@@ -1,1 +1,2 @@
-console.log('Schemas')
+// EXPORTS
+export { ValidationError } from '@/errors/ValidationError'
