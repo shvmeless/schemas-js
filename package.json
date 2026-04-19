@@ -1,0 +1,38 @@
+{
+  "name": "@shvmeless/schemas",
+  "description": "Custom schema builder library for data validation.",
+  "version": "0.0.1",
+  "license": "MIT",
+  "type": "commonjs",
+  "author": {
+    "name": "Luciano Aedo Puga",
+    "url": "https://github.com/shvmeless"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shvmeless/schemas-js.git"
+  },
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.js",
+  "exports": "./dist/index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "type",
+    "schema",
+    "validation",
+    "typescript",
+    "parse",
+    "data"
+  ],
+  "scripts": {
+    "build": "rm -rf ./dist && tsc -p ./tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.17",
+    "typescript": "^6.0.3"
+  }
+}

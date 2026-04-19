@@ -1,0 +1,30 @@
+# LOGS
+*.log
+logs
+
+# DEPENDENCIES
+node_modules/
+
+# ENVIRONMENT
+*.env
+
+# TEMP
+temporary/
+temp/
+tmp/
+tmp.ts
+*.tmp.ts
+
+# PACKAGES
+*.tgz
+
+# DEV
+coverage/
+html/
+
+# PRODUCTION
+themes/
+output/
+build/
+dist/
+out/
