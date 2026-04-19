@@ -29,10 +29,12 @@
     "data"
   ],
   "scripts": {
-    "build": "rm -rf ./dist && tsc -p ./tsconfig.json"
+    "build": "rm -rf ./dist && tspc -p ./tsconfig.json"
   },
   "devDependencies": {
     "@types/node": "^22.19.17",
-    "typescript": "^6.0.3"
+    "ts-patch": "^3.3.0",
+    "typescript": "^6.0.3",
+    "typescript-transform-paths": "^3.5.6"
   }
 }
