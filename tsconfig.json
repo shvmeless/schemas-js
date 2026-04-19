@@ -1,55 +1,8 @@
 {
-  "include": ["./src/**/*"],
+  "extends": "./tsconfig.prod.json",
+  "include": ["./src/**/*", "./tests/**/*"],
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "commonjs",
-
-    "lib": ["ES2022"],
-    "types": ["node"],
-
-    "rootDir": "./src",
-    "outDir": "./dist",
-    "paths": {
-      "@/*": ["./src/*"],
-      "@tests/*": ["./tests/*"]
-    },
-
-    "sourceMap": false,
-    "declaration": true,
-    "declarationMap": false,
-
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "isolatedModules": true,
-    "noEmitOnError": true,
-    "noUncheckedSideEffectImports": true,
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
-
-    "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "strictBindCallApply": true,
-    "strictPropertyInitialization": true,
-    "noImplicitThis": true,
-    "alwaysStrict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "exactOptionalPropertyTypes": false,
-    "useUnknownInCatchVariables": true,
-    "allowUnreachableCode": false,
-    "allowUnusedLabels": false,
-
-    "plugins": [
-      { "transform": "typescript-transform-paths" },
-      { "transform": "typescript-transform-paths", "afterDeclarations": true },
-    ]
+    "declaration": false,
+    "rootDir": "."
   }
 }

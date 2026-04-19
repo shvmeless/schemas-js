@@ -71,6 +71,7 @@ export default defineConfig([
   {
     ignores: [
       'eslint.config.mjs',
+      'vitest.config.js',
       'node_modules',
       'dist',
     ]

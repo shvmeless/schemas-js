@@ -31,7 +31,9 @@
   "scripts": {
     "lint": "eslint ./src",
     "lint:fix": "eslint ./src --fix",
-    "build": "rm -rf ./dist && tspc -p ./tsconfig.json"
+    "build": "rm -rf ./dist && tspc -p ./tsconfig.prod.json",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -42,6 +44,7 @@
     "ts-patch": "^3.3.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.58.2",
-    "typescript-transform-paths": "^3.5.6"
+    "typescript-transform-paths": "^3.5.6",
+    "vitest": "^4.1.4"
   }
 }
