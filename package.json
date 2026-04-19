@@ -29,12 +29,19 @@
     "data"
   ],
   "scripts": {
+    "lint": "eslint ./src",
+    "lint:fix": "eslint ./src --fix",
     "build": "rm -rf ./dist && tspc -p ./tsconfig.json"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@stylistic/eslint-plugin": "^5.10.0",
     "@types/node": "^22.19.17",
+    "eslint": "^10.2.1",
+    "globals": "^17.5.0",
     "ts-patch": "^3.3.0",
     "typescript": "^6.0.3",
+    "typescript-eslint": "^8.58.2",
     "typescript-transform-paths": "^3.5.6"
   }
 }

@@ -1,1 +1,1 @@
-console.log("Schemas");
+console.log('Schemas')
