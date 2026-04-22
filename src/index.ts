@@ -1,6 +1,6 @@
 // EXPORTS
 export type { GenericSchema } from '@/interfaces'
-export { ValidationError } from '@/errors/ValidationError'
+export { ValidationError, type ValidationErrorIndex } from '@/errors/ValidationError'
 export { UnknownSchema } from '@/schemas/UnknownSchema'
 export { AnySchema } from '@/schemas/AnySchema'
 export { StringSchema } from '@/schemas/StringSchema'
@@ -10,3 +10,4 @@ export { LiteralSchema } from '@/schemas/LiteralSchema'
 export { EnumSchema } from '@/schemas/EnumSchema'
 export { NullSchema } from '@/schemas/NullSchema'
 export { UndefinedSchema } from '@/schemas/UndefinedSchema'
+export { ArraySchema } from '@/schemas/ArraySchema'

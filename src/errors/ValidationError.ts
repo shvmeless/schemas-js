@@ -1,6 +1,6 @@
 // TYPE
-export type ValidationErrorFields = {
-  [key: string]: string | ValidationErrorFields
+export type ValidationErrorIndex = {
+  [key: string]: string | ValidationErrorIndex
 }
 
 // ERROR
@@ -8,13 +8,13 @@ export class ValidationError extends Error {
 
   // PROPERTIES
   public readonly value: unknown
-  public readonly fields: ValidationErrorFields | null
+  public readonly index: ValidationErrorIndex | null
 
   // CONSTRUCTOR
-  public constructor(value: unknown, message: string, fields?: ValidationErrorFields | null) {
+  public constructor(value: unknown, message: string, index?: ValidationErrorIndex | null) {
     super(message)
     this.value = value
-    this.fields = fields ?? null
+    this.index = index ?? null
   }
 
 }
