@@ -1,5 +1,5 @@
 // EXPORTS
-export type { GenericSchema } from '@/interfaces'
+export { GenericSchema } from '@/common'
 export { ValidationError, type ValidationErrorIndex } from '@/errors/ValidationError'
 export { UnknownSchema } from '@/schemas/UnknownSchema'
 export { AnySchema } from '@/schemas/AnySchema'

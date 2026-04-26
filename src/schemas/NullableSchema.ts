@@ -1,5 +1,5 @@
 // IMPORTS
-import { GenericSchema } from '@/interfaces'
+import { GenericSchema } from '@/common'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { OptionalSchema } from '@/schemas/OptionalSchema'
 import { TransformSchema } from '@/schemas/TransformSchema'
@@ -30,6 +30,11 @@ export class NullableSchema<T, D extends T | null> implements GenericSchema<T | 
       input = this._value
     }
     return this._schema.validate(input)
+  }
+
+  // METHOD
+  public isValid(input: unknown): boolean {
+    return GenericSchema.isValid(this, input)
   }
 
   // METHOD

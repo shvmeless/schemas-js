@@ -1,5 +1,5 @@
 // IMPORTS
-import { GenericSchema } from '@/interfaces'
+import { GenericSchema } from '@/common'
 import { ValidationError } from '@/errors/ValidationError'
 import { OptionalSchema } from '@/schemas/OptionalSchema'
 import { NullableSchema } from '@/schemas/NullableSchema'
@@ -29,6 +29,11 @@ export class NumberSchema implements GenericSchema<number> {
   }
 
   // METHOD
+  public isValid(input: unknown): boolean {
+    return GenericSchema.isValid(this, input)
+  }
+
+  // METHOD
   public optional(): OptionalSchema<number, undefined> {
     return OptionalSchema.create(this)
   }
@@ -40,7 +45,7 @@ export class NumberSchema implements GenericSchema<number> {
 
   // METHOD
   public or<NT>(schema: GenericSchema<NT>): UnionSchema<number | NT> {
-    return UnionSchema.create(this, schema)
+    return UnionSchema.create(this as GenericSchema<number>, schema)
   }
 
   // METHOD

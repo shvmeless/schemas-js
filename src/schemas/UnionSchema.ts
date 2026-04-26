@@ -1,5 +1,5 @@
 // IMPORTS
-import { GenericSchema } from '@/interfaces'
+import { GenericSchema } from '@/common'
 import { ValidationError } from '@/errors/ValidationError'
 import { OptionalSchema } from '@/schemas/OptionalSchema'
 import { NullableSchema } from '@/schemas/NullableSchema'
@@ -39,6 +39,11 @@ export class UnionSchema<T> implements GenericSchema<T> {
 
     throw new ValidationError(input, 'The value does not match any of the given schemas.')
 
+  }
+
+  // METHOD
+  public isValid(input: unknown): boolean {
+    return GenericSchema.isValid(this, input)
   }
 
   // METHOD

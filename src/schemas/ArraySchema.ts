@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError, ValidationErrorIndex } from '@/errors/ValidationError'
-import { GenericSchema } from '@/interfaces'
+import { GenericSchema } from '@/common'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { NullableSchema } from '@/schemas/NullableSchema'
 import { OptionalSchema } from '@/schemas/OptionalSchema'
@@ -51,6 +51,11 @@ export class ArraySchema<T> implements GenericSchema<Array<T>> {
   }
 
   // METHOD
+  public isValid(input: unknown): boolean {
+    return GenericSchema.isValid(this, input)
+  }
+
+  // METHOD
   public optional(): OptionalSchema<Array<T>, undefined> {
     return OptionalSchema.create(this)
   }
@@ -62,7 +67,7 @@ export class ArraySchema<T> implements GenericSchema<Array<T>> {
 
   // METHOD
   public or<NT>(schema: GenericSchema<NT>): UnionSchema<Array<T> | NT> {
-    return UnionSchema.create(this, schema)
+    return UnionSchema.create(this as GenericSchema<Array<T>>, schema)
   }
 
   // METHOD

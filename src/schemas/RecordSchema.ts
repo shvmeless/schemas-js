@@ -1,5 +1,5 @@
 // IMPORTS
-import { GenericSchema } from '@/interfaces'
+import { GenericSchema } from '@/common'
 import { ValidationError, ValidationErrorIndex } from '@/errors/ValidationError'
 import { OptionalSchema } from '@/schemas/OptionalSchema'
 import { NullableSchema } from '@/schemas/NullableSchema'
@@ -51,6 +51,11 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
   }
 
   // METHOD
+  public isValid(input: unknown): boolean {
+    return GenericSchema.isValid(this, input)
+  }
+
+  // METHOD
   public optional(): OptionalSchema<Record<string, T>, undefined> {
     return OptionalSchema.create(this)
   }
@@ -62,7 +67,7 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
 
   // METHOD
   public or<NT>(schema: GenericSchema<NT>): UnionSchema<Record<string, T> | NT> {
-    return UnionSchema.create(this, schema)
+    return UnionSchema.create(this as GenericSchema<Record<string, T>>, schema)
   }
 
   // METHOD

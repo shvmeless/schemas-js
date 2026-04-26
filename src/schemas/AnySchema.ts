@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
 // IMPORTS
-import { GenericSchema } from '@/interfaces'
+import { GenericSchema } from '@/common'
 
 // CLASS
 export class AnySchema implements GenericSchema<any> {
@@ -18,6 +18,11 @@ export class AnySchema implements GenericSchema<any> {
   // METHOD
   public validate(input: any): any {
     return input
+  }
+
+  // METHOD
+  public isValid(input: unknown): boolean {
+    return GenericSchema.isValid(this, input)
   }
 
 }
