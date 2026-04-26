@@ -3,6 +3,7 @@ import { GenericSchema } from '@/interfaces'
 import { ValidationError } from '@/errors/ValidationError'
 import { OptionalSchema } from '@/schemas/OptionalSchema'
 import { UnionSchema } from '@/schemas/UnionSchema'
+import { FallbackSchema } from '@/schemas/FallbackSchema'
 
 // CLASS
 export class NullSchema implements GenericSchema<null> {
@@ -33,6 +34,11 @@ export class NullSchema implements GenericSchema<null> {
   // METHOD
   public or<NT>(schema: GenericSchema<NT>): UnionSchema<null | NT> {
     return UnionSchema.create(this, schema)
+  }
+
+  // METHOD
+  public fallback(value: null): FallbackSchema<null> {
+    return FallbackSchema.create(this, value)
   }
 
 }

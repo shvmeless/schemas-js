@@ -1,6 +1,7 @@
 // IMPORTS
 import { ValidationError, ValidationErrorIndex } from '@/errors/ValidationError'
 import { GenericSchema } from '@/interfaces'
+import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { NullableSchema } from '@/schemas/NullableSchema'
 import { OptionalSchema } from '@/schemas/OptionalSchema'
 import { UnionSchema } from '@/schemas/UnionSchema'
@@ -76,6 +77,11 @@ export class ObjectSchema<T> implements GenericSchema<T> {
   // METHOD
   public or<NT>(schema: GenericSchema<NT>): UnionSchema<T | NT> {
     return UnionSchema.create(this, schema)
+  }
+
+  // METHOD
+  public fallback(value: T): FallbackSchema<T> {
+    return FallbackSchema.create(this, value)
   }
 
 }

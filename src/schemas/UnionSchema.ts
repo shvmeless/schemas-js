@@ -3,6 +3,7 @@ import { GenericSchema } from '@/interfaces'
 import { ValidationError } from '@/errors/ValidationError'
 import { OptionalSchema } from '@/schemas/OptionalSchema'
 import { NullableSchema } from '@/schemas/NullableSchema'
+import { FallbackSchema } from '@/schemas/FallbackSchema'
 
 // TYPES
 type InferSchemaType<I> = I extends GenericSchema<infer T> ? T : never
@@ -48,6 +49,11 @@ export class UnionSchema<T> implements GenericSchema<T> {
   // METHOD
   public nullable(): NullableSchema<T, null> {
     return NullableSchema.create(this)
+  }
+
+  // METHOD
+  public fallback(value: T): FallbackSchema<T> {
+    return FallbackSchema.create(this, value)
   }
 
 }

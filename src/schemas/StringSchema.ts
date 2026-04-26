@@ -4,6 +4,7 @@ import { ValidationError } from '@/errors/ValidationError'
 import { OptionalSchema } from '@/schemas/OptionalSchema'
 import { NullableSchema } from '@/schemas/NullableSchema'
 import { UnionSchema } from '@/schemas/UnionSchema'
+import { FallbackSchema } from '@/schemas/FallbackSchema'
 
 // CLASS
 export class StringSchema implements GenericSchema<string> {
@@ -39,6 +40,11 @@ export class StringSchema implements GenericSchema<string> {
   // METHOD
   public or<NT>(schema: GenericSchema<NT>): UnionSchema<string | NT> {
     return UnionSchema.create(this, schema)
+  }
+
+  // METHOD
+  public fallback(value: string): FallbackSchema<string> {
+    return FallbackSchema.create(this, value)
   }
 
 }
