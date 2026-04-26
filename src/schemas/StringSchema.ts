@@ -5,6 +5,7 @@ import { OptionalSchema } from '@/schemas/OptionalSchema'
 import { NullableSchema } from '@/schemas/NullableSchema'
 import { UnionSchema } from '@/schemas/UnionSchema'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
+import { TransformSchema } from '@/schemas/TransformSchema'
 
 // CLASS
 export class StringSchema implements GenericSchema<string> {
@@ -45,6 +46,11 @@ export class StringSchema implements GenericSchema<string> {
   // METHOD
   public fallback(value: string): FallbackSchema<string> {
     return FallbackSchema.create(this, value)
+  }
+
+  // METHOD
+  public transform<V>(fn: (value: string) => V): TransformSchema<string, V> {
+    return TransformSchema.create(this, fn)
   }
 
 }

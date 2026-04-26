@@ -4,6 +4,7 @@ import { GenericSchema } from '@/interfaces'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { NullableSchema } from '@/schemas/NullableSchema'
 import { OptionalSchema } from '@/schemas/OptionalSchema'
+import { TransformSchema } from '@/schemas/TransformSchema'
 import { UnionSchema } from '@/schemas/UnionSchema'
 
 // CLASS
@@ -67,6 +68,11 @@ export class ArraySchema<T> implements GenericSchema<Array<T>> {
   // METHOD
   public fallback(value: Array<T>): FallbackSchema<Array<T>> {
     return FallbackSchema.create(this, value)
+  }
+
+  // METHOD
+  public transform<V>(fn: (value: Array<T>) => V): TransformSchema<Array<T>, V> {
+    return TransformSchema.create(this, fn)
   }
 
 }

@@ -5,6 +5,7 @@ import { OptionalSchema } from '@/schemas/OptionalSchema'
 import { NullableSchema } from '@/schemas/NullableSchema'
 import { UnionSchema } from '@/schemas/UnionSchema'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
+import { TransformSchema } from '@/schemas/TransformSchema'
 
 // CLASS
 export class BooleanSchema implements GenericSchema<boolean> {
@@ -45,6 +46,11 @@ export class BooleanSchema implements GenericSchema<boolean> {
   // METHOD
   public fallback(value: boolean): FallbackSchema<boolean> {
     return FallbackSchema.create(this, value)
+  }
+
+  // METHOD
+  public transform<V>(fn: (value: boolean) => V): TransformSchema<boolean, V> {
+    return TransformSchema.create(this, fn)
   }
 
 }
