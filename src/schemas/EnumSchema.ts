@@ -1,6 +1,7 @@
 // IMPORTS
 import { GenericSchema } from '@/interfaces'
 import { ValidationError } from '@/errors/ValidationError'
+import { OptionalSchema } from '@/schemas/OptionalSchema'
 
 // CLASS
 export class EnumSchema<T extends string | number> implements GenericSchema<T> {
@@ -31,6 +32,11 @@ export class EnumSchema<T extends string | number> implements GenericSchema<T> {
 
     return input as T
 
+  }
+
+  // METHOD
+  public optional(): OptionalSchema<T, undefined> {
+    return OptionalSchema.create(this)
   }
 
 }

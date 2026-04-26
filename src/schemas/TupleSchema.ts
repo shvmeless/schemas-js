@@ -1,6 +1,7 @@
 // IMPORTS
 import { GenericSchema } from '@/interfaces'
 import { ValidationError, ValidationErrorIndex } from '@/errors/ValidationError'
+import { OptionalSchema } from '@/schemas/OptionalSchema'
 
 // CLASS
 export class TupleSchema<T extends ReadonlyArray<unknown>> implements GenericSchema<T> {
@@ -56,6 +57,11 @@ export class TupleSchema<T extends ReadonlyArray<unknown>> implements GenericSch
 
     return result as unknown as T
 
+  }
+
+  // METHOD
+  public optional(): OptionalSchema<T, undefined> {
+    return OptionalSchema.create(this)
   }
 
 }

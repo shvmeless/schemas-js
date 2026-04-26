@@ -1,6 +1,7 @@
 // IMPORTS
 import { GenericSchema } from '@/interfaces'
 import { ValidationError } from '@/errors/ValidationError'
+import { OptionalSchema } from '@/schemas/OptionalSchema'
 
 // CLASS
 export class BooleanSchema implements GenericSchema<boolean> {
@@ -21,6 +22,11 @@ export class BooleanSchema implements GenericSchema<boolean> {
     }
 
     return input
+  }
+
+  // METHOD
+  public optional(): OptionalSchema<boolean, undefined> {
+    return OptionalSchema.create(this)
   }
 
 }

@@ -1,6 +1,7 @@
 // IMPORTS
 import { GenericSchema } from '@/interfaces'
 import { ValidationError } from '@/errors/ValidationError'
+import { OptionalSchema } from '@/schemas/OptionalSchema'
 
 // CLASS
 export class NullSchema implements GenericSchema<null> {
@@ -21,6 +22,11 @@ export class NullSchema implements GenericSchema<null> {
     }
 
     return input
+  }
+
+  // METHOD
+  public optional(): OptionalSchema<null, undefined> {
+    return OptionalSchema.create(this)
   }
 
 }

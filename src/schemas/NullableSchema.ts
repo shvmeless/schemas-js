@@ -1,5 +1,6 @@
 // IMPORTS
 import { GenericSchema } from '@/interfaces'
+import { OptionalSchema } from '@/schemas/OptionalSchema'
 
 // CLASS
 export class NullableSchema<T, D extends T | null> implements GenericSchema<T | D> {
@@ -31,6 +32,11 @@ export class NullableSchema<T, D extends T | null> implements GenericSchema<T | 
   // METHOD
   public default(value: T): NullableSchema<T, T> {
     return new NullableSchema(this._schema, value)
+  }
+
+  // METHOD
+  public optional(): OptionalSchema<T | D, undefined> {
+    return OptionalSchema.create(this)
   }
 
 }

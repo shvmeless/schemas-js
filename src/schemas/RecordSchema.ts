@@ -1,6 +1,7 @@
 // IMPORTS
 import { GenericSchema } from '@/interfaces'
 import { ValidationError, ValidationErrorIndex } from '@/errors/ValidationError'
+import { OptionalSchema } from '@/schemas/OptionalSchema'
 
 // CLASS
 export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
@@ -43,6 +44,11 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
 
     return result
 
+  }
+
+  // METHOD
+  public optional(): OptionalSchema<Record<string, T>, undefined> {
+    return OptionalSchema.create(this)
   }
 
 }

@@ -1,6 +1,7 @@
 // IMPORTS
 import { GenericSchema } from '@/interfaces'
 import { ValidationError } from '@/errors/ValidationError'
+import { OptionalSchema } from '@/schemas/OptionalSchema'
 
 // CLASS
 export class LiteralSchema<T extends string | number | boolean> implements GenericSchema<T> {
@@ -27,6 +28,11 @@ export class LiteralSchema<T extends string | number | boolean> implements Gener
 
     return this._literal
 
+  }
+
+  // METHOD
+  public optional(): OptionalSchema<T, undefined> {
+    return OptionalSchema.create(this)
   }
 
 }
