@@ -1,6 +1,7 @@
 // IMPORTS
 import { ValidationError, ValidationErrorIndex } from '@/errors/ValidationError'
 import { GenericSchema } from '@/interfaces'
+import { NullableSchema } from '@/schemas/NullableSchema'
 import { OptionalSchema } from '@/schemas/OptionalSchema'
 
 // CLASS
@@ -49,6 +50,11 @@ export class ArraySchema<T> implements GenericSchema<Array<T>> {
   // METHOD
   public optional(): OptionalSchema<Array<T>, undefined> {
     return OptionalSchema.create(this)
+  }
+
+  // METHOD
+  public nullable(): NullableSchema<Array<T>, null> {
+    return NullableSchema.create(this)
   }
 
 }
