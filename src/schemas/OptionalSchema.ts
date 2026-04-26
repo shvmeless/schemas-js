@@ -1,6 +1,7 @@
 // IMPORTS
 import { GenericSchema } from '@/interfaces'
 import { NullableSchema } from '@/schemas/NullableSchema'
+import { UnionSchema } from '@/schemas/UnionSchema'
 
 // CLASS
 export class OptionalSchema<T, D extends T | undefined> implements GenericSchema<T | D> {
@@ -37,6 +38,11 @@ export class OptionalSchema<T, D extends T | undefined> implements GenericSchema
   // METHOD
   public nullable(): NullableSchema<T | D, null> {
     return NullableSchema.create(this)
+  }
+
+  // METHOD
+  public or<NT>(schema: GenericSchema<NT>): UnionSchema<T | D | NT> {
+    return UnionSchema.create(this, schema)
   }
 
 }

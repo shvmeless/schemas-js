@@ -3,6 +3,7 @@ import { GenericSchema } from '@/interfaces'
 import { ValidationError, ValidationErrorIndex } from '@/errors/ValidationError'
 import { OptionalSchema } from '@/schemas/OptionalSchema'
 import { NullableSchema } from '@/schemas/NullableSchema'
+import { UnionSchema } from '@/schemas/UnionSchema'
 
 // CLASS
 export class TupleSchema<T extends ReadonlyArray<unknown>> implements GenericSchema<T> {
@@ -68,6 +69,11 @@ export class TupleSchema<T extends ReadonlyArray<unknown>> implements GenericSch
   // METHOD
   public nullable(): NullableSchema<T, null> {
     return NullableSchema.create(this)
+  }
+
+  // METHOD
+  public or<NT>(schema: GenericSchema<NT>): UnionSchema<T | NT> {
+    return UnionSchema.create(this, schema)
   }
 
 }

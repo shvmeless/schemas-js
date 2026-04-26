@@ -2,6 +2,7 @@
 import { GenericSchema } from '@/interfaces'
 import { ValidationError } from '@/errors/ValidationError'
 import { OptionalSchema } from '@/schemas/OptionalSchema'
+import { UnionSchema } from '@/schemas/UnionSchema'
 
 // CLASS
 export class NullSchema implements GenericSchema<null> {
@@ -27,6 +28,11 @@ export class NullSchema implements GenericSchema<null> {
   // METHOD
   public optional(): OptionalSchema<null, undefined> {
     return OptionalSchema.create(this)
+  }
+
+  // METHOD
+  public or<NT>(schema: GenericSchema<NT>): UnionSchema<null | NT> {
+    return UnionSchema.create(this, schema)
   }
 
 }

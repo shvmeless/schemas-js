@@ -3,6 +3,7 @@ import { GenericSchema } from '@/interfaces'
 import { ValidationError } from '@/errors/ValidationError'
 import { OptionalSchema } from '@/schemas/OptionalSchema'
 import { NullableSchema } from '@/schemas/NullableSchema'
+import { UnionSchema } from '@/schemas/UnionSchema'
 
 // CLASS
 export class BooleanSchema implements GenericSchema<boolean> {
@@ -33,6 +34,11 @@ export class BooleanSchema implements GenericSchema<boolean> {
   // METHOD
   public nullable(): NullableSchema<boolean, null> {
     return NullableSchema.create(this)
+  }
+
+  // METHOD
+  public or<NT>(schema: GenericSchema<NT>): UnionSchema<boolean | NT> {
+    return UnionSchema.create(this, schema)
   }
 
 }

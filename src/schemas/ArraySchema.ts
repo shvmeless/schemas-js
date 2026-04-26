@@ -3,6 +3,7 @@ import { ValidationError, ValidationErrorIndex } from '@/errors/ValidationError'
 import { GenericSchema } from '@/interfaces'
 import { NullableSchema } from '@/schemas/NullableSchema'
 import { OptionalSchema } from '@/schemas/OptionalSchema'
+import { UnionSchema } from '@/schemas/UnionSchema'
 
 // CLASS
 export class ArraySchema<T> implements GenericSchema<Array<T>> {
@@ -55,6 +56,11 @@ export class ArraySchema<T> implements GenericSchema<Array<T>> {
   // METHOD
   public nullable(): NullableSchema<Array<T>, null> {
     return NullableSchema.create(this)
+  }
+
+  // METHOD
+  public or<NT>(schema: GenericSchema<NT>): UnionSchema<Array<T> | NT> {
+    return UnionSchema.create(this, schema)
   }
 
 }

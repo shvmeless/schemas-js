@@ -3,6 +3,7 @@ import { GenericSchema } from '@/interfaces'
 import { ValidationError } from '@/errors/ValidationError'
 import { OptionalSchema } from '@/schemas/OptionalSchema'
 import { NullableSchema } from '@/schemas/NullableSchema'
+import { UnionSchema } from '@/schemas/UnionSchema'
 
 // CLASS
 export class EnumSchema<T extends string | number> implements GenericSchema<T> {
@@ -43,6 +44,11 @@ export class EnumSchema<T extends string | number> implements GenericSchema<T> {
   // METHOD
   public nullable(): NullableSchema<T, null> {
     return NullableSchema.create(this)
+  }
+
+  // METHOD
+  public or<NT>(schema: GenericSchema<NT>): UnionSchema<T | NT> {
+    return UnionSchema.create(this, schema)
   }
 
 }
