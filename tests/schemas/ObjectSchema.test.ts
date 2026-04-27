@@ -41,3 +41,37 @@ describe('.create()', () => {
   })
 
 })
+
+// METHOD
+describe('.skip()', () => {
+
+  const schema = ObjectSchema.create({
+    string: StringSchema.create(),
+    number: NumberSchema.create(),
+    boolean: BooleanSchema.create(),
+  }).strip()
+
+  it('validates that each property matches its corresponding schema.', () => {
+    const result = schema.validate({ string: 'STRING', number: 74105280, boolean: true })
+    expect(result).toEqual({ string: 'STRING', number: 74105280, boolean: true })
+  })
+
+  it('throws when the input is not an object.', () => {
+    DataTypeGenerator.skip('objects').forEach((value) => {
+      expectSchema(schema, value).toThrow('The value must be an object.')
+    })
+  })
+
+  it('throws when the input contains fewer properties than expected.', () => {
+    expectSchema(schema, { string: 'STRING' }).toThrow('The object is missing one or more required properties.', {
+      number: 'The value must be a number.',
+      boolean: 'The value must be a boolean.',
+    })
+  })
+
+  it('strips unexpected properties from the input.', () => {
+    const result = schema.validate({ string: 'STRING', number: 74105280, boolean: true, unexpected: 'UNEXPECTED' })
+    expect(result).toEqual({ string: 'STRING', number: 74105280, boolean: true })
+  })
+
+})

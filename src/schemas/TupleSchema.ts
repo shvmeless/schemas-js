@@ -12,10 +12,12 @@ export class TupleSchema<T extends ReadonlyArray<unknown>> implements GenericSch
 
   // PROPERTIES
   private readonly _shape: { [K in keyof T]: GenericSchema<T[K]> }
+  private _strip: boolean
 
   // CONSTRUCTOR
   private constructor(shape: { [K in keyof T]: GenericSchema<T[K]> }) {
     this._shape = [...shape] as unknown as { [K in keyof T]: GenericSchema<T[K]> }
+    this._strip = false
   }
 
   // CONSTRUCTOR
@@ -39,6 +41,7 @@ export class TupleSchema<T extends ReadonlyArray<unknown>> implements GenericSch
 
         const shape = this._shape[index]
         if (shape === undefined) {
+          if (this._strip) continue
           throw new ValidationError(input, 'Unexpected element.')
         }
 
@@ -66,6 +69,12 @@ export class TupleSchema<T extends ReadonlyArray<unknown>> implements GenericSch
   // METHOD
   public isValid(input: unknown): boolean {
     return GenericSchema.isValid(this, input)
+  }
+
+  // METHOD
+  public skip(): this {
+    this._strip = true
+    return this
   }
 
   // METHOD

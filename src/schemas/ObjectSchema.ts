@@ -12,10 +12,12 @@ export class ObjectSchema<T> implements GenericSchema<T> {
 
   // PROPERTIES
   private readonly _schema: { [K in keyof T]: GenericSchema<T[K]> }
+  private _strip: boolean
 
   // CONSTRUCTOR
   private constructor(schema: { [K in keyof T]: GenericSchema<T[K]> }) {
     this._schema = schema
+    this._strip = false
   }
 
   // FACTORY
@@ -40,6 +42,7 @@ export class ObjectSchema<T> implements GenericSchema<T> {
 
         const schema = this._schema[key as keyof T]
         if (schema === undefined) {
+          if (this._strip) continue
           throw new ValidationError(input, 'Unexpected property.')
         }
 
@@ -68,6 +71,12 @@ export class ObjectSchema<T> implements GenericSchema<T> {
   // METHOD
   public isValid(input: unknown): boolean {
     return GenericSchema.isValid(this, input)
+  }
+
+  // METHOD
+  public strip(): this {
+    this._strip = true
+    return this
   }
 
   // METHOD
