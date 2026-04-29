@@ -1,6 +1,11 @@
 // IMPORTS
-import { GenericSchema } from '@/interfaces'
 import { ValidationError, ValidationErrorIndex } from '@/errors/ValidationError'
+import { GenericSchema } from '@/schemas/GenericSchema'
+import { OptionalSchema } from '@/schemas/OptionalSchema'
+import { NullableSchema } from '@/schemas/NullableSchema'
+import { UnionSchema } from '@/schemas/UnionSchema'
+import { FallbackSchema } from '@/schemas/FallbackSchema'
+import { TransformSchema } from '@/schemas/TransformSchema'
 
 // CLASS
 export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
@@ -43,6 +48,36 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
 
     return result
 
+  }
+
+  // METHOD
+  public isValid(input: unknown): boolean {
+    return GenericSchema.isValid(this, input)
+  }
+
+  // METHOD
+  public optional(): OptionalSchema<Record<string, T>, undefined> {
+    return OptionalSchema.create(this)
+  }
+
+  // METHOD
+  public nullable(): NullableSchema<Record<string, T>, null> {
+    return NullableSchema.create(this)
+  }
+
+  // METHOD
+  public or<NT>(schema: GenericSchema<NT>): UnionSchema<Record<string, T> | NT> {
+    return UnionSchema.create(this as GenericSchema<Record<string, T>>, schema)
+  }
+
+  // METHOD
+  public fallback(value: Record<string, T>): FallbackSchema<Record<string, T>> {
+    return FallbackSchema.create(this, value)
+  }
+
+  // METHOD
+  public transform<V>(fn: (value: Record<string, T>) => V): TransformSchema<Record<string, T>, V> {
+    return TransformSchema.create(this, fn)
   }
 
 }

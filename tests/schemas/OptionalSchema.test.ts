@@ -27,3 +27,26 @@ describe('.create()', () => {
   })
 
 })
+
+// METHOD
+describe('.default()', () => {
+
+  const schema = OptionalSchema.create(StringSchema.create()).default('DEFAULT')
+
+  it('validates an input that matches the given schema.', () => {
+    const result = schema.validate('STRING')
+    expect(result).toBe('STRING')
+  })
+
+  it('returns the default value for an undefined input.', () => {
+    const result = schema.validate(undefined)
+    expect(result).toBe('DEFAULT')
+  })
+
+  it('throws when the value does not match the given schema.', () => {
+    DataTypeGenerator.skip('strings', 'undefined').forEach((value) => {
+      expectSchema(schema, value).toThrow('The value must be a string.')
+    })
+  })
+
+})

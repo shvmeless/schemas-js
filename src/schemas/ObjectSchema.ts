@@ -1,16 +1,23 @@
 // IMPORTS
 import { ValidationError, ValidationErrorIndex } from '@/errors/ValidationError'
-import { GenericSchema } from '@/interfaces'
+import { GenericSchema } from '@/schemas/GenericSchema'
+import { FallbackSchema } from '@/schemas/FallbackSchema'
+import { NullableSchema } from '@/schemas/NullableSchema'
+import { OptionalSchema } from '@/schemas/OptionalSchema'
+import { TransformSchema } from '@/schemas/TransformSchema'
+import { UnionSchema } from '@/schemas/UnionSchema'
 
 // CLASS
 export class ObjectSchema<T> implements GenericSchema<T> {
 
   // PROPERTIES
   private readonly _schema: { [K in keyof T]: GenericSchema<T[K]> }
+  private _strip: boolean
 
   // CONSTRUCTOR
   private constructor(schema: { [K in keyof T]: GenericSchema<T[K]> }) {
     this._schema = schema
+    this._strip = false
   }
 
   // FACTORY
@@ -35,6 +42,7 @@ export class ObjectSchema<T> implements GenericSchema<T> {
 
         const schema = this._schema[key as keyof T]
         if (schema === undefined) {
+          if (this._strip) continue
           throw new ValidationError(input, 'Unexpected property.')
         }
 
@@ -58,6 +66,42 @@ export class ObjectSchema<T> implements GenericSchema<T> {
 
     return result as T
 
+  }
+
+  // METHOD
+  public isValid(input: unknown): boolean {
+    return GenericSchema.isValid(this, input)
+  }
+
+  // METHOD
+  public strip(): this {
+    this._strip = true
+    return this
+  }
+
+  // METHOD
+  public optional(): OptionalSchema<T, undefined> {
+    return OptionalSchema.create(this)
+  }
+
+  // METHOD
+  public nullable(): NullableSchema<T, null> {
+    return NullableSchema.create(this)
+  }
+
+  // METHOD
+  public or<NT>(schema: GenericSchema<NT>): UnionSchema<T | NT> {
+    return UnionSchema.create(this as GenericSchema<T>, schema)
+  }
+
+  // METHOD
+  public fallback(value: T): FallbackSchema<T> {
+    return FallbackSchema.create(this, value)
+  }
+
+  // METHOD
+  public transform<V>(fn: (value: T) => V): TransformSchema<T, V> {
+    return TransformSchema.create(this, fn)
   }
 
 }

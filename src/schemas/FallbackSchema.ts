@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import { GenericSchema } from '@/interfaces'
+import { GenericSchema } from '@/schemas/GenericSchema'
 
 // CLASS
 export class FallbackSchema<T> implements GenericSchema<T> {
@@ -30,6 +30,11 @@ export class FallbackSchema<T> implements GenericSchema<T> {
       if (error instanceof ValidationError) return this._value
       else throw error
     }
+  }
+
+  // METHOD
+  public isValid(input: unknown): boolean {
+    return GenericSchema.isValid(this, input)
   }
 
 }

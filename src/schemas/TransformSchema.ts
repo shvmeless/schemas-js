@@ -1,5 +1,5 @@
 // IMPORTS
-import { GenericSchema } from '@/interfaces'
+import { GenericSchema } from '@/schemas/GenericSchema'
 
 // CLASS
 export class TransformSchema<T, V> implements GenericSchema<V> {
@@ -23,6 +23,11 @@ export class TransformSchema<T, V> implements GenericSchema<V> {
   public validate(input: unknown): V {
     const result = this._schema.validate(input)
     return this._transform(result)
+  }
+
+  // METHOD
+  public isValid(input: unknown): boolean {
+    return GenericSchema.isValid(this, input)
   }
 
 }

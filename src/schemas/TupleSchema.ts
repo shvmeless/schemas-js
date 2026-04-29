@@ -1,16 +1,23 @@
 // IMPORTS
-import { GenericSchema } from '@/interfaces'
 import { ValidationError, ValidationErrorIndex } from '@/errors/ValidationError'
+import { GenericSchema } from '@/schemas/GenericSchema'
+import { OptionalSchema } from '@/schemas/OptionalSchema'
+import { NullableSchema } from '@/schemas/NullableSchema'
+import { UnionSchema } from '@/schemas/UnionSchema'
+import { FallbackSchema } from '@/schemas/FallbackSchema'
+import { TransformSchema } from '@/schemas/TransformSchema'
 
 // CLASS
 export class TupleSchema<T extends ReadonlyArray<unknown>> implements GenericSchema<T> {
 
   // PROPERTIES
   private readonly _shape: { [K in keyof T]: GenericSchema<T[K]> }
+  private _strip: boolean
 
   // CONSTRUCTOR
   private constructor(shape: { [K in keyof T]: GenericSchema<T[K]> }) {
     this._shape = [...shape] as unknown as { [K in keyof T]: GenericSchema<T[K]> }
+    this._strip = false
   }
 
   // CONSTRUCTOR
@@ -34,6 +41,7 @@ export class TupleSchema<T extends ReadonlyArray<unknown>> implements GenericSch
 
         const shape = this._shape[index]
         if (shape === undefined) {
+          if (this._strip) continue
           throw new ValidationError(input, 'Unexpected element.')
         }
 
@@ -56,6 +64,42 @@ export class TupleSchema<T extends ReadonlyArray<unknown>> implements GenericSch
 
     return result as unknown as T
 
+  }
+
+  // METHOD
+  public isValid(input: unknown): boolean {
+    return GenericSchema.isValid(this, input)
+  }
+
+  // METHOD
+  public skip(): this {
+    this._strip = true
+    return this
+  }
+
+  // METHOD
+  public optional(): OptionalSchema<T, undefined> {
+    return OptionalSchema.create(this)
+  }
+
+  // METHOD
+  public nullable(): NullableSchema<T, null> {
+    return NullableSchema.create(this)
+  }
+
+  // METHOD
+  public or<NT>(schema: GenericSchema<NT>): UnionSchema<T | NT> {
+    return UnionSchema.create(this as GenericSchema<T>, schema)
+  }
+
+  // METHOD
+  public fallback(value: T): FallbackSchema<T> {
+    return FallbackSchema.create(this, value)
+  }
+
+  // METHOD
+  public transform<V>(fn: (value: T) => V): TransformSchema<T, V> {
+    return TransformSchema.create(this, fn)
   }
 
 }

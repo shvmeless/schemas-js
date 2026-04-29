@@ -1,6 +1,11 @@
 // IMPORTS
 import { ValidationError, ValidationErrorIndex } from '@/errors/ValidationError'
-import { GenericSchema } from '@/interfaces'
+import { GenericSchema } from '@/schemas/GenericSchema'
+import { FallbackSchema } from '@/schemas/FallbackSchema'
+import { NullableSchema } from '@/schemas/NullableSchema'
+import { OptionalSchema } from '@/schemas/OptionalSchema'
+import { TransformSchema } from '@/schemas/TransformSchema'
+import { UnionSchema } from '@/schemas/UnionSchema'
 
 // CLASS
 export class ArraySchema<T> implements GenericSchema<Array<T>> {
@@ -43,6 +48,36 @@ export class ArraySchema<T> implements GenericSchema<Array<T>> {
 
     return result
 
+  }
+
+  // METHOD
+  public isValid(input: unknown): boolean {
+    return GenericSchema.isValid(this, input)
+  }
+
+  // METHOD
+  public optional(): OptionalSchema<Array<T>, undefined> {
+    return OptionalSchema.create(this)
+  }
+
+  // METHOD
+  public nullable(): NullableSchema<Array<T>, null> {
+    return NullableSchema.create(this)
+  }
+
+  // METHOD
+  public or<NT>(schema: GenericSchema<NT>): UnionSchema<Array<T> | NT> {
+    return UnionSchema.create(this as GenericSchema<Array<T>>, schema)
+  }
+
+  // METHOD
+  public fallback(value: Array<T>): FallbackSchema<Array<T>> {
+    return FallbackSchema.create(this, value)
+  }
+
+  // METHOD
+  public transform<V>(fn: (value: Array<T>) => V): TransformSchema<Array<T>, V> {
+    return TransformSchema.create(this, fn)
   }
 
 }

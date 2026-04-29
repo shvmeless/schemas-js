@@ -1,6 +1,10 @@
 // IMPORTS
-import { GenericSchema } from '@/interfaces'
 import { ValidationError } from '@/errors/ValidationError'
+import { GenericSchema } from '@/schemas/GenericSchema'
+import { NullableSchema } from '@/schemas/NullableSchema'
+import { UnionSchema } from '@/schemas/UnionSchema'
+import { FallbackSchema } from '@/schemas/FallbackSchema'
+import { TransformSchema } from '@/schemas/TransformSchema'
 
 // CLASS
 export class UndefinedSchema implements GenericSchema<undefined> {
@@ -21,6 +25,31 @@ export class UndefinedSchema implements GenericSchema<undefined> {
     }
 
     return input
+  }
+
+  // METHOD
+  public isValid(input: unknown): boolean {
+    return GenericSchema.isValid(this, input)
+  }
+
+  // METHOD
+  public nullable(): NullableSchema<undefined, null> {
+    return NullableSchema.create(this)
+  }
+
+  // METHOD
+  public or<NT>(schema: GenericSchema<NT>): UnionSchema<undefined | NT> {
+    return UnionSchema.create(this as GenericSchema<undefined>, schema)
+  }
+
+  // METHOD
+  public fallback(value: undefined): FallbackSchema<undefined> {
+    return FallbackSchema.create(this, value)
+  }
+
+  // METHOD
+  public transform<V>(fn: (value: undefined) => V): TransformSchema<undefined, V> {
+    return TransformSchema.create(this, fn)
   }
 
 }

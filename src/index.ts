@@ -1,21 +1,36 @@
-// EXPORTS
-export type { GenericSchema } from '@/interfaces'
-export { ValidationError, type ValidationErrorIndex } from '@/errors/ValidationError'
-export { UnknownSchema } from '@/schemas/UnknownSchema'
-export { AnySchema } from '@/schemas/AnySchema'
-export { StringSchema } from '@/schemas/StringSchema'
-export { NumberSchema } from '@/schemas/NumberSchema'
-export { BooleanSchema } from '@/schemas/BooleanSchema'
-export { LiteralSchema } from '@/schemas/LiteralSchema'
-export { EnumSchema } from '@/schemas/EnumSchema'
-export { NullSchema } from '@/schemas/NullSchema'
-export { UndefinedSchema } from '@/schemas/UndefinedSchema'
-export { ArraySchema } from '@/schemas/ArraySchema'
-export { RecordSchema } from '@/schemas/RecordSchema'
-export { TupleSchema } from '@/schemas/TupleSchema'
-export { ObjectSchema } from '@/schemas/ObjectSchema'
-export { OptionalSchema } from '@/schemas/OptionalSchema'
-export { NullableSchema } from '@/schemas/NullableSchema'
-export { UnionSchema } from '@/schemas/UnionSchema'
-export { FallbackSchema } from '@/schemas/FallbackSchema'
-export { TransformSchema } from '@/schemas/TransformSchema'
+/* eslint-disable @typescript-eslint/unbound-method */
+
+// IMPORTS
+import { UnknownSchema } from '@/schemas/UnknownSchema'
+import { AnySchema } from '@/schemas/AnySchema'
+import { StringSchema } from '@/schemas/StringSchema'
+import { NumberSchema } from '@/schemas/NumberSchema'
+import { BooleanSchema } from '@/schemas/BooleanSchema'
+import { LiteralSchema } from '@/schemas/LiteralSchema'
+import { EnumSchema } from '@/schemas/EnumSchema'
+import { NullSchema } from '@/schemas/NullSchema'
+import { UndefinedSchema } from '@/schemas/UndefinedSchema'
+import { ArraySchema } from '@/schemas/ArraySchema'
+import { RecordSchema } from '@/schemas/RecordSchema'
+import { TupleSchema } from '@/schemas/TupleSchema'
+import { ObjectSchema } from '@/schemas/ObjectSchema'
+
+// ERRORS
+export { type ValidationErrorIndex, ValidationError } from '@/errors/ValidationError'
+
+// SCHEMAS
+export const schemas = {
+  unknown: UnknownSchema.create,
+  any: AnySchema.create,
+  string: StringSchema.create,
+  number: NumberSchema.create,
+  boolean: BooleanSchema.create,
+  literal: LiteralSchema.create,
+  enum: EnumSchema.create,
+  null: NullSchema.create,
+  undefined: UndefinedSchema.create,
+  array: ArraySchema.create,
+  record: RecordSchema.create,
+  tuple: TupleSchema.create,
+  object: ObjectSchema.create,
+}
