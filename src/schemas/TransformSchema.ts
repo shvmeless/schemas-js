@@ -1,5 +1,5 @@
 // IMPORTS
-import { GenericSchema } from '@/common'
+import { GenericSchema } from '@/schemas/GenericSchema'
 
 // CLASS
 export class TransformSchema<T, V> implements GenericSchema<V> {

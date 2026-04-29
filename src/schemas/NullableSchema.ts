@@ -1,5 +1,5 @@
 // IMPORTS
-import { GenericSchema } from '@/common'
+import { GenericSchema } from '@/schemas/GenericSchema'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { OptionalSchema } from '@/schemas/OptionalSchema'
 import { TransformSchema } from '@/schemas/TransformSchema'

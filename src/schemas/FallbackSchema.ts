@@ -1,6 +1,6 @@
 // IMPORTS
-import { GenericSchema } from '@/common'
 import { ValidationError } from '@/errors/ValidationError'
+import { GenericSchema } from '@/schemas/GenericSchema'
 
 // CLASS
 export class FallbackSchema<T> implements GenericSchema<T> {

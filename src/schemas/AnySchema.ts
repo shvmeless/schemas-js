@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
 // IMPORTS
-import { GenericSchema } from '@/common'
+import { GenericSchema } from '@/schemas/GenericSchema'
 
 // CLASS
 export class AnySchema implements GenericSchema<any> {

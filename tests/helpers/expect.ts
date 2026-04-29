@@ -1,7 +1,7 @@
 // IMPORTS
 import { expect } from 'vitest'
 import { ValidationError, type ValidationErrorIndex } from '@/errors/ValidationError'
-import { GenericSchema } from '@/common'
+import { GenericSchema } from '@/schemas/GenericSchema'
 
 // INTERFACE
 interface ExpectSchemaResult {

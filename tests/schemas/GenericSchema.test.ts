@@ -1,6 +1,6 @@
 // IMPORTS
 import { describe, expect, it } from 'vitest'
-import { GenericSchema } from '@/common'
+import { GenericSchema } from '@/schemas/GenericSchema'
 import { ObjectSchema } from '@/schemas/ObjectSchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { NumberSchema } from '@/schemas/NumberSchema'

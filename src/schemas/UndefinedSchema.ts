@@ -1,6 +1,6 @@
 // IMPORTS
-import { GenericSchema } from '@/common'
 import { ValidationError } from '@/errors/ValidationError'
+import { GenericSchema } from '@/schemas/GenericSchema'
 import { NullableSchema } from '@/schemas/NullableSchema'
 import { UnionSchema } from '@/schemas/UnionSchema'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
