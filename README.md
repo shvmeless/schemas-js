@@ -15,10 +15,13 @@ This package includes the following functions for creating schemas:
 - **`enum`** - Validates that the input matches one of the provided literal values.
 - **`null`** - Validates that the input is null.
 - **`undefined`** - Validates that the input is undefined.
+- **`instanceOf`** - Validates that the input is an instance of a specific class.
 - **`array`** - Validates that each input item matches a specific schema.
 - **`record`** - Validates that each input entry matches a specific schema.
 - **`tuple`** - Validates that the input matches a specific tuple schema.
 - **`object`** - Validates that the input matches a specific object schema.
+- **`set`** - Validates that the input is a set of items matching a specific schema.
+- **`map`** - Validates that the input is a map of items matching specific key and value schemas.
 
 _**Note:** These functions are available in the `schemas` module, which can be imported directly from `@shvmeless/schemas`._
 
@@ -26,7 +29,7 @@ _**Note:** These functions are available in the `schemas` module, which can be i
 
 The functions above internally use the following classes:
 
-`AnySchema`, `UnknownSchema`, `StringSchema`, `NumberSchema`, `BooleanSchema`, `LiteralSchema`, `EnumSchema`, `NullSchema`, `UndefinedSchema`, `ArraySchema`, `RecordSchema`, `TupleSchema`, and `ObjectSchema`.
+`AnySchema`, `UnknownSchema`, `StringSchema`, `NumberSchema`, `BooleanSchema`, `LiteralSchema`, `EnumSchema`, `NullSchema`, `UndefinedSchema`, `InstanceOfSchema`, `ArraySchema`, `RecordSchema`, `TupleSchema`, `SetSchema`, `MapSchema`, and `ObjectSchema`.
 
 _**Note:** These classes are available in the `classes` module, which can be imported from `@shvmeless/schemas/classes`, *but it is **not recommended** to use them directly*._
 
