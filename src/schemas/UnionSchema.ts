@@ -1,0 +1,64 @@
+// IMPORTS
+import { ValidationError } from '@/errors/ValidationError'
+import { GenericSchema } from '@/schemas/GenericSchema'
+import { OptionalSchema } from '@/schemas/OptionalSchema'
+import { NullableSchema } from '@/schemas/NullableSchema'
+import { FallbackSchema } from '@/schemas/FallbackSchema'
+
+// TYPES
+type InferSchemaType<I> = I extends GenericSchema<infer T> ? T : never
+type SchemaTypeUnion<A extends ReadonlyArray<GenericSchema<unknown>>> = InferSchemaType<A[number]>
+
+// CLASS
+export class UnionSchema<T> implements GenericSchema<T> {
+
+  // PROPERTIES
+  private readonly _schemas: ReadonlyArray<GenericSchema<T>>
+
+  // CONSTRUCTOR
+  private constructor(...schemas: ReadonlyArray<GenericSchema<T>>) {
+    this._schemas = schemas
+  }
+
+  // CONSTRUCTOR
+  public static create<A extends ReadonlyArray<GenericSchema<unknown>>>(...schemas: A): UnionSchema<SchemaTypeUnion<A>> {
+    return new UnionSchema(...schemas as ReadonlyArray<GenericSchema<SchemaTypeUnion<A>>>)
+  }
+
+  // METHOD
+  public validate(input: unknown): T {
+
+    for (const schema of this._schemas) {
+      try {
+        return schema.validate(input) as T
+      } catch (error) {
+        if (error instanceof ValidationError) continue
+        else throw error
+      }
+    }
+
+    throw new ValidationError(input, 'The value does not match any of the given schemas.')
+
+  }
+
+  // METHOD
+  public isValid(input: unknown): boolean {
+    return GenericSchema.isValid(this, input)
+  }
+
+  // METHOD
+  public optional(): OptionalSchema<T, undefined> {
+    return OptionalSchema.create(this)
+  }
+
+  // METHOD
+  public nullable(): NullableSchema<T, null> {
+    return NullableSchema.create(this)
+  }
+
+  // METHOD
+  public fallback(value: T): FallbackSchema<T> {
+    return FallbackSchema.create(this, value)
+  }
+
+}

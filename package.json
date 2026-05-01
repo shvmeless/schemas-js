@@ -1,7 +1,7 @@
 {
   "name": "@shvmeless/schemas",
   "description": "Custom schema builder library for data validation.",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "license": "MIT",
   "type": "commonjs",
   "author": {
@@ -16,7 +16,10 @@
     "dist"
   ],
   "main": "./dist/index.js",
-  "exports": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./classes": "./dist/classes.js"
+  },
   "publishConfig": {
     "access": "public"
   },
