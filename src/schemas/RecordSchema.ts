@@ -1,5 +1,5 @@
 // IMPORTS
-import { ValidationError, ValidationErrorIndex } from '@/errors/ValidationError'
+import { ValidationError } from '@/errors/ValidationError'
 import { GenericSchema } from '@/schemas/GenericSchema'
 import { OptionalSchema } from '@/schemas/OptionalSchema'
 import { NullableSchema } from '@/schemas/NullableSchema'
@@ -31,19 +31,19 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
     }
 
     const result: Record<string, T> = {}
-    const errors: ValidationErrorIndex = {}
+    const errors = ValidationError.prepare()
 
     for (const [key, value] of Object.entries(input)) {
       try {
         result[key] = this._schema.validate(value)
       } catch (error) {
-        if (error instanceof ValidationError) errors[key] = error.index ?? error.message
+        if (error instanceof ValidationError) errors.addError(key, error)
         else throw error
       }
     }
 
-    if (Object.keys(errors).length > 0) {
-      throw new ValidationError(input, 'At least one entry does not match the given schema.', errors)
+    if (errors.size > 0) {
+      errors.throw(input, 'At least one entry does not match the given schema.')
     }
 
     return result

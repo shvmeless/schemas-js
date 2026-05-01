@@ -1,5 +1,5 @@
 // IMPORTS
-import { ValidationError, ValidationErrorIndex } from '@/errors/ValidationError'
+import { ValidationError } from '@/errors/ValidationError'
 import { GenericSchema } from '@/schemas/GenericSchema'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { NullableSchema } from '@/schemas/NullableSchema'
@@ -31,19 +31,19 @@ export class ArraySchema<T> implements GenericSchema<Array<T>> {
     }
 
     const result: Array<T> = []
-    const errors: ValidationErrorIndex = {}
+    const errors = ValidationError.prepare()
 
     input.forEach((element, index) => {
       try {
         result[index] = this._schema.validate(element)
-      } catch (error: unknown) {
-        if (error instanceof ValidationError) errors[index] = error.index ?? error.message
+      } catch (error) {
+        if (error instanceof ValidationError) errors.addError(index, error)
         else throw error
       }
     })
 
-    if (Object.keys(errors).length > 0) {
-      throw new ValidationError(input, 'At least one element does not match the given schema.', errors)
+    if (errors.size > 0) {
+      errors.throw(input, 'At least one element does not match the given schema.')
     }
 
     return result
