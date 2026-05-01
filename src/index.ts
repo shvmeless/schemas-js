@@ -10,6 +10,7 @@ import { LiteralSchema } from '@/schemas/LiteralSchema'
 import { EnumSchema } from '@/schemas/EnumSchema'
 import { NullSchema } from '@/schemas/NullSchema'
 import { UndefinedSchema } from '@/schemas/UndefinedSchema'
+import { InstanceOfSchema } from '@/schemas/InstanceOfSchema'
 import { ArraySchema } from '@/schemas/ArraySchema'
 import { RecordSchema } from '@/schemas/RecordSchema'
 import { TupleSchema } from '@/schemas/TupleSchema'
@@ -31,6 +32,7 @@ export const schemas = {
   enum: EnumSchema.create,
   null: NullSchema.create,
   undefined: UndefinedSchema.create,
+  instanceOf: InstanceOfSchema.create,
   array: ArraySchema.create,
   record: RecordSchema.create,
   tuple: TupleSchema.create,

@@ -1,5 +1,7 @@
-// CLASSES
+// GENEIRIC
 export { GenericSchema } from '@/schemas/GenericSchema'
+
+// BASIC
 export { UnknownSchema } from '@/schemas/UnknownSchema'
 export { AnySchema } from '@/schemas/AnySchema'
 export { StringSchema } from '@/schemas/StringSchema'
@@ -9,12 +11,17 @@ export { LiteralSchema } from '@/schemas/LiteralSchema'
 export { EnumSchema } from '@/schemas/EnumSchema'
 export { NullSchema } from '@/schemas/NullSchema'
 export { UndefinedSchema } from '@/schemas/UndefinedSchema'
+export { InstanceOfSchema } from '@/schemas/InstanceOfSchema'
+
+// STRUCTURED
 export { ArraySchema } from '@/schemas/ArraySchema'
 export { RecordSchema } from '@/schemas/RecordSchema'
 export { TupleSchema } from '@/schemas/TupleSchema'
 export { ObjectSchema } from '@/schemas/ObjectSchema'
 export { SetSchema } from '@/schemas/SetSchema'
 export { MapSchema } from '@/schemas/MapSchema'
+
+// SPECIAL
 export { OptionalSchema } from '@/schemas/OptionalSchema'
 export { NullableSchema } from '@/schemas/NullableSchema'
 export { UnionSchema } from '@/schemas/UnionSchema'
