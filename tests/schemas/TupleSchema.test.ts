@@ -24,16 +24,16 @@ describe('.create()', () => {
   })
 
   it('throws when the input contains fewer elements than expected.', () => {
-    expectSchema(schema, ['STRING']).toThrow('The tuple is missing one or more required elements.', {
-      1: 'The value must be a number.',
-      2: 'The value must be a boolean.',
-    })
+    expectSchema(schema, ['STRING']).toThrow('The tuple is missing one or more required elements.', [
+      [1, 'The value must be a number.'],
+      [2, 'The value must be a boolean.'],
+    ])
   })
 
   it('throws when the input contains more elements than expected.', () => {
-    expectSchema(schema, ['STRING', 74105280, true, 'UNEXPECTED']).toThrow('The tuple contains one or more unexpected elements.', {
-      3: 'Unexpected element.',
-    })
+    expectSchema(schema, ['STRING', 74105280, true, 'UNEXPECTED']).toThrow('The tuple contains one or more unexpected elements.', [
+      [3, 'Unexpected element.'],
+    ])
   })
 
 })
@@ -55,10 +55,10 @@ describe('.skip()', () => {
   })
 
   it('throws when the input contains fewer elements than expected.', () => {
-    expectSchema(schema, ['STRING']).toThrow('The tuple is missing one or more required elements.', {
-      1: 'The value must be a number.',
-      2: 'The value must be a boolean.',
-    })
+    expectSchema(schema, ['STRING']).toThrow('The tuple is missing one or more required elements.', [
+      [1, 'The value must be a number.'],
+      [2, 'The value must be a boolean.'],
+    ])
   })
 
   it('strips unexpected elements from the input.', () => {

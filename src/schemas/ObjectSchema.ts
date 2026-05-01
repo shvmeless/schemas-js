@@ -1,5 +1,5 @@
 // IMPORTS
-import { ValidationError, ValidationErrorIndex } from '@/errors/ValidationError'
+import { ValidationError } from '@/errors/ValidationError'
 import { GenericSchema } from '@/schemas/GenericSchema'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { NullableSchema } from '@/schemas/NullableSchema'
@@ -34,7 +34,7 @@ export class ObjectSchema<T> implements GenericSchema<T> {
 
     const object = input as Record<string, unknown>
     const result: Record<string, unknown> = {}
-    const errors: ValidationErrorIndex = {}
+    const errors = ValidationError.prepare()
 
     const keys = new Set([...Object.keys(this._schema), ...Object.keys(input)])
     for (const key of keys) {
@@ -50,18 +50,18 @@ export class ObjectSchema<T> implements GenericSchema<T> {
         result[key] = schema.validate(value)
 
       } catch (error) {
-        if (error instanceof ValidationError) errors[key] = error.index ?? error.message
+        if (error instanceof ValidationError) errors.addError(key, error)
         else throw error
       }
     }
 
-    if (Object.keys(errors).length > 0) {
+    if (errors.size > 0) {
       const message = (Object.keys(input as object).length !== Object.keys(this._schema).length)
         ? (Object.keys(input as object).length < Object.keys(this._schema).length)
             ? 'The object is missing one or more required properties.'
             : 'The object contains one or more unexpected properties.'
         : 'At least one property does not match the given schema.'
-      throw new ValidationError(input, message, errors)
+      errors.throw(input, message)
     }
 
     return result as T

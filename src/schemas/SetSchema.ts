@@ -8,7 +8,7 @@ import { TransformSchema } from '@/schemas/TransformSchema'
 import { UnionSchema } from '@/schemas/UnionSchema'
 
 // CLASS
-export class ArraySchema<T> implements GenericSchema<Array<T>> {
+export class SetSchema<T> implements GenericSchema<Set<T>> {
 
   // PROPERTIES
   private readonly _schema: GenericSchema<T>
@@ -19,28 +19,29 @@ export class ArraySchema<T> implements GenericSchema<Array<T>> {
   }
 
   // CONSTRUCTOR
-  public static create<T>(schema: GenericSchema<T>): ArraySchema<T> {
-    return new ArraySchema<T>(schema)
+  public static create<T>(schema: GenericSchema<T>): SetSchema<T> {
+    return new SetSchema<T>(schema)
   }
 
   // METHOD
-  public validate(input: unknown): Array<T> {
+  public validate(input: unknown): Set<T> {
 
-    if (!Array.isArray(input)) {
-      throw new ValidationError(input, 'The value must be an array.')
+    if (!(input instanceof Set)) {
+      throw new ValidationError(input, 'The value must be a Set.')
     }
 
-    const result: Array<T> = []
+    const result = new Set<T>()
     const errors = ValidationError.prepare()
 
-    input.forEach((element, index) => {
+    for (const element of input) {
       try {
-        result[index] = this._schema.validate(element)
+        const value = this._schema.validate(element)
+        result.add(value)
       } catch (error) {
-        if (error instanceof ValidationError) errors.addError(index, error)
+        if (error instanceof ValidationError) errors.addError(element, error)
         else throw error
       }
-    })
+    }
 
     if (errors.size > 0) {
       errors.throw(input, 'At least one element does not match the given schema.')
@@ -56,27 +57,27 @@ export class ArraySchema<T> implements GenericSchema<Array<T>> {
   }
 
   // METHOD
-  public optional(): OptionalSchema<Array<T>, undefined> {
+  public optional(): OptionalSchema<Set<T>, undefined> {
     return OptionalSchema.create(this)
   }
 
   // METHOD
-  public nullable(): NullableSchema<Array<T>, null> {
+  public nullable(): NullableSchema<Set<T>, null> {
     return NullableSchema.create(this)
   }
 
   // METHOD
-  public or<NT>(schema: GenericSchema<NT>): UnionSchema<Array<T> | NT> {
-    return UnionSchema.create(this as GenericSchema<Array<T>>, schema)
+  public or<NT>(schema: GenericSchema<NT>): UnionSchema<Set<T> | NT> {
+    return UnionSchema.create(this as GenericSchema<Set<T>>, schema)
   }
 
   // METHOD
-  public fallback(value: Array<T>): FallbackSchema<Array<T>> {
+  public fallback(value: Set<T>): FallbackSchema<Set<T>> {
     return FallbackSchema.create(this, value)
   }
 
   // METHOD
-  public transform<V>(fn: (value: Array<T>) => V): TransformSchema<Array<T>, V> {
+  public transform<V>(fn: (value: Set<T>) => V): TransformSchema<Set<T>, V> {
     return TransformSchema.create(this, fn)
   }
 

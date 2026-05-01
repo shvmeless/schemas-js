@@ -27,10 +27,10 @@ describe('.create()', () => {
   })
 
   it('throws when an element does not match the inner schema.', () => {
-    expectSchema(schema, [true, 'b', 255]).toThrow('At least one element does not match the given schema.', {
-      0: 'The value must be a string.',
-      2: 'The value must be a string.',
-    })
+    expectSchema(schema, [true, 'b', 255]).toThrow('At least one element does not match the given schema.', [
+      [0, 'The value must be a string.'],
+      [2, 'The value must be a string.'],
+    ])
   })
 
   it('returns a new array.', () => {
