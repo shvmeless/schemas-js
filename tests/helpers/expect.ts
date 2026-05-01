@@ -5,13 +5,13 @@ import { GenericSchema } from '@/schemas/GenericSchema'
 
 // INTERFACE
 interface ExpectSchemaResult {
-  toThrow(message: string, fields?: ValidationErrorIndex | null): void
+  toThrow(message: string, fields?: Array<[unknown, string | ValidationErrorIndex]>): void
 }
 
 // FUNCTION
 export function expectSchema(schema: GenericSchema<unknown>, input: unknown): ExpectSchemaResult {
   return {
-    toThrow(message: string, fields?: ValidationErrorIndex | null): void {
+    toThrow(message: string, fields?: Array<[unknown, string | ValidationErrorIndex]>): void {
       try {
 
         schema.validate(input)
@@ -24,7 +24,7 @@ export function expectSchema(schema: GenericSchema<unknown>, input: unknown): Ex
 
         expect(e.value).toBe(input)
         expect(e.message).toBe(message)
-        expect(e.index).toStrictEqual(fields ?? null)
+        expect(e.index).toStrictEqual(fields ? new Map(fields) : null)
 
       }
     },

@@ -1,7 +1,7 @@
 {
   "name": "@shvmeless/schemas",
-  "description": "Custom schema builder library for data validation.",
-  "version": "0.1.0",
+  "description": "Custom TypeScript schema builder library for data validation.",
+  "version": "0.2.0",
   "license": "MIT",
   "type": "commonjs",
   "author": {
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/shvmeless/schemas-js.git"
+    "url": "git+https://github.com/shvmeless/schemas-js.git"
   },
   "files": [
     "dist"

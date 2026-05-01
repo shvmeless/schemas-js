@@ -1,5 +1,5 @@
 // IMPORTS
-import { ValidationError, ValidationErrorIndex } from '@/errors/ValidationError'
+import { ValidationError } from '@/errors/ValidationError'
 import { GenericSchema } from '@/schemas/GenericSchema'
 import { OptionalSchema } from '@/schemas/OptionalSchema'
 import { NullableSchema } from '@/schemas/NullableSchema'
@@ -33,7 +33,7 @@ export class TupleSchema<T extends ReadonlyArray<unknown>> implements GenericSch
     }
 
     const result: Array<unknown> = []
-    const errors: ValidationErrorIndex = {}
+    const errors = ValidationError.prepare()
 
     const longest = Math.max(this._shape.length, input.length)
     for (let index = 0; index < longest; index++) {
@@ -48,18 +48,18 @@ export class TupleSchema<T extends ReadonlyArray<unknown>> implements GenericSch
         result[index] = shape.validate(input[index])
 
       } catch (error) {
-        if (error instanceof ValidationError) errors[index] = error.index ?? error.message
+        if (error instanceof ValidationError) errors.addError(index, error)
         else throw error
       }
     }
 
-    if (Object.keys(errors).length > 0) {
+    if (errors.size > 0) {
       const message = (input.length !== this._shape.length)
         ? (input.length < this._shape.length)
             ? 'The tuple is missing one or more required elements.'
             : 'The tuple contains one or more unexpected elements.'
         : 'At least one element does not match the given schema.'
-      throw new ValidationError(input, message, errors)
+      errors.throw(input, message)
     }
 
     return result as unknown as T
