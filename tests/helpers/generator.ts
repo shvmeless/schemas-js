@@ -16,6 +16,7 @@ type DataLabels = 'strings'
   | 'symbols'
   | 'objects'
   | 'arrays'
+  | 'sets'
   | 'functions'
   | 'classes'
 
@@ -40,6 +41,8 @@ const TYPES: Array<{ value: unknown, labels: Array<DataLabels> }> = [
   { value: {}, labels: ['objects'] },
   { value: ['a', 'b', 'c'], labels: ['arrays'] },
   { value: [], labels: ['arrays'] },
+  { value: new Set(['a', 'b', 'c']), labels: ['sets'] },
+  { value: new Set(), labels: ['sets'] },
   { value: function namedFunction(): void {}, labels: ['functions'] },
   { value: (): void => {}, labels: ['functions'] },
   { value: new Date(), labels: ['classes'] },

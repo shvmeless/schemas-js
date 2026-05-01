@@ -14,6 +14,7 @@ import { ArraySchema } from '@/schemas/ArraySchema'
 import { RecordSchema } from '@/schemas/RecordSchema'
 import { TupleSchema } from '@/schemas/TupleSchema'
 import { ObjectSchema } from '@/schemas/ObjectSchema'
+import { SetSchema } from '@/schemas/SetSchema'
 
 // ERRORS
 export { type ValidationErrorIndex, ValidationError } from '@/errors/ValidationError'
@@ -33,4 +34,5 @@ export const schemas = {
   record: RecordSchema.create,
   tuple: TupleSchema.create,
   object: ObjectSchema.create,
+  set: SetSchema.create,
 }
