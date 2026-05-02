@@ -1,22 +1,24 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 
 // IMPORTS
-import { UnknownSchema } from '@/schemas/UnknownSchema'
-import { AnySchema } from '@/schemas/AnySchema'
-import { StringSchema } from '@/schemas/StringSchema'
-import { NumberSchema } from '@/schemas/NumberSchema'
-import { BooleanSchema } from '@/schemas/BooleanSchema'
-import { LiteralSchema } from '@/schemas/LiteralSchema'
-import { EnumSchema } from '@/schemas/EnumSchema'
-import { NullSchema } from '@/schemas/NullSchema'
-import { UndefinedSchema } from '@/schemas/UndefinedSchema'
-import { InstanceOfSchema } from '@/schemas/InstanceOfSchema'
-import { ArraySchema } from '@/schemas/ArraySchema'
-import { RecordSchema } from '@/schemas/RecordSchema'
-import { TupleSchema } from '@/schemas/TupleSchema'
-import { ObjectSchema } from '@/schemas/ObjectSchema'
-import { SetSchema } from '@/schemas/SetSchema'
-import { MapSchema } from '@/schemas/MapSchema'
+import {
+  AnySchema,
+  ArraySchema,
+  BooleanSchema,
+  EnumSchema,
+  InstanceOfSchema,
+  LiteralSchema,
+  MapSchema,
+  NullSchema,
+  NumberSchema,
+  ObjectSchema,
+  RecordSchema,
+  SetSchema,
+  StringSchema,
+  TupleSchema,
+  UndefinedSchema,
+  UnknownSchema,
+} from '@/classes'
 
 // ERRORS
 export { type ValidationErrorIndex, ValidationError } from '@/errors/ValidationError'
