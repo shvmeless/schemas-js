@@ -38,7 +38,7 @@ export class SetSchema<T> implements GenericSchema<Set<T>> {
         const value = this._schema.validate(element)
         result.add(value)
       } catch (error) {
-        if (error instanceof ValidationError) errors.addError(element, error)
+        if (error instanceof ValidationError) errors.add(element, error)
         else throw error
       }
     }

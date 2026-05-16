@@ -30,16 +30,28 @@ describe('.create()', () => {
   it('throws when a key does not match the given schema.', () => {
     const input = new Map<unknown, number>([[true, 1], ['b', 2], [false, 3]])
     expectSchema(schema, input).toThrow('At least one entry does not match the given schema.', [
-      [true, 'The value must be a string.'],
-      [false, 'The value must be a string.'],
+      [true, {
+        value: true,
+        message: 'The value must be a string.',
+      }],
+      [false, {
+        value: false,
+        message: 'The value must be a string.',
+      }],
     ])
   })
 
   it('throws when a value does not match the given schema.', () => {
     const input = new Map<string, unknown>([['a', true], ['b', 2], ['c', false]])
     expectSchema(schema, input).toThrow('At least one entry does not match the given schema.', [
-      ['a', 'The value must be a number.'],
-      ['c', 'The value must be a number.'],
+      ['a', {
+        value: true,
+        message: 'The value must be a number.',
+      }],
+      ['c', {
+        value: false,
+        message: 'The value must be a number.',
+      }],
     ])
   })
 

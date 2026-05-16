@@ -28,8 +28,14 @@ describe('.create()', () => {
 
   it('throws when an element does not match the inner schema.', () => {
     expectSchema(schema, new Set([true, 'b', 255])).toThrow('At least one element does not match the given schema.', [
-      [true, 'The value must be a string.'],
-      [255, 'The value must be a string.'],
+      [true, {
+        value: true,
+        message: 'The value must be a string.',
+      }],
+      [255, {
+        value: 255,
+        message: 'The value must be a string.',
+      }],
     ])
   })
 
