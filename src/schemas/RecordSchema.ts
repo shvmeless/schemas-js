@@ -37,7 +37,7 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
       try {
         result[key] = this._schema.validate(value)
       } catch (error) {
-        if (error instanceof ValidationError) errors.addError(key, error)
+        if (error instanceof ValidationError) errors.add(key, error)
         else throw error
       }
     }

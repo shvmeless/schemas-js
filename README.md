@@ -45,6 +45,12 @@ Additionally, some classes provide special functionality, usually created intern
 
 _**Note:** These classes are also available in the `classes` module, which can be imported from `@shvmeless/schemas/classes`, *but it is **not recommended** to use them directly*._
 
+## Error Classes
+
+The `schemas` module also includes the following error class:
+
+- **`ValidationError`** - Thrown when `validate()` fails.
+
 ## Usage
 
 Import the `schemas` module and use the functions to create the schemas.
@@ -206,3 +212,32 @@ const schema = schemas.string().optional().default('DEFAULT');
 schema.validate('STRING'); // 'STRING'
 schema.validate(undefined); // 'DEFAULT'
 ```
+
+## Errors
+
+### `ValidationError`
+
+This error is thrown when `validate()` fails, and contains the following properties:
+
+- `value: unknown` - The value that caused the error.
+- `message: string` - The error message.
+- `index: ValidationErrorIndex | null` - A `Map` object with internal errors, if any.
+
+### `ValidationErrorIndex`
+
+This `Map` contains an index with internal errors that may have occurred during a validation. This index usually appears when using schemas with more complex structures, such as `ArraySchema`, `TupleSchema`, `RecordSchema`, `ObjectSchema`, `MapSchema`, and `SetSchema`.
+
+The `Map` keys represent, depending on the schema that caused the error, the following:
+
+- `ArraySchema`: The numeric index of the element.
+- `TupleSchema`: The numeric index of the element.
+- `RecordSchema`: The key corresponding to the entry.
+- `ObjectSchema`: The key corresponding to the property.
+- `MapSchema`: The key corresponding to the entry.
+- `SetSchema`: The element in question.
+
+Each entry in the `Map` is an object with the following properties:
+
+- `value: unknown` - The value that caused the error.
+- `message: string` - The error message.
+- `index: ValidationErrorIndex | null` - A `Map` object with internal errors, if any.

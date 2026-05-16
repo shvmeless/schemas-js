@@ -41,7 +41,7 @@ export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
         const validatedValue = this._valueSchema.validate(value)
         result.set(validatedKey, validatedValue)
       } catch (error) {
-        if (error instanceof ValidationError) errors.addError(key, error)
+        if (error instanceof ValidationError) errors.add(key, error)
         else throw error
       }
     })

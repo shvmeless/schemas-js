@@ -1,7 +1,7 @@
 {
   "name": "@shvmeless/schemas",
   "description": "Custom TypeScript schema builder library for data validation.",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "license": "MIT",
   "type": "commonjs",
   "author": {

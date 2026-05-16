@@ -40,17 +40,18 @@ export class ObjectSchema<T> implements GenericSchema<T> {
     for (const key of keys) {
       try {
 
+        const value = object[key]
         const schema = this._schema[key as keyof T]
+
         if (schema === undefined) {
           if (this._strip) continue
-          throw new ValidationError(input, 'Unexpected property.')
+          throw new ValidationError(value, 'Unexpected property.')
         }
 
-        const value = object[key]
         result[key] = schema.validate(value)
 
       } catch (error) {
-        if (error instanceof ValidationError) errors.addError(key, error)
+        if (error instanceof ValidationError) errors.add(key, error)
         else throw error
       }
     }

@@ -1,5 +1,9 @@
 // TYPE
-export type ValidationErrorIndex = Map<unknown, string | ValidationErrorIndex>
+export type ValidationErrorIndex = Map<unknown, {
+  value: unknown
+  message: string
+  index: ValidationErrorIndex | null
+}>
 
 // CLASS
 class ValidationErrorPreparator {
@@ -18,13 +22,12 @@ class ValidationErrorPreparator {
   }
 
   // METHOD
-  public add(index: unknown, message: string): void {
-    this.index.set(index, message)
-  }
-
-  // METHOD
-  public addError(index: unknown, error: ValidationError): void {
-    this.index.set(index, error.index ?? error.message)
+  public add(index: unknown, error: ValidationError): void {
+    this.index.set(index, {
+      value: error.value,
+      message: error.message,
+      index: error.index,
+    })
   }
 
   // METHOD

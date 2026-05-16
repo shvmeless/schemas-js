@@ -39,16 +39,18 @@ export class TupleSchema<T extends ReadonlyArray<unknown>> implements GenericSch
     for (let index = 0; index < longest; index++) {
       try {
 
+        const value = input[index] as unknown
         const shape = this._shape[index]
+
         if (shape === undefined) {
           if (this._strip) continue
-          throw new ValidationError(input, 'Unexpected element.')
+          throw new ValidationError(value, 'Unexpected element.')
         }
 
-        result[index] = shape.validate(input[index])
+        result[index] = shape.validate(value)
 
       } catch (error) {
-        if (error instanceof ValidationError) errors.addError(index, error)
+        if (error instanceof ValidationError) errors.add(index, error)
         else throw error
       }
     }
