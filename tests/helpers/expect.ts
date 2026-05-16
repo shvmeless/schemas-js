@@ -5,13 +5,21 @@ import { GenericSchema } from '@/schemas/GenericSchema'
 
 // INTERFACE
 interface ExpectSchemaResult {
-  toThrow(message: string, fields?: Array<[unknown, string | ValidationErrorIndex]>): void
+  toThrow(message: string, index?: Array<[unknown, {
+    value: unknown
+    message: string
+    index?: ValidationErrorIndex | null
+  }]>): void
 }
 
 // FUNCTION
 export function expectSchema(schema: GenericSchema<unknown>, input: unknown): ExpectSchemaResult {
   return {
-    toThrow(message: string, fields?: Array<[unknown, string | ValidationErrorIndex]>): void {
+    toThrow(message: string, index?: Array<[unknown, {
+      value: unknown
+      message: string
+      index?: ValidationErrorIndex | null
+    }]>): void {
       try {
 
         schema.validate(input)
@@ -22,9 +30,13 @@ export function expectSchema(schema: GenericSchema<unknown>, input: unknown): Ex
         expect(error).toBeInstanceOf(ValidationError)
         const e = error as ValidationError
 
+        index?.forEach(([, index]) => {
+          index.index ??= null
+        })
+
         expect(e.value).toBe(input)
         expect(e.message).toBe(message)
-        expect(e.index).toStrictEqual(fields ? new Map(fields) : null)
+        expect(e.index).toStrictEqual(index ? new Map(index) : null)
 
       }
     },

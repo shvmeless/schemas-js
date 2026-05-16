@@ -29,14 +29,23 @@ describe('.create()', () => {
 
   it('throws when the input contains fewer properties than expected.', () => {
     expectSchema(schema, { string: 'STRING' }).toThrow('The object is missing one or more required properties.', [
-      ['number', 'The value must be a number.'],
-      ['boolean', 'The value must be a boolean.'],
+      ['number', {
+        value: undefined,
+        message: 'The value must be a number.',
+      }],
+      ['boolean', {
+        value: undefined,
+        message: 'The value must be a boolean.',
+      }],
     ])
   })
 
   it('throws when the input contains more properties than expected.', () => {
     expectSchema(schema, { string: 'STRING', number: 74105280, boolean: true, unexpected: 'UNEXPECTED' }).toThrow('The object contains one or more unexpected properties.', [
-      ['unexpected', 'Unexpected property.'],
+      ['unexpected', {
+        value: 'UNEXPECTED',
+        message: 'Unexpected property.',
+      }],
     ])
   })
 
@@ -64,8 +73,14 @@ describe('.skip()', () => {
 
   it('throws when the input contains fewer properties than expected.', () => {
     expectSchema(schema, { string: 'STRING' }).toThrow('The object is missing one or more required properties.', [
-      ['number', 'The value must be a number.'],
-      ['boolean', 'The value must be a boolean.'],
+      ['number', {
+        value: undefined,
+        message: 'The value must be a number.',
+      }],
+      ['boolean', {
+        value: undefined,
+        message: 'The value must be a boolean.',
+      }],
     ])
   })
 

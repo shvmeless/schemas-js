@@ -37,7 +37,7 @@ export class ArraySchema<T> implements GenericSchema<Array<T>> {
       try {
         result[index] = this._schema.validate(element)
       } catch (error) {
-        if (error instanceof ValidationError) errors.addError(index, error)
+        if (error instanceof ValidationError) errors.add(index, error)
         else throw error
       }
     })
