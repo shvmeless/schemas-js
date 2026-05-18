@@ -12,17 +12,17 @@ export class ObjectSchema<T> implements GenericSchema<T> {
 
   // PROPERTIES
   private readonly _schema: { [K in keyof T]: GenericSchema<T[K]> }
-  private _strip: boolean
+  private readonly _strip: boolean
 
   // CONSTRUCTOR
-  private constructor(schema: { [K in keyof T]: GenericSchema<T[K]> }) {
+  private constructor(schema: { [K in keyof T]: GenericSchema<T[K]> }, strip: boolean) {
     this._schema = schema
-    this._strip = false
+    this._strip = strip
   }
 
   // FACTORY
   public static create<T>(schema: { [K in keyof T]: GenericSchema<T[K]> }): ObjectSchema<T> {
-    return new ObjectSchema(schema)
+    return new ObjectSchema(schema, false)
   }
 
   // METHOD
@@ -75,9 +75,8 @@ export class ObjectSchema<T> implements GenericSchema<T> {
   }
 
   // METHOD
-  public strip(): this {
-    this._strip = true
-    return this
+  public strip(): ObjectSchema<T> {
+    return new ObjectSchema(this._schema, true)
   }
 
   // METHOD

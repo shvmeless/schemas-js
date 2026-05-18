@@ -12,17 +12,17 @@ export class TupleSchema<T extends ReadonlyArray<unknown>> implements GenericSch
 
   // PROPERTIES
   private readonly _shape: { [K in keyof T]: GenericSchema<T[K]> }
-  private _strip: boolean
+  private readonly _strip: boolean
 
   // CONSTRUCTOR
-  private constructor(shape: { [K in keyof T]: GenericSchema<T[K]> }) {
+  private constructor(shape: { [K in keyof T]: GenericSchema<T[K]> }, strip: boolean) {
     this._shape = [...shape] as unknown as { [K in keyof T]: GenericSchema<T[K]> }
-    this._strip = false
+    this._strip = strip
   }
 
   // CONSTRUCTOR
   public static create<T extends ReadonlyArray<unknown>>(shape: { [K in keyof T]: GenericSchema<T[K]> }): TupleSchema<T> {
-    return new TupleSchema(shape)
+    return new TupleSchema(shape, false)
   }
 
   // METHOD
@@ -74,9 +74,8 @@ export class TupleSchema<T extends ReadonlyArray<unknown>> implements GenericSch
   }
 
   // METHOD
-  public skip(): this {
-    this._strip = true
-    return this
+  public strip(): TupleSchema<T> {
+    return new TupleSchema(this._shape, true)
   }
 
   // METHOD
