@@ -4,6 +4,9 @@ logs
 
 # DEPENDENCIES
 node_modules/
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
 
 # ENVIRONMENT
 *.env
@@ -14,6 +17,8 @@ temp/
 tmp/
 tmp.ts
 *.tmp.ts
+tmp.md
+*.tmp.md
 
 # PACKAGES
 *.tgz
@@ -23,7 +28,6 @@ coverage/
 html/
 
 # PRODUCTION
-themes/
 output/
 build/
 dist/
