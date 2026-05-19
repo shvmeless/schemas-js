@@ -102,4 +102,13 @@ export class StringSchema implements GenericSchema<string> {
     })
   }
 
+  // METHOD
+  public lowercase(options: { fix?: boolean } = {}): StringSchema {
+    return this.push((original, output) => {
+      if (output.toLowerCase() === output) return output
+      if (options.fix === true) return output.toLowerCase()
+      throw new ValidationError(original, 'The value must be lowercase.')
+    })
+  }
+
 }

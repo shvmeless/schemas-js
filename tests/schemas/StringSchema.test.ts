@@ -206,3 +206,57 @@ describe('max(length)', () => {
     })
   })
 })
+
+// METHOD
+describe('lowercase({ fix })', () => {
+
+  it('returns a new instance of the schema.', () => {
+    const base = StringSchema.create()
+    const schema = base.lowercase()
+    expect(schema).toBeInstanceOf(StringSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  describe('for a parameter `fix` equal to `undefined`', () => {
+
+    const schema = StringSchema.create().lowercase()
+
+    it('throws when the input contains uppercase characters.', () => {
+      expectSchema(schema, 'eXaMpLe').toThrow('The value must be lowercase.')
+    })
+
+    it('validates successfully when the input does not contain uppercase characters.', () => {
+      const result = schema.validate('example')
+      expect(result).toBe('example')
+    })
+  })
+
+  describe('when the `fix` parameter is `false`', () => {
+
+    const schema = StringSchema.create().lowercase({ fix: false })
+
+    it('throws when the input contains uppercase characters.', () => {
+      expectSchema(schema, 'eXaMpLe').toThrow('The value must be lowercase.')
+    })
+
+    it('validates successfully when the input does not contain uppercase characters.', () => {
+      const result = schema.validate('example')
+      expect(result).toBe('example')
+    })
+  })
+
+  describe('when the `fix` parameter is `true`', () => {
+
+    const schema = StringSchema.create().lowercase({ fix: true })
+
+    it('fixes and validates successfully when the input contains uppercase characters.', () => {
+      const result = schema.validate('eXaMpLe')
+      expect(result).toBe('eXaMpLe'.toLowerCase())
+    })
+
+    it('validates successfully when the input does not contain uppercase characters.', () => {
+      const result = schema.validate('example')
+      expect(result).toBe('example')
+    })
+  })
+})
