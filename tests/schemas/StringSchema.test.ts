@@ -5,7 +5,7 @@ import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectSchema, expectError } from '@tests/helpers/expect'
 
 // METHOD
-describe('.create()', () => {
+describe('create()', () => {
 
   const schema = StringSchema.create()
 
@@ -82,6 +82,67 @@ describe('length(length)', () => {
 
     it('throws when the input length is greater than expected.', () => {
       expectSchema(schema, '123456789').toThrow('The value must be 8 characters long.')
+    })
+  })
+})
+
+// METHOD
+describe('min(length)', () => {
+
+  it('returns a new instance of the schema.', () => {
+    const base = StringSchema.create()
+    const schema = base.min(8)
+    expect(schema).toBeInstanceOf(StringSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  describe('for a `length` parameter equals to NaN', () => {
+    it('throws when the schema is being built.', () => {
+      expectError(() => {
+        StringSchema.create().min(NaN)
+      }).toHaveMessage('The length value must be zero or positive.')
+    })
+  })
+
+  describe('for a `length` parameter less than zero', () => {
+    it('throws when the schema is being built.', () => {
+      expectError(() => {
+        StringSchema.create().min(-8)
+      }).toHaveMessage('The length value must be zero or positive.')
+    })
+  })
+
+  describe('for a `length` parameter equal to zero', () => {
+
+    const schema = StringSchema.create().min(0)
+
+    it('validates successfully when the input length is as expected.', () => {
+      const result = schema.validate('')
+      expect(result).toBe('')
+    })
+
+    it('validates successfully when the input length is greater than expected.', () => {
+      const result = schema.validate('1')
+      expect(result).toBe('1')
+    })
+  })
+
+  describe('for a `length` parameter greater than zero', () => {
+
+    const schema = StringSchema.create().min(8)
+
+    it('throws when the input length is less than expected.', () => {
+      expectSchema(schema, '1234567').toThrow('The value must be at least 8 characters long.')
+    })
+
+    it('validates successfully when the input length is as expected.', () => {
+      const result = schema.validate('12345678')
+      expect(result).toBe('12345678')
+    })
+
+    it('validates successfully when the input length is greater than expected.', () => {
+      const result = schema.validate('123456789')
+      expect(result).toBe('123456789')
     })
   })
 })
