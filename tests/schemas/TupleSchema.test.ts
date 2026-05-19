@@ -48,9 +48,15 @@ describe('.create()', () => {
 })
 
 // METHOD
-describe('.skip()', () => {
+describe('.strip()', () => {
 
-  const schema = TupleSchema.create([StringSchema.create(), NumberSchema.create(), BooleanSchema.create()]).skip()
+  const base = TupleSchema.create([StringSchema.create(), NumberSchema.create(), BooleanSchema.create()])
+  const schema = base.strip()
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(TupleSchema)
+    expect(schema).not.toBe(base)
+  })
 
   it('validates that each element matches its corresponding schema.', () => {
     const result = schema.validate(['STRING', 74105280, true])

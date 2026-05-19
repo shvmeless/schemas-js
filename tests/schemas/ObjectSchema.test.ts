@@ -52,13 +52,20 @@ describe('.create()', () => {
 })
 
 // METHOD
-describe('.skip()', () => {
+describe('.strip()', () => {
 
-  const schema = ObjectSchema.create({
+  const base = ObjectSchema.create({
     string: StringSchema.create(),
     number: NumberSchema.create(),
     boolean: BooleanSchema.create(),
-  }).strip()
+  })
+
+  const schema = base.strip()
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(ObjectSchema)
+    expect(schema).not.toBe(base)
+  })
 
   it('validates that each property matches its corresponding schema.', () => {
     const result = schema.validate({ string: 'STRING', number: 74105280, boolean: true })
