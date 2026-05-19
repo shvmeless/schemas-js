@@ -120,4 +120,13 @@ export class StringSchema implements GenericSchema<string> {
     })
   }
 
+  // METHOD
+  public trim(options: { fix?: boolean } = {}): StringSchema {
+    return this.push((original, output) => {
+      if (output.trim() === output) return output
+      if (options.fix === true) return output.trim()
+      throw new ValidationError(original, 'The value must be trimmed.')
+    })
+  }
+
 }

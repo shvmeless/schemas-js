@@ -314,3 +314,83 @@ describe('uppercase({ fix })', () => {
     })
   })
 })
+
+// METHOD
+describe('trim({ fix })', () => {
+
+  it('returns a new instance of the schema.', () => {
+    const base = StringSchema.create()
+    const schema = base.trim()
+    expect(schema).toBeInstanceOf(StringSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  describe('for a parameter `fix` equal to `undefined`', () => {
+
+    const schema = StringSchema.create().trim()
+
+    it('throws when the input contains whitespaces at the beginning.', () => {
+      expectSchema(schema, '   EXAMPLE').toThrow('The value must be trimmed.')
+    })
+
+    it('throws when the input contains whitespaces at the end.', () => {
+      expectSchema(schema, 'EXAMPLE   ').toThrow('The value must be trimmed.')
+    })
+
+    it('throws when the input is surrounded by whitespaces.', () => {
+      expectSchema(schema, '   EXAMPLE   ').toThrow('The value must be trimmed.')
+    })
+
+    it('validates successfully when the input is not surrounded by whitespaces.', () => {
+      const result = schema.validate('EXAMPLE')
+      expect(result).toBe('EXAMPLE')
+    })
+  })
+
+  describe('when the `fix` parameter is `false`', () => {
+
+    const schema = StringSchema.create().trim({ fix: false })
+
+    it('throws when the input contains whitespaces at the beginning.', () => {
+      expectSchema(schema, '   EXAMPLE').toThrow('The value must be trimmed.')
+    })
+
+    it('throws when the input contains whitespaces at the end.', () => {
+      expectSchema(schema, 'EXAMPLE   ').toThrow('The value must be trimmed.')
+    })
+
+    it('throws when the input is surrounded by whitespaces.', () => {
+      expectSchema(schema, '   EXAMPLE   ').toThrow('The value must be trimmed.')
+    })
+
+    it('validates successfully when the input is not surrounded by whitespaces.', () => {
+      const result = schema.validate('EXAMPLE')
+      expect(result).toBe('EXAMPLE')
+    })
+  })
+
+  describe('when the `fix` parameter is `true`', () => {
+
+    const schema = StringSchema.create().trim({ fix: true })
+
+    it('validates successfully when the input contains whitespaces at the beginning.', () => {
+      const result = schema.validate('   EXAMPLE')
+      expect(result).toBe('EXAMPLE')
+    })
+
+    it('validates successfully when the input contains whitespaces at the end.', () => {
+      const result = schema.validate('EXAMPLE   ')
+      expect(result).toBe('EXAMPLE')
+    })
+
+    it('validates successfully when the input is surrounded by whitespaces.', () => {
+      const result = schema.validate('   EXAMPLE   ')
+      expect(result).toBe('EXAMPLE')
+    })
+
+    it('validates successfully when the input is not surrounded by whitespaces.', () => {
+      const result = schema.validate('EXAMPLE')
+      expect(result).toBe('EXAMPLE')
+    })
+  })
+})
