@@ -6,16 +6,27 @@ import { NullableSchema } from '@/schemas/NullableSchema'
 import { UnionSchema } from '@/schemas/UnionSchema'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { TransformSchema } from '@/schemas/TransformSchema'
+import { stringify } from '@/utils/stringify'
 
 // CLASS
 export class StringSchema implements GenericSchema<string> {
 
+  // PROPERTIES
+  private readonly _queue: Array<(original: string, output: string) => string>
+
   // CONSTRUCTOR
-  private constructor() {}
+  private constructor(queue: Array<(original: string, output: string) => string>) {
+    this._queue = queue
+  }
 
   // CONSTRUCTOR
   public static create(): StringSchema {
-    return new StringSchema()
+    return new StringSchema([])
+  }
+
+  // CONSTRUCTOR
+  private push(fn: (original: string, output: string) => string): StringSchema {
+    return new StringSchema([...this._queue, fn])
   }
 
   // METHOD
@@ -25,7 +36,13 @@ export class StringSchema implements GenericSchema<string> {
       throw new ValidationError(input, 'The value must be a string.')
     }
 
-    return input
+    let output = input
+    for (const fn of this._queue) {
+      output = fn(input, output)
+    }
+
+    return output
+
   }
 
   // METHOD
@@ -56,6 +73,15 @@ export class StringSchema implements GenericSchema<string> {
   // METHOD
   public transform<V>(fn: (value: string) => V): TransformSchema<string, V> {
     return TransformSchema.create(this, fn)
+  }
+
+  // METHOD
+  public length(length: number): StringSchema {
+    if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
+    return this.push((original, output) => {
+      if (output.length === length) return output
+      throw new ValidationError(original, `The value must be ${stringify(length)} characters long.`)
+    })
   }
 
 }

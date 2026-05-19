@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/consistent-return */
+
 // IMPORTS
 import { expect } from 'vitest'
+import type { GenericSchema } from '@/schemas/GenericSchema'
 import { ValidationError, type ValidationErrorIndex } from '@/errors/ValidationError'
-import { GenericSchema } from '@/schemas/GenericSchema'
 
 // INTERFACE
 interface ExpectSchemaResult {
@@ -40,5 +42,22 @@ export function expectSchema(schema: GenericSchema<unknown>, input: unknown): Ex
 
       }
     },
+  }
+}
+
+// FUNCTION
+export function expectError(fn: () => void): { toHaveMessage(message: string): void } {
+  let error: Error
+  try {
+    fn()
+    expect.unreachable('Expected to throw an error.')
+  } catch (e: unknown) {
+    expect(e).toBeInstanceOf(Error)
+    error = e as Error
+    return {
+      toHaveMessage(message: string): void {
+        expect(error.message).toBe(message)
+      },
+    }
   }
 }
