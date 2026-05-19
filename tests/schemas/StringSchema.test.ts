@@ -251,12 +251,66 @@ describe('lowercase({ fix })', () => {
 
     it('fixes and validates successfully when the input contains uppercase characters.', () => {
       const result = schema.validate('eXaMpLe')
-      expect(result).toBe('eXaMpLe'.toLowerCase())
+      expect(result).toBe('example')
     })
 
     it('validates successfully when the input does not contain uppercase characters.', () => {
       const result = schema.validate('example')
       expect(result).toBe('example')
+    })
+  })
+})
+
+// METHOD
+describe('uppercase({ fix })', () => {
+
+  it('returns a new instance of the schema.', () => {
+    const base = StringSchema.create()
+    const schema = base.uppercase()
+    expect(schema).toBeInstanceOf(StringSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  describe('for a parameter `fix` equal to `undefined`', () => {
+
+    const schema = StringSchema.create().uppercase()
+
+    it('throws when the input contains lowercase characters.', () => {
+      expectSchema(schema, 'eXaMpLe').toThrow('The value must be uppercase.')
+    })
+
+    it('validates successfully when the input does not contain lowercase characters.', () => {
+      const result = schema.validate('EXAMPLE')
+      expect(result).toBe('EXAMPLE')
+    })
+  })
+
+  describe('when the `fix` parameter is `false`', () => {
+
+    const schema = StringSchema.create().uppercase({ fix: false })
+
+    it('throws when the input contains lowercase characters.', () => {
+      expectSchema(schema, 'eXaMpLe').toThrow('The value must be uppercase.')
+    })
+
+    it('validates successfully when the input does not contain lowercase characters.', () => {
+      const result = schema.validate('EXAMPLE')
+      expect(result).toBe('EXAMPLE')
+    })
+  })
+
+  describe('when the `fix` parameter is `true`', () => {
+
+    const schema = StringSchema.create().uppercase({ fix: true })
+
+    it('fixes and validates successfully when the input contains lowercase characters.', () => {
+      const result = schema.validate('eXaMpLe')
+      expect(result).toBe('EXAMPLE')
+    })
+
+    it('validates successfully when the input does not contain lowercase characters.', () => {
+      const result = schema.validate('EXAMPLE')
+      expect(result).toBe('EXAMPLE')
     })
   })
 })

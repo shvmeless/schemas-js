@@ -111,4 +111,13 @@ export class StringSchema implements GenericSchema<string> {
     })
   }
 
+  // METHOD
+  public uppercase(options: { fix?: boolean } = {}): StringSchema {
+    return this.push((original, output) => {
+      if (output.toUpperCase() === output) return output
+      if (options.fix === true) return output.toUpperCase()
+      throw new ValidationError(original, 'The value must be uppercase.')
+    })
+  }
+
 }
