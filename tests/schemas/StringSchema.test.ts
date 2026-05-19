@@ -146,3 +146,63 @@ describe('min(length)', () => {
     })
   })
 })
+
+// METHOD
+describe('max(length)', () => {
+
+  it('returns a new instance of the schema.', () => {
+    const base = StringSchema.create()
+    const schema = base.max(8)
+    expect(schema).toBeInstanceOf(StringSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  describe('for a `length` parameter equals to NaN', () => {
+    it('throws when the schema is being built.', () => {
+      expectError(() => {
+        StringSchema.create().max(NaN)
+      }).toHaveMessage('The length value must be zero or positive.')
+    })
+  })
+
+  describe('for a `length` parameter less than zero', () => {
+    it('throws when the schema is being built.', () => {
+      expectError(() => {
+        StringSchema.create().max(-8)
+      }).toHaveMessage('The length value must be zero or positive.')
+    })
+  })
+
+  describe('for a `length` parameter equal to zero', () => {
+
+    const schema = StringSchema.create().max(0)
+
+    it('validates successfully when the input length is as expected.', () => {
+      const result = schema.validate('')
+      expect(result).toBe('')
+    })
+
+    it('throws when the input length is greater than expected.', () => {
+      expectSchema(schema, '1').toThrow('The value must be at most 0 characters long.')
+    })
+  })
+
+  describe('for a `length` parameter greater than zero', () => {
+
+    const schema = StringSchema.create().max(8)
+
+    it('validates successfully when the input length is less than expected.', () => {
+      const result = schema.validate('1234567')
+      expect(result).toBe('1234567')
+    })
+
+    it('validates successfully when the input length is as expected.', () => {
+      const result = schema.validate('12345678')
+      expect(result).toBe('12345678')
+    })
+
+    it('throws when the input length is greater than expected.', () => {
+      expectSchema(schema, '123456789').toThrow('The value must be at most 8 characters long.')
+    })
+  })
+})

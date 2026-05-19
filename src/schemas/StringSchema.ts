@@ -93,4 +93,13 @@ export class StringSchema implements GenericSchema<string> {
     })
   }
 
+  // METHOD
+  public max(length: number): StringSchema {
+    if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
+    return this.push((original, output) => {
+      if (output.length <= length) return output
+      throw new ValidationError(original, `The value must be at most ${stringify(length)} characters long.`)
+    })
+  }
+
 }
