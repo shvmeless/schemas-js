@@ -6,16 +6,27 @@ import { NullableSchema } from '@/schemas/NullableSchema'
 import { UnionSchema } from '@/schemas/UnionSchema'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { TransformSchema } from '@/schemas/TransformSchema'
+import { stringify } from '@/utils/stringify'
 
 // CLASS
 export class StringSchema implements GenericSchema<string> {
 
+  // PROPERTIES
+  private readonly _queue: Array<(original: string, output: string) => string>
+
   // CONSTRUCTOR
-  private constructor() {}
+  private constructor(queue: Array<(original: string, output: string) => string>) {
+    this._queue = queue
+  }
 
   // CONSTRUCTOR
   public static create(): StringSchema {
-    return new StringSchema()
+    return new StringSchema([])
+  }
+
+  // CONSTRUCTOR
+  private push(fn: (original: string, output: string) => string): StringSchema {
+    return new StringSchema([...this._queue, fn])
   }
 
   // METHOD
@@ -25,7 +36,13 @@ export class StringSchema implements GenericSchema<string> {
       throw new ValidationError(input, 'The value must be a string.')
     }
 
-    return input
+    let output = input
+    for (const fn of this._queue) {
+      output = fn(input, output)
+    }
+
+    return output
+
   }
 
   // METHOD
@@ -58,4 +75,107 @@ export class StringSchema implements GenericSchema<string> {
     return TransformSchema.create(this, fn)
   }
 
+  // METHOD
+  public length(length: number): StringSchema {
+    if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
+    return this.push((original, output) => {
+      if (output.length === length) return output
+      throw new ValidationError(original, `The value must be ${stringify(length)} characters long.`)
+    })
+  }
+
+  // METHOD
+  public min(length: number): StringSchema {
+    if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
+    return this.push((original, output) => {
+      if (output.length >= length) return output
+      throw new ValidationError(original, `The value must be at least ${stringify(length)} characters long.`)
+    })
+  }
+
+  // METHOD
+  public max(length: number): StringSchema {
+    if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
+    return this.push((original, output) => {
+      if (output.length <= length) return output
+      throw new ValidationError(original, `The value must be at most ${stringify(length)} characters long.`)
+    })
+  }
+
+  // METHOD
+  public lowercase(options: { fix?: boolean } = {}): StringSchema {
+    return this.push((original, output) => {
+      if (output.toLowerCase() === output) return output
+      if (options.fix === true) return output.toLowerCase()
+      throw new ValidationError(original, 'The value must be lowercase.')
+    })
+  }
+
+  // METHOD
+  public uppercase(options: { fix?: boolean } = {}): StringSchema {
+    return this.push((original, output) => {
+      if (output.toUpperCase() === output) return output
+      if (options.fix === true) return output.toUpperCase()
+      throw new ValidationError(original, 'The value must be uppercase.')
+    })
+  }
+
+  // METHOD
+  public trim(options: { fix?: boolean } = {}): StringSchema {
+    return this.push((original, output) => {
+      if (output.trim() === output) return output
+      if (options.fix === true) return output.trim()
+      throw new ValidationError(original, 'The value must be trimmed.')
+    })
+  }
+
+  // METHOD
+  public startsWith(prefix: string, options: { fix?: boolean } = {}): StringSchema {
+    return this.push((original, output) => {
+      if (output.startsWith(prefix)) return output
+      if (options.fix === true) return (prefix + output)
+      throw new ValidationError(original, `The value must start with ${stringify(prefix)}.`)
+    })
+  }
+
+  // METHOD
+  public endsWith(suffix: string, options: { fix?: boolean } = {}): StringSchema {
+    return this.push((original, output) => {
+      if (output.endsWith(suffix)) return output
+      if (options.fix === true) return (output + suffix)
+      throw new ValidationError(original, `The value must end with ${stringify(suffix)}.`)
+    })
+  }
+
+  // METHOD
+  public includes(search: string): StringSchema {
+    return this.push((original, output) => {
+      if (output.includes(search)) return output
+      throw new ValidationError(original, `The value must include ${stringify(search)}.`)
+    })
+  }
+
+  // METHOD
+  public excludes(search: string): StringSchema {
+    return this.push((original, output) => {
+      if (!output.includes(search)) return output
+      throw new ValidationError(original, `The value must not include ${stringify(search)}.`)
+    })
+  }
+
+  // METHOD
+  public match(pattern: RegExp): StringSchema {
+    return this.push((original, output) => {
+      if (pattern.test(output)) return output
+      throw new ValidationError(original, `The value must match the pattern ${stringify(pattern)}.`)
+    })
+  }
+
+  // METHOD
+  public default(value: string): StringSchema {
+    return this.push((_original, output) => {
+      if (output === '') return value
+      return output
+    })
+  }
 }
