@@ -147,4 +147,12 @@ export class StringSchema implements GenericSchema<string> {
     })
   }
 
+  // METHOD
+  public includes(search: string): StringSchema {
+    return this.push((original, output) => {
+      if (output.includes(search)) return output
+      throw new ValidationError(original, `The value must include "${search}".`)
+    })
+  }
+
 }

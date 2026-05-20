@@ -396,7 +396,7 @@ describe('trim({ fix })', () => {
 })
 
 // METHOD
-describe('startsWith(prefix, fix)', () => {
+describe('startsWith(prefix, { fix })', () => {
 
   it('returns a new instance of the schema.', () => {
     const base = StringSchema.create()
@@ -463,7 +463,7 @@ describe('startsWith(prefix, fix)', () => {
 })
 
 // METHOD
-describe('endsWith(prefix, fix)', () => {
+describe('endsWith(prefix, { fix })', () => {
 
   it('returns a new instance of the schema.', () => {
     const base = StringSchema.create()
@@ -526,5 +526,26 @@ describe('endsWith(prefix, fix)', () => {
       const result = schema.validate('string-suffix')
       expect(result).toBe('string-suffix')
     })
+  })
+})
+
+// METHOD
+describe('includes(search)', () => {
+
+  const base = StringSchema.create()
+  const schema = base.includes('str')
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(StringSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('throws when the input does not include the expected search.', () => {
+    expectSchema(schema, 'wrong').toThrow('The value must include "str".')
+  })
+
+  it('validates successfully when the input includes the expected search.', () => {
+    const result = schema.validate('string')
+    expect(result).toBe('string')
   })
 })
