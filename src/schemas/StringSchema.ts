@@ -129,4 +129,13 @@ export class StringSchema implements GenericSchema<string> {
     })
   }
 
+  // METHOD
+  public startsWith(prefix: string, options: { fix?: boolean } = {}): StringSchema {
+    return this.push((original, output) => {
+      if (output.startsWith(prefix)) return output
+      if (options.fix === true) return (prefix + output)
+      throw new ValidationError(original, `The value must start with "${prefix}".`)
+    })
+  }
+
 }

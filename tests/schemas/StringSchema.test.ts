@@ -394,3 +394,70 @@ describe('trim({ fix })', () => {
     })
   })
 })
+
+// METHOD
+describe('startsWith(prefix, fix)', () => {
+
+  it('returns a new instance of the schema.', () => {
+    const base = StringSchema.create()
+    const schema = base.startsWith('prefix-')
+    expect(schema).toBeInstanceOf(StringSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  describe('for a parameter `fix` equal to `undefined`', () => {
+
+    const schema = StringSchema.create().startsWith('prefix-')
+
+    it('throws when the input does not start with the expected prefix.', () => {
+      expectSchema(schema, 'string').toThrow('The value must start with "prefix-".')
+    })
+
+    it('throws when the input starts with the expected prefix (case-sensitive).', () => {
+      expectSchema(schema, 'PREFIX-string').toThrow('The value must start with "prefix-".')
+    })
+
+    it('validates successfully when the input starts with the expected prefix.', () => {
+      const result = schema.validate('prefix-string')
+      expect(result).toBe('prefix-string')
+    })
+  })
+
+  describe('for a parameter `fix` equal to `false`', () => {
+
+    const schema = StringSchema.create().startsWith('prefix-', { fix: false })
+
+    it('throws when the input does not start with the expected prefix.', () => {
+      expectSchema(schema, 'string').toThrow('The value must start with "prefix-".')
+    })
+
+    it('throws when the input starts with the expected prefix (case-sensitive).', () => {
+      expectSchema(schema, 'PREFIX-string').toThrow('The value must start with "prefix-".')
+    })
+
+    it('validates successfully when the input starts with the expected prefix.', () => {
+      const result = schema.validate('prefix-string')
+      expect(result).toBe('prefix-string')
+    })
+  })
+
+  describe('for a parameter `fix` equal to `true`', () => {
+
+    const schema = StringSchema.create().startsWith('prefix-', { fix: true })
+
+    it('fixes and validates successfully when the input does not start with the expected prefix.', () => {
+      const result = schema.validate('string')
+      expect(result).toBe('prefix-string')
+    })
+
+    it('fixes and validates successfully when the input starts with the expected prefix (case-sensitive).', () => {
+      const result = schema.validate('PREFIX-string')
+      expect(result).toBe('prefix-PREFIX-string')
+    })
+
+    it('validates successfully when the input starts with the expected prefix.', () => {
+      const result = schema.validate('prefix-string')
+      expect(result).toBe('prefix-string')
+    })
+  })
+})
