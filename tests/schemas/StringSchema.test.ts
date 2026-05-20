@@ -549,3 +549,24 @@ describe('includes(search)', () => {
     expect(result).toBe('string')
   })
 })
+
+// METHOD
+describe('excludes(search)', () => {
+
+  const base = StringSchema.create()
+  const schema = base.excludes('str')
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(StringSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('throws when the input includes the expected search.', () => {
+    expectSchema(schema, 'string').toThrow('The value must not include "str".')
+  })
+
+  it('validates successfully when the input does not include the expected search.', () => {
+    const result = schema.validate('text')
+    expect(result).toBe('text')
+  })
+})
