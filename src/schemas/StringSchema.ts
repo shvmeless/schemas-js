@@ -138,4 +138,13 @@ export class StringSchema implements GenericSchema<string> {
     })
   }
 
+  // METHOD
+  public endsWith(suffix: string, options: { fix?: boolean } = {}): StringSchema {
+    return this.push((original, output) => {
+      if (output.endsWith(suffix)) return output
+      if (options.fix === true) return (output + suffix)
+      throw new ValidationError(original, `The value must end with "${suffix}".`)
+    })
+  }
+
 }

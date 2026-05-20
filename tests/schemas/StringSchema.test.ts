@@ -461,3 +461,70 @@ describe('startsWith(prefix, fix)', () => {
     })
   })
 })
+
+// METHOD
+describe('endsWith(prefix, fix)', () => {
+
+  it('returns a new instance of the schema.', () => {
+    const base = StringSchema.create()
+    const schema = base.endsWith('-suffix')
+    expect(schema).toBeInstanceOf(StringSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  describe('for a parameter `fix` equal to `undefined`', () => {
+
+    const schema = StringSchema.create().endsWith('-suffix')
+
+    it('throws when the input does not end with the expected suffix.', () => {
+      expectSchema(schema, 'string').toThrow('The value must end with "-suffix".')
+    })
+
+    it('throws when the input ends with the expected suffix (case-sensitive).', () => {
+      expectSchema(schema, 'string-SUFFIX').toThrow('The value must end with "-suffix".')
+    })
+
+    it('validates successfully when the input ends with the expected suffix.', () => {
+      const result = schema.validate('string-suffix')
+      expect(result).toBe('string-suffix')
+    })
+  })
+
+  describe('for a parameter `fix` equal to `false`', () => {
+
+    const schema = StringSchema.create().endsWith('-suffix', { fix: false })
+
+    it('throws when the input does not end with the expected suffix.', () => {
+      expectSchema(schema, 'string').toThrow('The value must end with "-suffix".')
+    })
+
+    it('throws when the input ends with the expected suffix (case-sensitive).', () => {
+      expectSchema(schema, 'string-SUFFIX').toThrow('The value must end with "-suffix".')
+    })
+
+    it('validates successfully when the input ends with the expected suffix.', () => {
+      const result = schema.validate('string-suffix')
+      expect(result).toBe('string-suffix')
+    })
+  })
+
+  describe('for a parameter `fix` equal to `true`', () => {
+
+    const schema = StringSchema.create().endsWith('-suffix', { fix: true })
+
+    it('fixes and validates successfully when the input does not end with the expected suffix.', () => {
+      const result = schema.validate('string')
+      expect(result).toBe('string-suffix')
+    })
+
+    it('fixes and validates successfully when the input ends with the expected suffix (case-sensitive).', () => {
+      const result = schema.validate('string-SUFFIX')
+      expect(result).toBe('string-SUFFIX-suffix')
+    })
+
+    it('validates successfully when the input ends with the expected prefix.', () => {
+      const result = schema.validate('string-suffix')
+      expect(result).toBe('string-suffix')
+    })
+  })
+})
