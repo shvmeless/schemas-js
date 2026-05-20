@@ -171,4 +171,11 @@ export class StringSchema implements GenericSchema<string> {
     })
   }
 
+  // METHOD
+  public default(value: string): StringSchema {
+    return this.push((_original, output) => {
+      if (output === '') return value
+      return output
+    })
+  }
 }

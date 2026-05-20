@@ -591,3 +591,25 @@ describe('match(pattern)', () => {
     expect(result).toBe('abcde')
   })
 })
+
+// METHOD
+describe('default(value)', () => {
+
+  const base = StringSchema.create()
+  const schema = base.default('DEFAULT')
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(StringSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns the default value when the input is an empty string.', () => {
+    const result = schema.validate('')
+    expect(result).toBe('DEFAULT')
+  })
+
+  it('validates successfully when the input is not an empty string.', () => {
+    const result = schema.validate('string')
+    expect(result).toBe('string')
+  })
+})
