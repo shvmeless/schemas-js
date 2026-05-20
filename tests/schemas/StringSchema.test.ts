@@ -570,3 +570,24 @@ describe('excludes(search)', () => {
     expect(result).toBe('text')
   })
 })
+
+// METHOD
+describe('match(pattern)', () => {
+
+  const base = StringSchema.create()
+  const schema = base.match(/^[a-z]+$/)
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(StringSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('throws when the input does not match the `pattern` parameter.', () => {
+    expectSchema(schema, '12345').toThrow('The value must match the pattern /^[a-z]+$/.')
+  })
+
+  it('validates successfully when the input matches the `pattern` parameter.', () => {
+    const result = schema.validate('abcde')
+    expect(result).toBe('abcde')
+  })
+})

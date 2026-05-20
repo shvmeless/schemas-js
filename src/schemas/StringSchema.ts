@@ -134,7 +134,7 @@ export class StringSchema implements GenericSchema<string> {
     return this.push((original, output) => {
       if (output.startsWith(prefix)) return output
       if (options.fix === true) return (prefix + output)
-      throw new ValidationError(original, `The value must start with "${prefix}".`)
+      throw new ValidationError(original, `The value must start with ${stringify(prefix)}.`)
     })
   }
 
@@ -143,7 +143,7 @@ export class StringSchema implements GenericSchema<string> {
     return this.push((original, output) => {
       if (output.endsWith(suffix)) return output
       if (options.fix === true) return (output + suffix)
-      throw new ValidationError(original, `The value must end with "${suffix}".`)
+      throw new ValidationError(original, `The value must end with ${stringify(suffix)}.`)
     })
   }
 
@@ -151,7 +151,7 @@ export class StringSchema implements GenericSchema<string> {
   public includes(search: string): StringSchema {
     return this.push((original, output) => {
       if (output.includes(search)) return output
-      throw new ValidationError(original, `The value must include "${search}".`)
+      throw new ValidationError(original, `The value must include ${stringify(search)}.`)
     })
   }
 
@@ -159,7 +159,15 @@ export class StringSchema implements GenericSchema<string> {
   public excludes(search: string): StringSchema {
     return this.push((original, output) => {
       if (!output.includes(search)) return output
-      throw new ValidationError(original, `The value must not include "${search}".`)
+      throw new ValidationError(original, `The value must not include ${stringify(search)}.`)
+    })
+  }
+
+  // METHOD
+  public match(pattern: RegExp): StringSchema {
+    return this.push((original, output) => {
+      if (pattern.test(output)) return output
+      throw new ValidationError(original, `The value must match the pattern ${stringify(pattern)}.`)
     })
   }
 
