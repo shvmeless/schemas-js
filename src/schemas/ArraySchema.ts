@@ -145,4 +145,11 @@ export class ArraySchema<T> implements GenericSchema<Array<T>> {
     })
   }
 
+  // METHOD
+  public filter(callback: (value: T, index: number, array: Array<T>) => boolean): ArraySchema<T> {
+    return this.push((output) => {
+      return output.filter(callback)
+    })
+  }
+
 }
