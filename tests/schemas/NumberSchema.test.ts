@@ -687,6 +687,37 @@ describe('.trunc()', () => {
 })
 
 // METHOD
+describe('.round()', () => {
+
+  it('returns a new instance of the schema.', () => {
+    const schema = NumberSchema.create().round()
+    expect(schema).toBeInstanceOf(NumberSchema)
+  })
+
+  const schema = NumberSchema.create().round()
+
+  it('returns when `input` is an integer.', () => {
+    expectValidation(schema, Number.MIN_SAFE_INTEGER).toReturn(Number.MIN_SAFE_INTEGER)
+    expectValidation(schema, -999999).toReturn(-999999)
+    expectValidation(schema, -100).toReturn(-100)
+    expectValidation(schema, -0).toReturn(-0)
+    expectValidation(schema, 0).toReturn(0)
+    expectValidation(schema, 100).toReturn(100)
+    expectValidation(schema, 999999).toReturn(999999)
+    expectValidation(schema, Number.MAX_SAFE_INTEGER).toReturn(Number.MAX_SAFE_INTEGER)
+  })
+
+  it('rounds when `input` is a float.', () => {
+    expectValidation(schema, -999999.75).toReturn(-1000000)
+    expectValidation(schema, -100.55).toReturn(-101)
+    expectValidation(schema, -0.25).toReturn(-0)
+    expectValidation(schema, 0.25).toReturn(0)
+    expectValidation(schema, 100.55).toReturn(101)
+    expectValidation(schema, 999999.75).toReturn(1000000)
+  })
+})
+
+// METHOD
 describe('.floor()', () => {
 
   it('returns a new instance of the schema.', () => {

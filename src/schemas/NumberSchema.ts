@@ -160,6 +160,11 @@ export class NumberSchema implements GenericSchema<number> {
   }
 
   // METHOD
+  public round(): NumberSchema {
+    return this.push((output) => Math.round(output))
+  }
+
+  // METHOD
   public floor(): NumberSchema {
     return this.push((output) => Math.floor(output))
   }
