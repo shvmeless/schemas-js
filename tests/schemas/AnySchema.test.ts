@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import { AnySchema } from '@/schemas/AnySchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
-import { expectSchema } from '@tests/helpers/expect'
+import { expectValidation } from '@tests/helpers/expect'
 
 // METHOD
 describe('.create()', () => {
@@ -21,7 +21,7 @@ describe('.validate(input)', () => {
 
   it('returns any `input` as `any`.', () => {
     DataTypeGenerator.forEach((value) => {
-      expectSchema(schema, value).toReturn(value)
+      expectValidation(schema, value).toReturn(value)
     })
   })
 })

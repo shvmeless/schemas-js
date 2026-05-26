@@ -9,7 +9,7 @@ import { TupleSchema } from '@/schemas/TupleSchema'
 import { RecordSchema } from '@/schemas/RecordSchema'
 import { MapSchema } from '@/schemas/MapSchema'
 import { SetSchema } from '@/schemas/SetSchema'
-import { expectSchema } from '@tests/helpers/expect'
+import { expectValidation } from '@tests/helpers/expect'
 
 // METHOD
 describe('ValidationErrorIndex', () => {
@@ -48,7 +48,7 @@ describe('ValidationErrorIndex', () => {
       set: new Set([100, 200, 300]),
     }
 
-    expectSchema(schema, input).toThrow('At least one property does not match the given schema.', [
+    expectValidation(schema, input).toThrow('At least one property does not match the given schema.', [
       ['string', {
         value: 255,
         message: 'The value must be a string.',

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { TransformSchema } from '@/schemas/TransformSchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
-import { expectSchema } from '@tests/helpers/expect'
+import { expectValidation } from '@tests/helpers/expect'
 
 // METHOD
 describe('.create(inner, transform)', () => {
@@ -21,14 +21,14 @@ describe('.validate(input)', () => {
   const schema = TransformSchema.create(StringSchema.create(), (value) => (value.length))
 
   it('transforms when `input` matches the `inner` schema.', () => {
-    expectSchema(schema, 'STRING').toReturn(6)
-    expectSchema(schema, 'TEXT').toReturn(4)
-    expectSchema(schema, 'EXAMPLE').toReturn(7)
+    expectValidation(schema, 'STRING').toReturn(6)
+    expectValidation(schema, 'TEXT').toReturn(4)
+    expectValidation(schema, 'EXAMPLE').toReturn(7)
   })
 
   it('throws when `input` does not match the `inner` schema.', () => {
     DataTypeGenerator.skip('strings').forEach((value) => {
-      expectSchema(schema, value).toThrow('The value must be a string.')
+      expectValidation(schema, value).toThrow('The value must be a string.')
     })
   })
 
