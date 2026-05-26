@@ -14,74 +14,63 @@ export class ArraySchema<T> implements GenericSchema<Array<T>> {
   // PROPERTIES
   private readonly _schema: GenericSchema<T>
   private readonly _queue: Array<(original: Array<T>, output: Array<T>) => Array<T>>
+  private readonly _prune: boolean
 
   // CONSTRUCTOR
-  private constructor(schema: GenericSchema<T>, queue: Array<(original: Array<T>, output: Array<T>) => Array<T>>) {
+  private constructor(schema: GenericSchema<T>, queue: Array<(original: Array<T>, output: Array<T>) => Array<T>>, prune: boolean) {
     this._schema = schema
     this._queue = queue
+    this._prune = prune
   }
 
   // CONSTRUCTOR
   public static create<T>(schema: GenericSchema<T>): ArraySchema<T> {
-    return new ArraySchema<T>(schema, [])
+    return new ArraySchema<T>(schema, [], false)
+  }
+
+  // CONSTRUCTOR
+  private clone(params: {
+    schema?: GenericSchema<T>
+    queue?: Array<(original: Array<T>, output: Array<T>) => Array<T>>
+    prune?: boolean
+  } = {}): ArraySchema<T> {
+    return new ArraySchema<T>(
+      params.schema ?? this._schema,
+      params.queue ?? this._queue,
+      params.prune ?? this._prune,
+    )
   }
 
   // CONSTRUCTOR
   private push(fn: (original: Array<T>, output: Array<T>) => Array<T>): ArraySchema<T> {
-    return new ArraySchema<T>(this._schema, [...this._queue, fn])
+    return new ArraySchema<T>(this._schema, [...this._queue, fn], this._prune)
   }
 
   // METHOD
-  private checkType(input: unknown): Array<T> {
+  public validate(input: unknown): Array<T> {
 
     if (!Array.isArray(input)) {
       throw new ValidationError(input, 'The value must be an array.')
     }
 
-    const result: Array<T> = []
+    let result: Array<T> = []
     const errors = ValidationError.prepare()
 
     input.forEach((element, index) => {
       try {
-        result[index] = this._schema.validate(element)
+        const value = this._schema.validate(element)
+        result.push(value)
       } catch (error) {
-        if (error instanceof ValidationError) errors.add(index, error)
-        else throw error
+        if (error instanceof ValidationError) {
+          if (this._prune) return
+          errors.add(index, error)
+        } else throw error
       }
     })
 
     if (errors.size > 0) {
       errors.throw(input, 'At least one element does not match the given schema.')
     }
-
-    return result
-
-  }
-
-  // METHOD
-  public validate(input: unknown): Array<T> {
-
-    // if (!Array.isArray(input)) {
-    //   throw new ValidationError(input, 'The value must be an array.')
-    // }
-
-    // const result: Array<T> = []
-    // const errors = ValidationError.prepare()
-
-    // input.forEach((element, index) => {
-    //   try {
-    //     result[index] = this._schema.validate(element)
-    //   } catch (error) {
-    //     if (error instanceof ValidationError) errors.add(index, error)
-    //     else throw error
-    //   }
-    // })
-
-    // if (errors.size > 0) {
-    //   errors.throw(input, 'At least one element does not match the given schema.')
-    // }
-
-    let result = this.checkType(input)
 
     for (const fn of this._queue) {
       result = fn(input as Array<T>, result)
@@ -119,6 +108,11 @@ export class ArraySchema<T> implements GenericSchema<Array<T>> {
   // METHOD
   public transform<V>(fn: (value: Array<T>) => V): TransformSchema<Array<T>, V> {
     return TransformSchema.create(this, fn)
+  }
+
+  // METHOD
+  public prune(): ArraySchema<T> {
+    return this.clone({ prune: true })
   }
 
   // METHOD

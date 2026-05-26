@@ -16,6 +16,44 @@ describe('.create(shape)', () => {
 })
 
 // METHOD
+describe('.prune()', () => {
+
+  const schema = ArraySchema.create(StringSchema.create()).prune()
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(ArraySchema)
+  })
+
+  it('returns when `input` is an array.', () => {
+    expectValidation(schema, []).toReturn([])
+  })
+
+  it('throws when `input` is not an array.', () => {
+    DataTypeGenerator.skip('arrays').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be an array.')
+    })
+  })
+
+  it('returns when all `input` elements match the `shape` schema.', () => {
+    const input = ['a', 'b', 'c']
+    const expected = ['a', 'b', 'c']
+    expectValidation(schema, input).toReturn(expected)
+  })
+
+  it('prunes when some `input` elements do not match the `shape` schema.', () => {
+    const input = ['a', true, 'b', 255, 'c']
+    const expected = ['a', 'b', 'c']
+    expectValidation(schema, input).toReturn(expected)
+  })
+
+  it('returns a new array.', () => {
+    const input = ['a', 'b', 'c']
+    expectValidation(schema, input).toReturn(['a', 'b', 'c'])
+    expectValidation(schema, input).notToReturn(input)
+  })
+})
+
+// METHOD
 describe('.validate(input)', () => {
 
   const schema = ArraySchema.create(StringSchema.create())
