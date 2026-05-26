@@ -620,3 +620,38 @@ describe('.finite()', () => {
     expectValidation(schema, Number.MAX_SAFE_INTEGER + 1).toReturn(Number.MAX_SAFE_INTEGER + 1)
   })
 })
+
+// METHOD
+describe('.safe()', () => {
+
+  it('returns a new instance of the schema.', () => {
+    const schema = NumberSchema.create().safe()
+    expect(schema).toBeInstanceOf(NumberSchema)
+  })
+
+  const schema = NumberSchema.create().safe()
+
+  it('throws when `input` is `NaN`.', () => {
+    expectValidation(schema, NaN).toThrow('The value must be a safe integer.')
+  })
+
+  it('throws when `input` is an infinite number.', () => {
+    expectValidation(schema, -Infinity).toThrow('The value must be a safe integer.')
+    expectValidation(schema, Infinity).toThrow('The value must be a safe integer.')
+  })
+
+  it('throws when `input` is not a safe number.', () => {
+    expectValidation(schema, Number.MIN_SAFE_INTEGER - 1).toThrow('The value must be a safe integer.')
+    expectValidation(schema, Number.MAX_SAFE_INTEGER + 1).toThrow('The value must be a safe integer.')
+  })
+
+  it('returns when `input` is a safe number.', () => {
+    expectValidation(schema, Number.MIN_SAFE_INTEGER).toReturn(Number.MIN_SAFE_INTEGER)
+    expectValidation(schema, -Number.MIN_VALUE).toReturn(-Number.MIN_VALUE)
+    expectValidation(schema, -0).toReturn(-0)
+    expectValidation(schema, 0).toReturn(0)
+    expectValidation(schema, Number.MIN_VALUE).toReturn(Number.MIN_VALUE)
+    expectValidation(schema, Number.MAX_SAFE_INTEGER).toReturn(Number.MAX_SAFE_INTEGER)
+  })
+
+})

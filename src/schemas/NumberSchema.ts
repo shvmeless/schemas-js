@@ -140,9 +140,17 @@ export class NumberSchema implements GenericSchema<number> {
 
   // METHOD
   public finite(): NumberSchema {
-    return this.push((output, original) => {
+    return this.push((original, output) => {
       if (Number.isFinite(output)) return output
       throw new ValidationError(original, 'The value must be a finite number.')
+    })
+  }
+
+  // METHOD
+  public safe(): NumberSchema {
+    return this.push((original, output) => {
+      if (output >= Number.MIN_SAFE_INTEGER && output <= Number.MAX_SAFE_INTEGER) return output
+      throw new ValidationError(original, 'The value must be a safe integer.')
     })
   }
 
