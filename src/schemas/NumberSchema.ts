@@ -6,16 +6,27 @@ import { NullableSchema } from '@/schemas/NullableSchema'
 import { UnionSchema } from '@/schemas/UnionSchema'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { TransformSchema } from '@/schemas/TransformSchema'
+import { stringify } from '@/utils/stringify'
 
 // CLASS
 export class NumberSchema implements GenericSchema<number> {
 
+  // PROPERTIES
+  public readonly _queue: Array<(original: number, output: number) => number>
+
   // CONSTRUCTOR
-  private constructor() {}
+  private constructor(queue: Array<(original: number, output: number) => number>) {
+    this._queue = queue
+  }
+
+  // CONSTRUCTOR
+  private push(fn: (original: number, output: number) => number): NumberSchema {
+    return new NumberSchema([...this._queue, fn])
+  }
 
   // CONSTRUCTOR
   public static create(): NumberSchema {
-    return new NumberSchema()
+    return new NumberSchema([])
   }
 
   // METHOD
@@ -24,8 +35,13 @@ export class NumberSchema implements GenericSchema<number> {
     if (typeof input !== 'number') {
       throw new ValidationError(input, 'The value must be a number.')
     }
+    let output = input
+    for (const fn of this._queue) {
+      output = fn(input, output)
+    }
 
-    return input
+    return output
+
   }
 
   // METHOD
@@ -56,6 +72,16 @@ export class NumberSchema implements GenericSchema<number> {
   // METHOD
   public transform<V>(fn: (value: number) => V): TransformSchema<number, V> {
     return TransformSchema.create(this, fn)
+  }
+
+  // METHOD
+  public lessThan(target: number, options: { clamp?: boolean } = {}): NumberSchema {
+    if (Number.isNaN(target)) throw new Error('The `target` parameter cannot be NaN.')
+    return this.push((original, output) => {
+      if (output < target) return output
+      if (options.clamp === true) return target - 1
+      throw new ValidationError(original, `The value must be less than ${stringify(target)}.`)
+    })
   }
 
 }
