@@ -485,3 +485,35 @@ describe('greaterThanOrEqual(target, { clamp })', () => {
     })
   })
 })
+
+// METHOD
+describe('positive()', () => {
+
+  it('returns a new instance of the schema.', () => {
+    const base = NumberSchema.create()
+    const schema = base.positive()
+    expect(schema).toBeInstanceOf(NumberSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  const schema = NumberSchema.create().positive()
+
+  it('throws when `input` is a negative number.', () => {
+    expectValidation(schema, -0.001).toThrow('The value must be a positive number.')
+    expectValidation(schema, -1).toThrow('The value must be a positive number.')
+    expectValidation(schema, Number.MIN_SAFE_INTEGER).toThrow('The value must be a positive number.')
+    expectValidation(schema, -Infinity).toThrow('The value must be a positive number.')
+  })
+
+  it('throws when `input` is zero.', () => {
+    expectValidation(schema, -0).toThrow('The value must be a positive number.')
+    expectValidation(schema, 0).toThrow('The value must be a positive number.')
+  })
+
+  it('returns when `input` is a positive number.', () => {
+    expectValidation(schema, 0.001).toReturn(0.001)
+    expectValidation(schema, 1).toReturn(1)
+    expectValidation(schema, Number.MAX_SAFE_INTEGER).toReturn(Number.MAX_SAFE_INTEGER)
+    expectValidation(schema, Infinity).toReturn(Infinity)
+  })
+})
