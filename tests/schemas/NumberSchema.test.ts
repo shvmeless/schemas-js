@@ -51,7 +51,7 @@ describe('.validate(input)', () => {
 })
 
 // METHOD
-describe('lessThan(target, { clamp })', () => {
+describe('.lessThan(target, { clamp })', () => {
 
   it('returns a new instance of the schema.', () => {
     const base = NumberSchema.create()
@@ -160,7 +160,7 @@ describe('lessThan(target, { clamp })', () => {
 })
 
 // METHOD
-describe('lessThanOrEqual(target, { clamp })', () => {
+describe('.lessThanOrEqual(target, { clamp })', () => {
 
   it('returns a new instance of the schema.', () => {
     const base = NumberSchema.create()
@@ -269,7 +269,7 @@ describe('lessThanOrEqual(target, { clamp })', () => {
 })
 
 // METHOD
-describe('greaterThan(target, { clamp })', () => {
+describe('.greaterThan(target, { clamp })', () => {
 
   it('returns a new instance of the schema.', () => {
     const base = NumberSchema.create()
@@ -378,7 +378,7 @@ describe('greaterThan(target, { clamp })', () => {
 })
 
 // METHOD
-describe('greaterThanOrEqual(target, { clamp })', () => {
+describe('.greaterThanOrEqual(target, { clamp })', () => {
 
   it('returns a new instance of the schema.', () => {
     const base = NumberSchema.create()
@@ -487,7 +487,39 @@ describe('greaterThanOrEqual(target, { clamp })', () => {
 })
 
 // METHOD
-describe('positive()', () => {
+describe('.negative()', () => {
+
+  it('returns a new instance of the schema.', () => {
+    const base = NumberSchema.create()
+    const schema = base.negative()
+    expect(schema).toBeInstanceOf(NumberSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  const schema = NumberSchema.create().negative()
+
+  it('throws when `input` is a negative number.', () => {
+    expectValidation(schema, -0.001).toReturn(-0.001)
+    expectValidation(schema, -1).toReturn(-1)
+    expectValidation(schema, Number.MIN_SAFE_INTEGER).toReturn(Number.MIN_SAFE_INTEGER)
+    expectValidation(schema, -Infinity).toReturn(-Infinity)
+  })
+
+  it('throws when `input` is zero.', () => {
+    expectValidation(schema, -0).toThrow('The value must be a negative number.')
+    expectValidation(schema, 0).toThrow('The value must be a negative number.')
+  })
+
+  it('returns when `input` is a negative number.', () => {
+    expectValidation(schema, 0.001).toThrow('The value must be a negative number.')
+    expectValidation(schema, 1).toThrow('The value must be a negative number.')
+    expectValidation(schema, Number.MAX_SAFE_INTEGER).toThrow('The value must be a negative number.')
+    expectValidation(schema, Infinity).toThrow('The value must be a negative number.')
+  })
+})
+
+// METHOD
+describe('.positive()', () => {
 
   it('returns a new instance of the schema.', () => {
     const base = NumberSchema.create()

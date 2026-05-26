@@ -115,6 +115,14 @@ export class NumberSchema implements GenericSchema<number> {
   }
 
   // METHOD
+  public negative(): NumberSchema {
+    return this.push((original, output) => {
+      if (output < 0) return output
+      throw new ValidationError(original, 'The value must be a negative number.')
+    })
+  }
+
+  // METHOD
   public positive(): NumberSchema {
     return this.push((original, output) => {
       if (output > 0) return output
