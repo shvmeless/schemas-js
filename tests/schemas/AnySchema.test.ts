@@ -10,7 +10,7 @@ describe('.create()', () => {
 
   const schema = AnySchema.create()
 
-  it('validate any value as unknown.', () => {
+  it('returns any `input` as `any`.', () => {
     DataTypeGenerator.forEach((value) => {
       const result = schema.validate(value)
       expect(result).toBe(value)

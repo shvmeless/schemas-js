@@ -6,21 +6,21 @@ import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectSchema } from '@tests/helpers/expect'
 
 // METHOD
-describe('.create()', () => {
+describe('.create(inner)', () => {
 
   const schema = OptionalSchema.create(StringSchema.create())
 
-  it('validates an input that matches the given schema.', () => {
+  it('returns when `input` matches the `inner` schema.', () => {
     const result = schema.validate('STRING')
     expect(result).toBe('STRING')
   })
 
-  it('validates an undefined input.', () => {
+  it('returns when `input` is `undefined`.', () => {
     const result = schema.validate(undefined)
     expect(result).toBeUndefined()
   })
 
-  it('throws when the value does not match the given schema.', () => {
+  it('throws when `input` does not match the `inner` schema.', () => {
     DataTypeGenerator.skip('strings', 'undefined').forEach((value) => {
       expectSchema(schema, value).toThrow('The value must be a string.')
     })
@@ -29,21 +29,21 @@ describe('.create()', () => {
 })
 
 // METHOD
-describe('.default()', () => {
+describe('.default(default)', () => {
 
   const schema = OptionalSchema.create(StringSchema.create()).default('DEFAULT')
 
-  it('validates an input that matches the given schema.', () => {
+  it('returns when the `input` matches the `inner` schema.', () => {
     const result = schema.validate('STRING')
     expect(result).toBe('STRING')
   })
 
-  it('returns the default value for an undefined input.', () => {
+  it('returns `default` value when `input` is `undefined`.', () => {
     const result = schema.validate(undefined)
     expect(result).toBe('DEFAULT')
   })
 
-  it('throws when the value does not match the given schema.', () => {
+  it('throws when `input` does not match the `inner` schema.', () => {
     DataTypeGenerator.skip('strings', 'undefined').forEach((value) => {
       expectSchema(schema, value).toThrow('The value must be a string.')
     })

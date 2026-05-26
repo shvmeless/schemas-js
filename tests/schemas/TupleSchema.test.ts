@@ -8,22 +8,22 @@ import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectSchema } from '@tests/helpers/expect'
 
 // METHOD
-describe('.create()', () => {
+describe('.create(shapes)', () => {
 
   const schema = TupleSchema.create([StringSchema.create(), NumberSchema.create(), BooleanSchema.create()])
 
-  it('validates that each element matches its corresponding schema.', () => {
-    const result = schema.validate(['STRING', 74105280, true])
-    expect(result).toEqual(['STRING', 74105280, true])
-  })
-
-  it('throws when the input is not an array.', () => {
+  it('throws when `input` is not an array.', () => {
     DataTypeGenerator.skip('arrays').forEach((value) => {
       expectSchema(schema, value).toThrow('The value must be an array.')
     })
   })
 
-  it('throws when the input contains fewer elements than expected.', () => {
+  it('returns when all `input` elements match the `shapes` schemas.', () => {
+    const result = schema.validate(['STRING', 74105280, true])
+    expect(result).toEqual(['STRING', 74105280, true])
+  })
+
+  it('throws when `input` contains fewer elements than expected.', () => {
     expectSchema(schema, ['STRING']).toThrow('The tuple is missing one or more required elements.', [
       [1, {
         value: undefined,
@@ -36,13 +36,20 @@ describe('.create()', () => {
     ])
   })
 
-  it('throws when the input contains more elements than expected.', () => {
+  it('throws when `input` contains more elements than expected.', () => {
     expectSchema(schema, ['STRING', 74105280, true, 'UNEXPECTED']).toThrow('The tuple contains one or more unexpected elements.', [
       [3, {
         value: 'UNEXPECTED',
         message: 'Unexpected element.',
       }],
     ])
+  })
+
+  it('returns a new tuple.', () => {
+    const input = ['STRING', 74105280, true]
+    const result = schema.validate(input)
+    expect(result).not.toBe(input)
+    expect(result).toEqual(input)
   })
 
 })
@@ -58,18 +65,18 @@ describe('.strip()', () => {
     expect(schema).not.toBe(base)
   })
 
-  it('validates that each element matches its corresponding schema.', () => {
-    const result = schema.validate(['STRING', 74105280, true])
-    expect(result).toEqual(['STRING', 74105280, true])
-  })
-
-  it('throws when the input is not an array.', () => {
+  it('throws when `input` is not an array.', () => {
     DataTypeGenerator.skip('arrays').forEach((value) => {
       expectSchema(schema, value).toThrow('The value must be an array.')
     })
   })
 
-  it('throws when the input contains fewer elements than expected.', () => {
+  it('returns when all `input` elements match the `shapes` schemas.', () => {
+    const result = schema.validate(['STRING', 74105280, true])
+    expect(result).toEqual(['STRING', 74105280, true])
+  })
+
+  it('throws when `input` contains fewer elements than expected.', () => {
     expectSchema(schema, ['STRING']).toThrow('The tuple is missing one or more required elements.', [
       [1, {
         value: undefined,
@@ -82,9 +89,16 @@ describe('.strip()', () => {
     ])
   })
 
-  it('strips unexpected elements from the input.', () => {
+  it('strips when `input` contains unexpected elements.', () => {
     const result = schema.validate(['STRING', 74105280, true, 'UNEXPECTED'])
     expect(result).toEqual(['STRING', 74105280, true])
+  })
+
+  it('returns a new tuple.', () => {
+    const input = ['STRING', 74105280, true]
+    const result = schema.validate(input)
+    expect(result).not.toBe(input)
+    expect(result).toEqual(input)
   })
 
 })

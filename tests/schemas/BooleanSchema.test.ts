@@ -9,14 +9,14 @@ describe('.create()', () => {
 
   const schema = BooleanSchema.create()
 
-  it('validates an input that is a boolean.', () => {
+  it('returns when `input` is a boolean.', () => {
     const r1 = schema.validate(true)
     expect(r1).toBe(true)
     const r2 = schema.validate(false)
     expect(r2).toBe(false)
   })
 
-  it('throws when the input is not a boolean.', () => {
+  it('throws when `input` is not a boolean.', () => {
     DataTypeGenerator.skip('booleans').forEach((value) => {
       expectSchema(schema, value).toThrow('The value must be a boolean.')
     })

@@ -6,16 +6,16 @@ import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectSchema } from '@tests/helpers/expect'
 
 // METHOD
-describe('.create()', () => {
+describe('.create(inner, transform)', () => {
 
   const schema = TransformSchema.create(StringSchema.create(), (value) => (value.length))
 
-  it('validates and transforms the input using the given schema and transform function.', () => {
+  it('transforms when `input` matches the `inner` schema.', () => {
     const result = schema.validate('STRING')
     expect(result).toBe(6)
   })
 
-  it('throws when the input does not match the given schema.', () => {
+  it('throws when `input` does not match the `inner` schema.', () => {
     DataTypeGenerator.skip('strings').forEach((value) => {
       expectSchema(schema, value).toThrow('The value must be a string.')
     })

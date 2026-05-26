@@ -1,5 +1,5 @@
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it } from 'vitest'
 import { ObjectSchema } from '@/schemas/ObjectSchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { NumberSchema } from '@/schemas/NumberSchema'
@@ -30,30 +30,7 @@ describe('ValidationErrorIndex', () => {
     set: SetSchema.create(StringSchema.create()),
   })
 
-  it('does not throws when input matches schema.', () => {
-
-    const input = {
-      string: 'STRING',
-      number: 255,
-      boolean: true,
-      array: ['A', 'B', 'C'],
-      tuple: ['STRING', 255, true],
-      record: { a: 1, b: 2, c: 3 },
-      object: {
-        string: 'STRING',
-        number: 255,
-        boolean: true,
-      },
-      map: new Map([['a', 1], ['b', 2], ['c', 3]]),
-      set: new Set(['A', 'B', 'C']),
-    }
-
-    const result = schema.validate(input)
-    expect(result).toEqual({ ...input })
-
-  })
-
-  it('throws when the input does not match the schema.', () => {
+  it('contains a deep index for each element that fails.', () => {
 
     const input = {
       string: 255,

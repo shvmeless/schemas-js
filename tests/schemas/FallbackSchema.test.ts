@@ -5,20 +5,20 @@ import { StringSchema } from '@/schemas/StringSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
 
 // METHOD
-describe('.create()', () => {
+describe('.create(inner, fallback)', () => {
 
   const schema = FallbackSchema.create(StringSchema.create(), 'DEFAULT')
 
-  it('validates an input that matches the given schema.', () => {
-    const result = schema.validate('STRING')
-    expect(result).toBe('STRING')
-  })
-
-  it('returns the fallback value when the input does not match the given schema.', () => {
+  it('returns `fallback` value when `input` does not match the `inner` schema.', () => {
     DataTypeGenerator.skip('strings').forEach((value) => {
       const result = schema.validate(value)
       expect(result).toBe('DEFAULT')
     })
+  })
+
+  it('returns when `input` matches the `inner` schema.', () => {
+    const result = schema.validate('STRING')
+    expect(result).toBe('STRING')
   })
 
 })

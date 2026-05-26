@@ -9,12 +9,12 @@ describe('.create()', () => {
 
   const schema = NullSchema.create()
 
-  it('validates an input that is null.', () => {
+  it('returns when `input` is `null`.', () => {
     const result = schema.validate(null)
     expect(result).toBe(null)
   })
 
-  it('throws when the input is not null.', () => {
+  it('throws when `input` is not `null`.', () => {
     DataTypeGenerator.skip('null').forEach((value) => {
       expectSchema(schema, value).toThrow('The value must be null.')
     })

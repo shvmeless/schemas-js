@@ -9,12 +9,12 @@ describe('.create()', () => {
 
   const schema = UndefinedSchema.create()
 
-  it('validates an input that is undefined.', () => {
+  it('returns when `input` is `undefined`.', () => {
     const result = schema.validate(undefined)
     expect(result).toBe(undefined)
   })
 
-  it('throws when the input is not undefined.', () => {
+  it('throws when `input` is not `undefined`.', () => {
     DataTypeGenerator.skip('undefined').forEach((value) => {
       expectSchema(schema, value).toThrow('The value must be undefined.')
     })

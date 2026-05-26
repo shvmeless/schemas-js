@@ -8,7 +8,7 @@ import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectSchema } from '@tests/helpers/expect'
 
 // METHOD
-describe('.create()', () => {
+describe('.create(...inner)', () => {
 
   const schema = UnionSchema.create(
     StringSchema.create(),
@@ -16,7 +16,7 @@ describe('.create()', () => {
     BooleanSchema.create(),
   )
 
-  it('validates an input that matches any of the given schemas.', () => {
+  it('returns when `input` matches any of the `inner` schemas.', () => {
     const inputs = ['STRING', 25, true]
     inputs.forEach((input) => {
       const result = schema.validate(input)
@@ -24,7 +24,7 @@ describe('.create()', () => {
     })
   })
 
-  it('throws when the input does not match any of the given schemas.', () => {
+  it('throws when `input` does not match any of the `inner` schemas.', () => {
     DataTypeGenerator.skip('strings', 'numbers', 'booleans').forEach((value) => {
       expectSchema(schema, value).toThrow('The value does not match any of the given schemas.')
     })

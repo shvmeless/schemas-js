@@ -6,27 +6,27 @@ import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectSchema } from '@tests/helpers/expect'
 
 // METHOD
-describe('.create()', () => {
+describe('.create(shape)', () => {
 
   const schema = ArraySchema.create(StringSchema.create())
 
-  it('validates that all elements match the given schema.', () => {
-    const result = schema.validate(['a', 'b', 'c'])
-    expect(result).toEqual(['a', 'b', 'c'])
-  })
-
-  it('validates an empty array.', () => {
+  it('returns when `input` is an array.', () => {
     const result = schema.validate([])
     expect(result).toEqual([])
   })
 
-  it('throws when input is not an array.', () => {
+  it('throws when `input` is not an array.', () => {
     DataTypeGenerator.skip('arrays').forEach((value) => {
       expectSchema(schema, value).toThrow('The value must be an array.')
     })
   })
 
-  it('throws when an element does not match the inner schema.', () => {
+  it('returns when all `input` elements match the `shape` schema.', () => {
+    const result = schema.validate(['a', 'b', 'c'])
+    expect(result).toEqual(['a', 'b', 'c'])
+  })
+
+  it('throws when at least one `input` element does not match the `shape` schema.', () => {
     expectSchema(schema, [true, 'b', 255]).toThrow('At least one element does not match the given schema.', [
       [0, {
         value: true,

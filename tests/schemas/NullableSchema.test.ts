@@ -6,21 +6,21 @@ import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectSchema } from '@tests/helpers/expect'
 
 // METHOD
-describe('.create()', () => {
+describe('.create(inner)', () => {
 
   const schema = NullableSchema.create(StringSchema.create())
 
-  it('validates an input that matches the given schema.', () => {
+  it('returns when `input` matches the `inner` schema.', () => {
     const result = schema.validate('STRING')
     expect(result).toBe('STRING')
   })
 
-  it('validates a null input.', () => {
+  it('returns when `input` is `null`.', () => {
     const result = schema.validate(null)
     expect(result).toBeNull()
   })
 
-  it('throws when the value does not match the given schema.', () => {
+  it('throws when `input` does not match the `inner` schema.', () => {
     DataTypeGenerator.skip('strings', 'null').forEach((value) => {
       expectSchema(schema, value).toThrow('The value must be a string.')
     })
@@ -29,21 +29,21 @@ describe('.create()', () => {
 })
 
 // METHOD
-describe('.default()', () => {
+describe('.default(default)', () => {
 
   const schema = NullableSchema.create(StringSchema.create()).default('DEFAULT')
 
-  it('validates an input that matches the given schema.', () => {
+  it('returns when the `input` matches the `inner` schema.', () => {
     const result = schema.validate('STRING')
     expect(result).toBe('STRING')
   })
 
-  it('returns the default value for a null input.', () => {
+  it('returns `default` value when `input` is `null`.', () => {
     const result = schema.validate(null)
     expect(result).toBe('DEFAULT')
   })
 
-  it('throws when the value does not match the given schema.', () => {
+  it('throws when `input` does not match the `inner` schema.', () => {
     DataTypeGenerator.skip('strings', 'null').forEach((value) => {
       expectSchema(schema, value).toThrow('The value must be a string.')
     })
