@@ -141,4 +141,14 @@ export class ArraySchema<T> implements GenericSchema<Array<T>> {
     })
   }
 
+  // METHOD
+  public max(length: number): ArraySchema<T> {
+    if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
+    if (length < 0) throw new Error('The length value must be zero or positive.')
+    return this.push((original, output) => {
+      if (output.length > length) throw new ValidationError(original, `The value must be at most ${stringify(length)} elements long.`)
+      return output
+    })
+  }
+
 }

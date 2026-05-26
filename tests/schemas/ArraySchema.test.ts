@@ -179,3 +179,66 @@ describe('.min(length)', () => {
     })
   })
 })
+
+// METHOD
+describe('.max(length)', () => {
+
+  it('returns a new instance of the schema.', () => {
+    const base = ArraySchema.create(ArraySchema.create(StringSchema.create()))
+    const schema = base.max(5)
+    expect(schema).toBeInstanceOf(ArraySchema)
+    expect(schema).not.toBe(base)
+  })
+
+  describe('when `length` is `NaN`', () => {
+    it('throws when the schema is being built.', () => {
+      expectError(() => {
+        ArraySchema.create(StringSchema.create()).max(NaN)
+      }).toHaveMessage('The length value must be zero or positive.')
+    })
+  })
+
+  describe('when `length` is a negative number', () => {
+    it('throws when the schema is being built.', () => {
+      expectError(() => {
+        ArraySchema.create(StringSchema.create()).max(-8)
+      }).toHaveMessage('The length value must be zero or positive.')
+    })
+  })
+
+  describe('when `length` is zero', () => {
+
+    const schema = ArraySchema.create(StringSchema.create()).max(0)
+
+    it('returns when `input` is empty.', () => {
+      expectValidation(schema, []).toReturn([])
+    })
+
+    it('throws when `input` length is greater than expected.', () => {
+      const input = ['A', 'B', 'C']
+      expectValidation(schema, input).toThrow('The value must be at most 0 elements long.')
+    })
+  })
+
+  describe('when `length` is a positive number', () => {
+
+    const schema = ArraySchema.create(StringSchema.create()).max(5)
+
+    it('throws when `input` length is less than expected.', () => {
+      const input = ['A', 'B', 'C']
+      const expected = ['A', 'B', 'C']
+      expectValidation(schema, input).toReturn(expected)
+    })
+
+    it('returns when `input` length is as expected.', () => {
+      const input = ['A', 'B', 'C', 'D', 'E']
+      const expected = ['A', 'B', 'C', 'D', 'E']
+      expectValidation(schema, input).toReturn(expected)
+    })
+
+    it('throws when `input` length is greater than expected.', () => {
+      const input = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+      expectValidation(schema, input).toThrow('The value must be at most 5 elements long.')
+    })
+  })
+})
