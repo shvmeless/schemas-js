@@ -42,8 +42,8 @@
     "lint": "eslint ./src",
     "lint:fix": "eslint ./src --fix",
     "build": "rm -rf ./dist && tspc -p ./tsconfig.prod.json",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "vitest run ./tests",
+    "test:watch": "vitest ./tests"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

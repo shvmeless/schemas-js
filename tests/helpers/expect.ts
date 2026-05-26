@@ -7,6 +7,9 @@ import { ValidationError, type ValidationErrorIndex } from '@/errors/ValidationE
 
 // INTERFACE
 interface ExpectSchemaResult {
+  toReturn(value: unknown): void
+  notToReturn(value: unknown): void
+  toReturnInstanceOf(value: unknown): void
   toThrow(message: string, index?: Array<[unknown, {
     value: unknown
     message: string
@@ -15,8 +18,20 @@ interface ExpectSchemaResult {
 }
 
 // FUNCTION
-export function expectSchema(schema: GenericSchema<unknown>, input: unknown): ExpectSchemaResult {
+export function expectValidation(schema: GenericSchema<unknown>, input: unknown): ExpectSchemaResult {
   return {
+    toReturn(value: unknown): void {
+      const result = schema.validate(input)
+      expect(result).toEqual(value)
+    },
+    notToReturn(value: unknown): void {
+      const result = schema.validate(input)
+      expect(result).not.toBe(value)
+    },
+    toReturnInstanceOf(value: unknown): void {
+      const result = schema.validate(input)
+      expect(result).toBeInstanceOf(value)
+    },
     toThrow(message: string, index?: Array<[unknown, {
       value: unknown
       message: string

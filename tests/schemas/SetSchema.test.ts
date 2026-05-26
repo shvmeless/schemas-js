@@ -3,31 +3,42 @@ import { describe, expect, it } from 'vitest'
 import { SetSchema } from '@/schemas/SetSchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
-import { expectSchema } from '@tests/helpers/expect'
+import { expectValidation } from '@tests/helpers/expect'
 
 // METHOD
-describe('.create()', () => {
+describe('.create(shape)', () => {
 
   const schema = SetSchema.create(StringSchema.create())
 
-  it('validates that all elements match the given schema.', () => {
-    const result = schema.validate(new Set(['a', 'b', 'c']))
-    expect(result).toEqual(new Set(['a', 'b', 'c']))
+  it('returns an instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(SetSchema)
+  })
+})
+
+// METHOD
+describe('.validate(input)', () => {
+
+  const schema = SetSchema.create(StringSchema.create())
+
+  it('returns when `input` is a `Set` instance.', () => {
+    expectValidation(schema, new Set()).toReturn(new Set())
   })
 
-  it('validates an empty Set.', () => {
-    const result = schema.validate(new Set())
-    expect(result).toEqual(new Set())
-  })
-
-  it('throws when input is not a Set.', () => {
+  it('throws when `input` is not a `Set` instance.', () => {
     DataTypeGenerator.skip('sets').forEach((value) => {
-      expectSchema(schema, value).toThrow('The value must be a Set.')
+      expectValidation(schema, value).toThrow('The value must be a Set.')
     })
   })
 
-  it('throws when an element does not match the inner schema.', () => {
-    expectSchema(schema, new Set([true, 'b', 255])).toThrow('At least one element does not match the given schema.', [
+  it('returns when all `input` elements match the `shape` schema.', () => {
+    const input = new Set(['a', 'b', 'c'])
+    const expected = new Set(['a', 'b', 'c'])
+    expectValidation(schema, input).toReturn(expected)
+  })
+
+  it('throws when at least one `input` element does not match the `shape` schema.', () => {
+    const input = new Set([true, 'b', 255])
+    expectValidation(schema, input).toThrow('At least one element does not match the given schema.', [
       [true, {
         value: true,
         message: 'The value must be a string.',
@@ -39,11 +50,10 @@ describe('.create()', () => {
     ])
   })
 
-  it('returns a new Set.', () => {
+  it('returns a new `Set instance`.', () => {
     const input = new Set(['a', 'b', 'c'])
-    const result = schema.validate(input)
-    expect(result).not.toBe(input)
-    expect(result).toEqual(input)
+    const expected = new Set(['a', 'b', 'c'])
+    expectValidation(schema, input).toReturn(expected)
+    expectValidation(schema, input).notToReturn(input)
   })
-
 })

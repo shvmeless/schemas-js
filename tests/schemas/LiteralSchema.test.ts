@@ -2,70 +2,102 @@
 import { describe, expect, it } from 'vitest'
 import { LiteralSchema } from '@/schemas/LiteralSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
-import { expectSchema } from '@tests/helpers/expect'
+import { expectValidation } from '@tests/helpers/expect'
 
 // METHOD
-describe('.create()', () => {
-  describe('with a string type', () => {
+describe('.create(literal)', () => {
+  describe('when `literal` is a string', () => {
 
     const schema = LiteralSchema.create('LITERAL')
 
-    it('validates an input that matches the literal.', () => {
-      const result = schema.validate('LITERAL')
-      expect(result).toBe('LITERAL')
+    it('returns an instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(LiteralSchema)
     })
-
-    it('throws when input does not match the literal.', () => {
-      expectSchema(schema, 'WRONG').toThrow('The value must be the literal "LITERAL".')
-    })
-
-    it('throws when input does not match the type.', () => {
-      DataTypeGenerator.skip('strings').forEach((value) => {
-        expectSchema(schema, value).toThrow('The value must be the literal "LITERAL".')
-      })
-    })
-
   })
 
-  describe('with a number type', () => {
+  describe('when `literal` is a number', () => {
 
     const schema = LiteralSchema.create(255)
 
-    it('validates an input that matches the literal.', () => {
-      const result = schema.validate(255)
-      expect(result).toBe(255)
+    it('returns an instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(LiteralSchema)
     })
-
-    it('throws when input does not match the literal.', () => {
-      expectSchema(schema, 0).toThrow('The value must be the literal 255.')
-    })
-
-    it('throws when input does not match the type.', () => {
-      DataTypeGenerator.skip('numbers').forEach((value) => {
-        expectSchema(schema, value).toThrow('The value must be the literal 255.')
-      })
-    })
-
   })
 
-  describe('with a boolean type', () => {
+  describe('when `literal` is a boolean', () => {
 
     const schema = LiteralSchema.create(true)
 
-    it('validates an input that matches the literal.', () => {
-      const result = schema.validate(true)
-      expect(result).toBe(true)
+    it('returns an instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(LiteralSchema)
     })
+  })
+})
 
-    it('throws when input does not match the literal.', () => {
-      expectSchema(schema, false).toThrow('The value must be the literal true.')
-    })
+// METHOD
+describe('.validate(input)', () => {
+  describe('when `literal` is a string', () => {
 
-    it('throws when input does not match the type.', () => {
-      DataTypeGenerator.skip('booleans').forEach((value) => {
-        expectSchema(schema, value).toThrow('The value must be the literal true.')
+    const schema = LiteralSchema.create('LITERAL')
+
+    it('throws when `input` is not a string.', () => {
+      DataTypeGenerator.skip('strings').forEach((value) => {
+        expectValidation(schema, value).toThrow('The value must be the literal "LITERAL".')
       })
     })
 
+    it('returns when `input` matches the `literal`.', () => {
+      expectValidation(schema, 'LITERAL').toReturn('LITERAL')
+    })
+
+    it('throws when `input` does not match the `literal` (case-sensitive).', () => {
+      expectValidation(schema, 'literal').toThrow('The value must be the literal "LITERAL".')
+    })
+
+    it('throws when `input` does not match the `literal`.', () => {
+      expectValidation(schema, 'WRONG').toThrow('The value must be the literal "LITERAL".')
+      expectValidation(schema, 'TEXT').toThrow('The value must be the literal "LITERAL".')
+      expectValidation(schema, 'STRING').toThrow('The value must be the literal "LITERAL".')
+    })
+  })
+
+  describe('when `literal` is a number', () => {
+
+    const schema = LiteralSchema.create(255)
+
+    it('throws when `input` is not a number.', () => {
+      DataTypeGenerator.skip('numbers').forEach((value) => {
+        expectValidation(schema, value).toThrow('The value must be the literal 255.')
+      })
+    })
+
+    it('returns when `input` matches the `literal`.', () => {
+      expectValidation(schema, 255).toReturn(255)
+    })
+
+    it('throws when `input` does not match the `literal`.', () => {
+      expectValidation(schema, -500).toThrow('The value must be the literal 255.')
+      expectValidation(schema, 0).toThrow('The value must be the literal 255.')
+      expectValidation(schema, 500).toThrow('The value must be the literal 255.')
+    })
+  })
+
+  describe('when `literal` is a boolean', () => {
+
+    const schema = LiteralSchema.create(true)
+
+    it('throws when `input` is not a boolean.', () => {
+      DataTypeGenerator.skip('booleans').forEach((value) => {
+        expectValidation(schema, value).toThrow('The value must be the literal true.')
+      })
+    })
+
+    it('returns when `input` matches the `literal`.', () => {
+      expectValidation(schema, true).toReturn(true)
+    })
+
+    it('throws when `input` does not match the `literal`.', () => {
+      expectValidation(schema, false).toThrow('The value must be the literal true.')
+    })
   })
 })

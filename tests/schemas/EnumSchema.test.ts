@@ -1,54 +1,80 @@
+// IMPORTS
 import { describe, expect, it } from 'vitest'
 import { EnumSchema } from '@/schemas/EnumSchema'
-import { expectSchema } from '@tests/helpers/expect'
+import { expectValidation } from '@tests/helpers/expect'
 import { DataTypeGenerator } from '@tests/helpers/generator'
 
 // METHOD
-describe('.create()', () => {
-  describe('with string values', () => {
+describe('.create(literals)', () => {
+  describe('when `literals` are string values', () => {
 
     const schema = EnumSchema.create('A', 'B', 'C')
 
-    it('validates an input that matches one of the defined string values.', () => {
-      const inputs = ['A', 'B', 'C']
-      inputs.forEach((input) => {
-        const result = schema.validate(input)
-        expect(result).toBe(input)
-      })
+    it('returns an instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(EnumSchema)
     })
-
-    it('throws when the input does not match any of the defined string values.', () => {
-      expectSchema(schema, 'D').toThrow('The value must be one of "A", "B", "C".')
-    })
-
-    it('throws when the input is not a valid string.', () => {
-      DataTypeGenerator.skip('strings').forEach((value) => {
-        expectSchema(schema, value).toThrow('The value must be one of "A", "B", "C".')
-      })
-    })
-
   })
 
-  describe('with number values', () => {
+  describe('when `literals` are number values', () => {
 
     const schema = EnumSchema.create(-100, 0, 100)
 
-    it('validates an input that matches one of the defined number values.', () => {
-      const inputs = [-100, 0, 100]
-      inputs.forEach((input) => {
-        const result = schema.validate(input)
-        expect(result).toBe(input)
+    it('returns an instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(EnumSchema)
+    })
+  })
+})
+
+// METHOD
+describe('.validate(input)', () => {
+  describe('when `literals` are string values', () => {
+
+    const schema = EnumSchema.create('A', 'B', 'C')
+
+    it('throws when `input` is not a string.', () => {
+      DataTypeGenerator.skip('strings').forEach((value) => {
+        expectValidation(schema, value).toThrow('The value must be one of "A", "B", "C".')
       })
     })
 
-    it('throws when the input does not match any of the defined number values.', () => {
-      expectSchema(schema, 255).toThrow('The value must be one of -100, 0, 100.')
+    it('returns when `input` matches one of the `literals`.', () => {
+      expectValidation(schema, 'A').toReturn('A')
+      expectValidation(schema, 'B').toReturn('B')
+      expectValidation(schema, 'C').toReturn('C')
     })
 
-    it('throws when the input is not a valid number.', () => {
+    it('throws when `input` does not match any of the `literals` (case-sensitive).', () => {
+      expectValidation(schema, 'a').toThrow('The value must be one of "A", "B", "C".')
+      expectValidation(schema, 'b').toThrow('The value must be one of "A", "B", "C".')
+      expectValidation(schema, 'c').toThrow('The value must be one of "A", "B", "C".')
+    })
+
+    it('throws when `input` does not match any of the `literals`.', () => {
+      expectValidation(schema, 'X').toThrow('The value must be one of "A", "B", "C".')
+      expectValidation(schema, 'Y').toThrow('The value must be one of "A", "B", "C".')
+      expectValidation(schema, 'Z').toThrow('The value must be one of "A", "B", "C".')
+    })
+  })
+
+  describe('when `literals` are number values', () => {
+
+    const schema = EnumSchema.create(-100, 0, 100)
+
+    it('throws when `input` is not a number.', () => {
       DataTypeGenerator.skip('numbers').forEach((value) => {
-        expectSchema(schema, value).toThrow('The value must be one of -100, 0, 100.')
+        expectValidation(schema, value).toThrow('The value must be one of -100, 0, 100.')
       })
+    })
+
+    it('returns when `input` matches one of the `literals`.', () => {
+      expectValidation(schema, -100).toReturn(-100)
+      expectValidation(schema, 0).toReturn(0)
+      expectValidation(schema, 100).toReturn(100)
+    })
+
+    it('throws when `input` does not match any of the `literals`.', () => {
+      expectValidation(schema, -500).toThrow('The value must be one of -100, 0, 100.')
+      expectValidation(schema, 500).toThrow('The value must be one of -100, 0, 100.')
     })
 
   })

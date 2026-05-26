@@ -3,22 +3,32 @@ import { describe, expect, it } from 'vitest'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
+import { expectValidation } from '@tests/helpers/expect'
 
 // METHOD
-describe('.create()', () => {
+describe('.create(inner, fallback)', () => {
 
   const schema = FallbackSchema.create(StringSchema.create(), 'DEFAULT')
 
-  it('validates an input that matches the given schema.', () => {
-    const result = schema.validate('STRING')
-    expect(result).toBe('STRING')
+  it('returns an instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(FallbackSchema)
   })
+})
 
-  it('returns the fallback value when the input does not match the given schema.', () => {
+// METHOD
+describe('.validate(input)', () => {
+
+  const schema = FallbackSchema.create(StringSchema.create(), 'DEFAULT')
+
+  it('returns `fallback` value when `input` does not match the `inner` schema.', () => {
     DataTypeGenerator.skip('strings').forEach((value) => {
-      const result = schema.validate(value)
-      expect(result).toBe('DEFAULT')
+      expectValidation(schema, value).toReturn('DEFAULT')
     })
   })
 
+  it('returns when `input` matches the `inner` schema.', () => {
+    expectValidation(schema, 'string').toReturn('string')
+    expectValidation(schema, 'text').toReturn('text')
+    expectValidation(schema, 'example').toReturn('example')
+  })
 })

@@ -3,33 +3,43 @@ import { describe, expect, it } from 'vitest'
 import { MapSchema } from '@/schemas/MapSchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
-import { expectSchema } from '@tests/helpers/expect'
+import { expectValidation } from '@tests/helpers/expect'
 import { NumberSchema } from '@/schemas/NumberSchema'
 
 // METHOD
-describe('.create()', () => {
+describe('.create(key, value)', () => {
 
   const schema = MapSchema.create(StringSchema.create(), NumberSchema.create())
 
-  it('validates that all elements match the given schema.', () => {
-    const result = schema.validate(new Map([['a', 1], ['b', 2], ['c', 3]]))
-    expect(result).toEqual(new Map([['a', 1], ['b', 2], ['c', 3]]))
+  it('returns an instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(MapSchema)
+  })
+})
+
+// METHOD
+describe('.validate(input)', () => {
+
+  const schema = MapSchema.create(StringSchema.create(), NumberSchema.create())
+
+  it('returns when `input` is a `Map` instance.', () => {
+    expectValidation(schema, new Map()).toReturn(new Map())
   })
 
-  it('validates an empty Map.', () => {
-    const result = schema.validate(new Map())
-    expect(result).toEqual(new Map())
-  })
-
-  it('throws when input is not a Map.', () => {
+  it('throws when `input` is not a `Map` instance.', () => {
     DataTypeGenerator.skip('maps').forEach((value) => {
-      expectSchema(schema, value).toThrow('The value must be a Map.')
+      expectValidation(schema, value).toThrow('The value must be a Map.')
     })
   })
 
-  it('throws when a key does not match the given schema.', () => {
+  it('returns when all `input` entries match the `key` and `value` schemas.', () => {
+    const input = new Map([['a', 1], ['b', 2], ['c', 3]])
+    const expected = new Map([['a', 1], ['b', 2], ['c', 3]])
+    expectValidation(schema, input).toReturn(expected)
+  })
+
+  it('throws when at least one `input` key does not match the `key` schema.', () => {
     const input = new Map<unknown, number>([[true, 1], ['b', 2], [false, 3]])
-    expectSchema(schema, input).toThrow('At least one entry does not match the given schema.', [
+    expectValidation(schema, input).toThrow('At least one entry does not match the given schema.', [
       [true, {
         value: true,
         message: 'The value must be a string.',
@@ -41,9 +51,9 @@ describe('.create()', () => {
     ])
   })
 
-  it('throws when a value does not match the given schema.', () => {
+  it('throws when at least one `input` value does not match the `value` schema.', () => {
     const input = new Map<string, unknown>([['a', true], ['b', 2], ['c', false]])
-    expectSchema(schema, input).toThrow('At least one entry does not match the given schema.', [
+    expectValidation(schema, input).toThrow('At least one entry does not match the given schema.', [
       ['a', {
         value: true,
         message: 'The value must be a number.',
@@ -55,11 +65,10 @@ describe('.create()', () => {
     ])
   })
 
-  it('returns a new Map.', () => {
+  it('returns a new `Map` instance.', () => {
     const input = new Map([['a', 1], ['b', 2], ['c', 3]])
-    const result = schema.validate(input)
-    expect(result).not.toBe(input)
-    expect(result).toEqual(input)
+    const expected = new Map([['a', 1], ['b', 2], ['c', 3]])
+    expectValidation(schema, input).toReturn(expected)
+    expectValidation(schema, input).notToReturn(input)
   })
-
 })

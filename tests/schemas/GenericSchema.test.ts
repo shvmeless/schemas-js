@@ -16,20 +16,20 @@ describe('.isValid()', () => {
     boolean: BooleanSchema.create(),
   })
 
-  it('should return `true` if the input matches the given schema.', () => {
+  it('returns `false` when `input` does not match the schema.', () => {
+    DataTypeGenerator.skip('objects').forEach((value) => {
+      const result = schema.isValid(value)
+      expect(result).toBe(false)
+    })
+  })
+
+  it('returns `true` when `input` matches the schema.', () => {
     const result = GenericSchema.isValid(schema, {
       string: 'STRING',
       number: 123,
       boolean: true,
     })
     expect(result).toBe(true)
-  })
-
-  it('should return `false` if the input does not match the given schema.', () => {
-    DataTypeGenerator.skip('objects').forEach((value) => {
-      const result = GenericSchema.isValid(schema, value)
-      expect(result).toBe(false)
-    })
   })
 
 })

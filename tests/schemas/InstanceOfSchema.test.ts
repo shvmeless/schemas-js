@@ -2,26 +2,38 @@
 import { describe, expect, it } from 'vitest'
 import { InstanceOfSchema } from '@/schemas/InstanceOfSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
-import { expectSchema } from '@tests/helpers/expect'
+import { expectValidation } from '@tests/helpers/expect'
 
 // METHOD
-describe('.create()', () => {
+describe('.create(constructor)', () => {
 
   const schema = InstanceOfSchema.create(Date)
 
-  it('validates an input that is an instance of the provided constructor.', () => {
-    const result = schema.validate(new Date())
-    expect(result).toBeInstanceOf(Date)
+  it('returns an instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(InstanceOfSchema)
   })
+})
 
-  it('throws when the input is not an instance.', () => {
+// METHOD
+describe('.validate(input)', () => {
+
+  const schema = InstanceOfSchema.create(Date)
+
+  it('throws when `input` is not a class instance.', () => {
     DataTypeGenerator.skip('classes').forEach((value) => {
-      expectSchema(schema, value).toThrow('Expected instance of Date.')
+      expectValidation(schema, value).toThrow('Expected instance of Date.')
     })
   })
 
-  it('throws when the input is not an instance of the provided constructor.', () => {
-    expectSchema(schema, new Map()).toThrow('Expected instance of Date.')
+  it('returns when `input` is a instance of the `constructor`.', () => {
+    expectValidation(schema, new Date()).toReturnInstanceOf(Date)
+    expectValidation(schema, new Date('1993-06-26')).toReturnInstanceOf(Date)
+    expectValidation(schema, new Date(741052800000)).toReturnInstanceOf(Date)
   })
 
+  it('throws when `input` is not an instance of the `constructor`.', () => {
+    expectValidation(schema, new Map()).toThrow('Expected instance of Date.')
+    expectValidation(schema, new Set()).toThrow('Expected instance of Date.')
+    expectValidation(schema, new ArrayBuffer()).toThrow('Expected instance of Date.')
+  })
 })
