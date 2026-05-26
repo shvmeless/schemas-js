@@ -138,4 +138,12 @@ export class NumberSchema implements GenericSchema<number> {
     })
   }
 
+  // METHOD
+  public finite(): NumberSchema {
+    return this.push((output, original) => {
+      if (Number.isFinite(output)) return output
+      throw new ValidationError(original, 'The value must be a finite number.')
+    })
+  }
+
 }
