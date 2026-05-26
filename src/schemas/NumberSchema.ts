@@ -130,4 +130,12 @@ export class NumberSchema implements GenericSchema<number> {
     })
   }
 
+  // METHOD
+  public integer(): NumberSchema {
+    return this.push((original, output) => {
+      if (Number.isInteger(output)) return output
+      throw new ValidationError(original, 'The value must be an integer.')
+    })
+  }
+
 }
