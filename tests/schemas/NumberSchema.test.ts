@@ -716,3 +716,34 @@ describe('.floor()', () => {
     expectValidation(schema, 999999.75).toReturn(999999)
   })
 })
+
+// METHOD
+describe('.ceil()', () => {
+
+  it('returns a new instance of the schema.', () => {
+    const schema = NumberSchema.create().ceil()
+    expect(schema).toBeInstanceOf(NumberSchema)
+  })
+
+  const schema = NumberSchema.create().ceil()
+
+  it('returns when `input` is an integer.', () => {
+    expectValidation(schema, Number.MIN_SAFE_INTEGER).toReturn(Number.MIN_SAFE_INTEGER)
+    expectValidation(schema, -999999).toReturn(-999999)
+    expectValidation(schema, -100).toReturn(-100)
+    expectValidation(schema, -0).toReturn(-0)
+    expectValidation(schema, 0).toReturn(0)
+    expectValidation(schema, 100).toReturn(100)
+    expectValidation(schema, 999999).toReturn(999999)
+    expectValidation(schema, Number.MAX_SAFE_INTEGER).toReturn(Number.MAX_SAFE_INTEGER)
+  })
+
+  it('ceils when `input` is a float.', () => {
+    expectValidation(schema, -999999.75).toReturn(-999999)
+    expectValidation(schema, -100.5).toReturn(-100)
+    expectValidation(schema, -0.25).toReturn(-0)
+    expectValidation(schema, 0.25).toReturn(1)
+    expectValidation(schema, 100.5).toReturn(101)
+    expectValidation(schema, 999999.75).toReturn(1000000)
+  })
+})

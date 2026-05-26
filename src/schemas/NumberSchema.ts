@@ -163,4 +163,9 @@ export class NumberSchema implements GenericSchema<number> {
   public floor(): NumberSchema {
     return this.push((output) => Math.floor(output))
   }
+
+  // METHOD
+  public ceil(): NumberSchema {
+    return this.push((output) => Math.ceil(output))
+  }
 }
