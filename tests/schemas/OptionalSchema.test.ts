@@ -1,5 +1,5 @@
 // IMPORTS
-import { describe, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { OptionalSchema } from '@/schemas/OptionalSchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
@@ -7,6 +7,16 @@ import { expectSchema } from '@tests/helpers/expect'
 
 // METHOD
 describe('.create(inner)', () => {
+
+  const schema = OptionalSchema.create(StringSchema.create())
+
+  it('returns an instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(OptionalSchema)
+  })
+})
+
+// METHOD
+describe('.validate(input)', () => {
 
   const schema = OptionalSchema.create(StringSchema.create())
 
@@ -25,7 +35,6 @@ describe('.create(inner)', () => {
       expectSchema(schema, value).toThrow('The value must be a string.')
     })
   })
-
 })
 
 // METHOD
@@ -48,5 +57,4 @@ describe('.default(default)', () => {
       expectSchema(schema, value).toThrow('The value must be a string.')
     })
   })
-
 })

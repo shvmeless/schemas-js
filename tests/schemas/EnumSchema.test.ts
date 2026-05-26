@@ -1,11 +1,32 @@
 // IMPORTS
-import { describe, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { EnumSchema } from '@/schemas/EnumSchema'
 import { expectSchema } from '@tests/helpers/expect'
 import { DataTypeGenerator } from '@tests/helpers/generator'
 
 // METHOD
 describe('.create(literals)', () => {
+  describe('when `literals` are string values', () => {
+
+    const schema = EnumSchema.create('A', 'B', 'C')
+
+    it('returns an instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(EnumSchema)
+    })
+  })
+
+  describe('when `literals` are number values', () => {
+
+    const schema = EnumSchema.create(-100, 0, 100)
+
+    it('returns an instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(EnumSchema)
+    })
+  })
+})
+
+// METHOD
+describe('.validate(input)', () => {
   describe('when `literals` are string values', () => {
 
     const schema = EnumSchema.create('A', 'B', 'C')

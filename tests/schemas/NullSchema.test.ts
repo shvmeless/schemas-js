@@ -1,11 +1,21 @@
 // IMPORTS
-import { describe, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { NullSchema } from '@/schemas/NullSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectSchema } from '@tests/helpers/expect'
 
 // METHOD
 describe('.create()', () => {
+
+  const schema = NullSchema.create()
+
+  it('returns an instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(NullSchema)
+  })
+})
+
+// METHOD
+describe('.validate(input)', () => {
 
   const schema = NullSchema.create()
 
@@ -18,5 +28,4 @@ describe('.create()', () => {
       expectSchema(schema, value).toThrow('The value must be null.')
     })
   })
-
 })

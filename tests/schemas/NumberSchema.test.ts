@@ -1,11 +1,21 @@
 // IMPORTS
-import { describe, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { NumberSchema } from '@/schemas/NumberSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectSchema } from '@tests/helpers/expect'
 
 // METHOD
 describe('.create()', () => {
+
+  const schema = NumberSchema.create()
+
+  it('returns an instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(NumberSchema)
+  })
+})
+
+// METHOD
+describe('.validate(input)', () => {
 
   const schema = NumberSchema.create()
 
@@ -38,5 +48,4 @@ describe('.create()', () => {
       expectSchema(schema, value).toThrow('The value must be a number.')
     })
   })
-
 })

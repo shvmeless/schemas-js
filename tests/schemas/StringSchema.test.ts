@@ -9,6 +9,16 @@ describe('create()', () => {
 
   const schema = StringSchema.create()
 
+  it('returns an instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(StringSchema)
+  })
+})
+
+// METHOD
+describe('validate(input)', () => {
+
+  const schema = StringSchema.create()
+
   it('return when `input` is a string.', () => {
     expectSchema(schema, 'string').toReturn('string')
     expectSchema(schema, 'text').toReturn('text')

@@ -1,11 +1,21 @@
 // IMPORTS
-import { describe, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { BooleanSchema } from '@/schemas/BooleanSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectSchema } from '@tests/helpers/expect'
 
 // METHOD
 describe('.create()', () => {
+
+  const schema = BooleanSchema.create()
+
+  it('returns an instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(BooleanSchema)
+  })
+})
+
+// METHOD
+describe('.validate(input)', () => {
 
   const schema = BooleanSchema.create()
 

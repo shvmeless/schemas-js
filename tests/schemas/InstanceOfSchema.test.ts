@@ -1,11 +1,21 @@
 // IMPORTS
-import { describe, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { InstanceOfSchema } from '@/schemas/InstanceOfSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectSchema } from '@tests/helpers/expect'
 
 // METHOD
 describe('.create(constructor)', () => {
+
+  const schema = InstanceOfSchema.create(Date)
+
+  it('returns an instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(InstanceOfSchema)
+  })
+})
+
+// METHOD
+describe('.validate(input)', () => {
 
   const schema = InstanceOfSchema.create(Date)
 

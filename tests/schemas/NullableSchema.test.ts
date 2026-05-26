@@ -1,5 +1,5 @@
 // IMPORTS
-import { describe, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { NullableSchema } from '@/schemas/NullableSchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
@@ -7,6 +7,16 @@ import { expectSchema } from '@tests/helpers/expect'
 
 // METHOD
 describe('.create(inner)', () => {
+
+  const schema = NullableSchema.create(StringSchema.create())
+
+  it('returns an instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(NullableSchema)
+  })
+})
+
+// METHOD
+describe('.validate(input)', () => {
 
   const schema = NullableSchema.create(StringSchema.create())
 

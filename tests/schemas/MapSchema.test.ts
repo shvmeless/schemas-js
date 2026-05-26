@@ -1,5 +1,5 @@
 // IMPORTS
-import { describe, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { MapSchema } from '@/schemas/MapSchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
@@ -8,6 +8,16 @@ import { NumberSchema } from '@/schemas/NumberSchema'
 
 // METHOD
 describe('.create(key, value)', () => {
+
+  const schema = MapSchema.create(StringSchema.create(), NumberSchema.create())
+
+  it('returns an instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(MapSchema)
+  })
+})
+
+// METHOD
+describe('.validate(input)', () => {
 
   const schema = MapSchema.create(StringSchema.create(), NumberSchema.create())
 

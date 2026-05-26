@@ -1,5 +1,5 @@
 // IMPORTS
-import { describe, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { ArraySchema } from '@/schemas/ArraySchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
@@ -7,6 +7,16 @@ import { expectSchema } from '@tests/helpers/expect'
 
 // METHOD
 describe('.create(shape)', () => {
+
+  const schema = ArraySchema.create(StringSchema.create())
+
+  it('returns an instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(ArraySchema)
+  })
+})
+
+// METHOD
+describe('.validate(input)', () => {
 
   const schema = ArraySchema.create(StringSchema.create())
 

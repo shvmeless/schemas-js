@@ -16,6 +16,20 @@ describe('.create(shape)', () => {
     boolean: BooleanSchema.create(),
   })
 
+  it('returns an instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(ObjectSchema)
+  })
+})
+
+// METHOD
+describe('.validate(input)', () => {
+
+  const schema = ObjectSchema.create({
+    string: StringSchema.create(),
+    number: NumberSchema.create(),
+    boolean: BooleanSchema.create(),
+  })
+
   it('throws when `input` is not an object.', () => {
     DataTypeGenerator.skip('objects').forEach((value) => {
       expectSchema(schema, value).toThrow('The value must be an object.')
@@ -115,5 +129,4 @@ describe('.strip()', () => {
     expectSchema(schema, input).toReturn(expected)
     expectSchema(schema, input).notToReturn(input)
   })
-
 })

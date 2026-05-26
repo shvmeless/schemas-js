@@ -1,5 +1,5 @@
 // IMPORTS
-import { describe, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { RecordSchema } from '@/schemas/RecordSchema'
 import { NumberSchema } from '@/schemas/NumberSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
@@ -7,6 +7,16 @@ import { expectSchema } from '@tests/helpers/expect'
 
 // METHOD
 describe('.create(shape)', () => {
+
+  const schema = RecordSchema.create(NumberSchema.create())
+
+  it('returns an instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(RecordSchema)
+  })
+})
+
+// METHOD
+describe('.validate(input)', () => {
 
   const schema = RecordSchema.create(NumberSchema.create())
 

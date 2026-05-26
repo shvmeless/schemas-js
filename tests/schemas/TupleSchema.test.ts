@@ -12,6 +12,16 @@ describe('.create(shapes)', () => {
 
   const schema = TupleSchema.create([StringSchema.create(), NumberSchema.create(), BooleanSchema.create()])
 
+  it('returns an instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(TupleSchema)
+  })
+})
+
+// METHOD
+describe('.validate(input)', () => {
+
+  const schema = TupleSchema.create([StringSchema.create(), NumberSchema.create(), BooleanSchema.create()])
+
   it('throws when `input` is not an array.', () => {
     DataTypeGenerator.skip('arrays').forEach((value) => {
       expectSchema(schema, value).toThrow('The value must be an array.')

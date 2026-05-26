@@ -1,5 +1,5 @@
 // IMPORTS
-import { describe, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { UnionSchema } from '@/schemas/UnionSchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { NumberSchema } from '@/schemas/NumberSchema'
@@ -9,6 +9,20 @@ import { expectSchema } from '@tests/helpers/expect'
 
 // METHOD
 describe('.create(...inner)', () => {
+
+  const schema = UnionSchema.create(
+    StringSchema.create(),
+    NumberSchema.create(),
+    BooleanSchema.create(),
+  )
+
+  it('returns an instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(UnionSchema)
+  })
+})
+
+// METHOD
+describe('.validate(input)', () => {
 
   const schema = UnionSchema.create(
     StringSchema.create(),
