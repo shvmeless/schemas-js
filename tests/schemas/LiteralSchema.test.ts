@@ -1,5 +1,5 @@
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it } from 'vitest'
 import { LiteralSchema } from '@/schemas/LiteralSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectSchema } from '@tests/helpers/expect'
@@ -17,12 +17,17 @@ describe('.create(literal)', () => {
     })
 
     it('returns when `input` matches the `literal`.', () => {
-      const result = schema.validate('LITERAL')
-      expect(result).toBe('LITERAL')
+      expectSchema(schema, 'LITERAL').toReturn('LITERAL')
+    })
+
+    it('throws when `input` does not match the `literal` (case-sensitive).', () => {
+      expectSchema(schema, 'literal').toThrow('The value must be the literal "LITERAL".')
     })
 
     it('throws when `input` does not match the `literal`.', () => {
       expectSchema(schema, 'WRONG').toThrow('The value must be the literal "LITERAL".')
+      expectSchema(schema, 'TEXT').toThrow('The value must be the literal "LITERAL".')
+      expectSchema(schema, 'STRING').toThrow('The value must be the literal "LITERAL".')
     })
   })
 
@@ -37,12 +42,13 @@ describe('.create(literal)', () => {
     })
 
     it('returns when `input` matches the `literal`.', () => {
-      const result = schema.validate(255)
-      expect(result).toBe(255)
+      expectSchema(schema, 255).toReturn(255)
     })
 
     it('throws when `input` does not match the `literal`.', () => {
+      expectSchema(schema, -500).toThrow('The value must be the literal 255.')
       expectSchema(schema, 0).toThrow('The value must be the literal 255.')
+      expectSchema(schema, 500).toThrow('The value must be the literal 255.')
     })
   })
 
@@ -57,8 +63,7 @@ describe('.create(literal)', () => {
     })
 
     it('returns when `input` matches the `literal`.', () => {
-      const result = schema.validate(true)
-      expect(result).toBe(true)
+      expectSchema(schema, true).toReturn(true)
     })
 
     it('throws when `input` does not match the `literal`.', () => {

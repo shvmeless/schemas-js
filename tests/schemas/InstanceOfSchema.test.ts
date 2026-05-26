@@ -1,5 +1,5 @@
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it } from 'vitest'
 import { InstanceOfSchema } from '@/schemas/InstanceOfSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectSchema } from '@tests/helpers/expect'
@@ -16,12 +16,14 @@ describe('.create(constructor)', () => {
   })
 
   it('returns when `input` is a instance of the `constructor`.', () => {
-    const result = schema.validate(new Date())
-    expect(result).toBeInstanceOf(Date)
+    expectSchema(schema, new Date()).toReturnInstanceOf(Date)
+    expectSchema(schema, new Date('1993-06-26')).toReturnInstanceOf(Date)
+    expectSchema(schema, new Date(741052800000)).toReturnInstanceOf(Date)
   })
 
   it('throws when `input` is not an instance of the `constructor`.', () => {
     expectSchema(schema, new Map()).toThrow('Expected instance of Date.')
+    expectSchema(schema, new Set()).toThrow('Expected instance of Date.')
+    expectSchema(schema, new ArrayBuffer()).toThrow('Expected instance of Date.')
   })
-
 })

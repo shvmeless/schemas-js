@@ -1,5 +1,5 @@
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it } from 'vitest'
 import { UnionSchema } from '@/schemas/UnionSchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { NumberSchema } from '@/schemas/NumberSchema'
@@ -17,11 +17,12 @@ describe('.create(...inner)', () => {
   )
 
   it('returns when `input` matches any of the `inner` schemas.', () => {
-    const inputs = ['STRING', 25, true]
-    inputs.forEach((input) => {
-      const result = schema.validate(input)
-      expect(result).toBe(input)
-    })
+    expectSchema(schema, 'STRING').toReturn('STRING')
+    expectSchema(schema, 'TEXT').toReturn('TEXT')
+    expectSchema(schema, -250).toReturn(-250)
+    expectSchema(schema, 250).toReturn(250)
+    expectSchema(schema, true).toReturn(true)
+    expectSchema(schema, false).toReturn(false)
   })
 
   it('throws when `input` does not match any of the `inner` schemas.', () => {
@@ -29,5 +30,4 @@ describe('.create(...inner)', () => {
       expectSchema(schema, value).toThrow('The value does not match any of the given schemas.')
     })
   })
-
 })

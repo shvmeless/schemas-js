@@ -18,7 +18,7 @@ describe('.isValid()', () => {
 
   it('returns `false` when `input` does not match the schema.', () => {
     DataTypeGenerator.skip('objects').forEach((value) => {
-      const result = GenericSchema.isValid(schema, value)
+      const result = schema.isValid(value)
       expect(result).toBe(false)
     })
   })

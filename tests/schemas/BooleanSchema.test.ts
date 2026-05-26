@@ -1,5 +1,5 @@
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it } from 'vitest'
 import { BooleanSchema } from '@/schemas/BooleanSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectSchema } from '@tests/helpers/expect'
@@ -10,10 +10,8 @@ describe('.create()', () => {
   const schema = BooleanSchema.create()
 
   it('returns when `input` is a boolean.', () => {
-    const r1 = schema.validate(true)
-    expect(r1).toBe(true)
-    const r2 = schema.validate(false)
-    expect(r2).toBe(false)
+    expectSchema(schema, true).toReturn(true)
+    expectSchema(schema, false).toReturn(false)
   })
 
   it('throws when `input` is not a boolean.', () => {

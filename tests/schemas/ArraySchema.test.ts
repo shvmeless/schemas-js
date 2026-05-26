@@ -1,5 +1,5 @@
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it } from 'vitest'
 import { ArraySchema } from '@/schemas/ArraySchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
@@ -11,8 +11,7 @@ describe('.create(shape)', () => {
   const schema = ArraySchema.create(StringSchema.create())
 
   it('returns when `input` is an array.', () => {
-    const result = schema.validate([])
-    expect(result).toEqual([])
+    expectSchema(schema, []).toReturn([])
   })
 
   it('throws when `input` is not an array.', () => {
@@ -22,8 +21,7 @@ describe('.create(shape)', () => {
   })
 
   it('returns when all `input` elements match the `shape` schema.', () => {
-    const result = schema.validate(['a', 'b', 'c'])
-    expect(result).toEqual(['a', 'b', 'c'])
+    expectSchema(schema, ['a', 'b', 'c']).toReturn(['a', 'b', 'c'])
   })
 
   it('throws when at least one `input` element does not match the `shape` schema.', () => {
@@ -41,9 +39,7 @@ describe('.create(shape)', () => {
 
   it('returns a new array.', () => {
     const input = ['a', 'b', 'c']
-    const result = schema.validate(input)
-    expect(result).not.toBe(input)
-    expect(result).toEqual(input)
+    expectSchema(schema, input).toReturn(['a', 'b', 'c'])
+    expectSchema(schema, input).notToReturn(input)
   })
-
 })

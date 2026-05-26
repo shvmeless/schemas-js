@@ -1,5 +1,5 @@
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it } from 'vitest'
 import { NullSchema } from '@/schemas/NullSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectSchema } from '@tests/helpers/expect'
@@ -10,8 +10,7 @@ describe('.create()', () => {
   const schema = NullSchema.create()
 
   it('returns when `input` is `null`.', () => {
-    const result = schema.validate(null)
-    expect(result).toBe(null)
+    expectSchema(schema, null).toReturn(null)
   })
 
   it('throws when `input` is not `null`.', () => {

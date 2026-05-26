@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it } from 'vitest'
 import { AnySchema } from '@/schemas/AnySchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
+import { expectSchema } from '@tests/helpers/expect'
 
 // METHOD
 describe('.create()', () => {
@@ -12,8 +11,7 @@ describe('.create()', () => {
 
   it('returns any `input` as `any`.', () => {
     DataTypeGenerator.forEach((value) => {
-      const result = schema.validate(value)
-      expect(result).toBe(value)
+      expectSchema(schema, value).toReturn(value)
     })
   })
 

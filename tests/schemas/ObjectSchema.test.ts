@@ -23,12 +23,14 @@ describe('.create(shape)', () => {
   })
 
   it('returns when `input` matches the `shape` schema.', () => {
-    const result = schema.validate({ string: 'STRING', number: 74105280, boolean: true })
-    expect(result).toEqual({ string: 'STRING', number: 74105280, boolean: true })
+    const input = { string: 'STRING', number: 74105280, boolean: true }
+    const expected = { string: 'STRING', number: 74105280, boolean: true }
+    expectSchema(schema, input).toReturn(expected)
   })
 
   it('throws when `input` contains fewer properties than expected.', () => {
-    expectSchema(schema, { string: 'STRING' }).toThrow('The object is missing one or more required properties.', [
+    const input = { string: 'STRING' }
+    expectSchema(schema, input).toThrow('The object is missing one or more required properties.', [
       ['number', {
         value: undefined,
         message: 'The value must be a number.',
@@ -41,7 +43,8 @@ describe('.create(shape)', () => {
   })
 
   it('throws when `input` contains more properties than expected.', () => {
-    expectSchema(schema, { string: 'STRING', number: 74105280, boolean: true, unexpected: 'UNEXPECTED' }).toThrow('The object contains one or more unexpected properties.', [
+    const input = { string: 'STRING', number: 74105280, boolean: true, unexpected: 'UNEXPECTED' }
+    expectSchema(schema, input).toThrow('The object contains one or more unexpected properties.', [
       ['unexpected', {
         value: 'UNEXPECTED',
         message: 'Unexpected property.',
@@ -51,9 +54,9 @@ describe('.create(shape)', () => {
 
   it('returns a new object.', () => {
     const input = { string: 'STRING', number: 74105280, boolean: true }
-    const result = schema.validate(input)
-    expect(result).not.toBe(input)
-    expect(result).toEqual(input)
+    const expected = { string: 'STRING', number: 74105280, boolean: true }
+    expectSchema(schema, input).toReturn(expected)
+    expectSchema(schema, input).notToReturn(input)
   })
 
 })
@@ -81,12 +84,14 @@ describe('.strip()', () => {
   })
 
   it('returns when `input` matches the `shape` schema.', () => {
-    const result = schema.validate({ string: 'STRING', number: 74105280, boolean: true })
-    expect(result).toEqual({ string: 'STRING', number: 74105280, boolean: true })
+    const input = { string: 'STRING', number: 74105280, boolean: true }
+    const expected = { string: 'STRING', number: 74105280, boolean: true }
+    expectSchema(schema, input).toReturn(expected)
   })
 
   it('throws when `input` contains fewer properties than expected.', () => {
-    expectSchema(schema, { string: 'STRING' }).toThrow('The object is missing one or more required properties.', [
+    const input = { string: 'STRING' }
+    expectSchema(schema, input).toThrow('The object is missing one or more required properties.', [
       ['number', {
         value: undefined,
         message: 'The value must be a number.',
@@ -99,15 +104,16 @@ describe('.strip()', () => {
   })
 
   it('strips when `input` contains unexpected properties.', () => {
-    const result = schema.validate({ string: 'STRING', number: 74105280, boolean: true, unexpected: 'UNEXPECTED' })
-    expect(result).toEqual({ string: 'STRING', number: 74105280, boolean: true })
+    const input = { string: 'STRING', number: 74105280, boolean: true, unexpected: 'UNEXPECTED' }
+    const expected = { string: 'STRING', number: 74105280, boolean: true }
+    expectSchema(schema, input).toReturn(expected)
   })
 
   it('returns a new object.', () => {
     const input = { string: 'STRING', number: 74105280, boolean: true }
-    const result = schema.validate(input)
-    expect(result).not.toBe(input)
-    expect(result).toEqual(input)
+    const expected = { string: 'STRING', number: 74105280, boolean: true }
+    expectSchema(schema, input).toReturn(expected)
+    expectSchema(schema, input).notToReturn(input)
   })
 
 })

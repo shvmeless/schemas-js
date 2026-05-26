@@ -1,7 +1,8 @@
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it } from 'vitest'
 import { UnknownSchema } from '@/schemas/UnknownSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
+import { expectSchema } from '@tests/helpers/expect'
 
 // METHOD
 describe('.create()', () => {
@@ -10,9 +11,7 @@ describe('.create()', () => {
 
   it('validate any `input` value as `unknown`.', () => {
     DataTypeGenerator.forEach((value) => {
-      const result = schema.validate(value)
-      expect(result).toBe(value)
+      expectSchema(schema, value).toReturn(value)
     })
   })
-
 })

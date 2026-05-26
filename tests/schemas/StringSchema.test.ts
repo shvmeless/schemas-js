@@ -10,13 +10,13 @@ describe('create()', () => {
   const schema = StringSchema.create()
 
   it('return when `input` is a string.', () => {
-    const result = schema.validate('string')
-    expect(result).toBe('string')
+    expectSchema(schema, 'string').toReturn('string')
+    expectSchema(schema, 'text').toReturn('text')
+    expectSchema(schema, 'example').toReturn('example')
   })
 
   it('returns when `input` is an empty string.', () => {
-    const result = schema.validate('')
-    expect(result).toBe('')
+    expectSchema(schema, '').toReturn('')
   })
 
   it('throws when `input` is not a string.', () => {
@@ -57,8 +57,7 @@ describe('length(length)', () => {
     const schema = StringSchema.create().length(0)
 
     it('returns when `input` length is as expected.', () => {
-      const result = schema.validate('')
-      expect(result).toBe('')
+      expectSchema(schema, '').toReturn('')
     })
 
     it('throws when `input` length is greater than expected.', () => {
@@ -75,8 +74,7 @@ describe('length(length)', () => {
     })
 
     it('returns when `input` length is as expected.', () => {
-      const result = schema.validate('12345678')
-      expect(result).toBe('12345678')
+      expectSchema(schema, '12345678').toReturn('12345678')
     })
 
     it('throws when `input` length is greater than expected.', () => {
@@ -116,13 +114,11 @@ describe('min(length)', () => {
     const schema = StringSchema.create().min(0)
 
     it('returns when `input` length is as expected.', () => {
-      const result = schema.validate('')
-      expect(result).toBe('')
+      expectSchema(schema, '').toReturn('')
     })
 
     it('returns when `input` length is greater than expected.', () => {
-      const result = schema.validate('1')
-      expect(result).toBe('1')
+      expectSchema(schema, '1').toReturn('1')
     })
   })
 
@@ -135,13 +131,11 @@ describe('min(length)', () => {
     })
 
     it('returns when `input` length is as expected.', () => {
-      const result = schema.validate('12345678')
-      expect(result).toBe('12345678')
+      expectSchema(schema, '12345678').toReturn('12345678')
     })
 
     it('returns when `input` length is greater than expected.', () => {
-      const result = schema.validate('123456789')
-      expect(result).toBe('123456789')
+      expectSchema(schema, '123456789').toReturn('123456789')
     })
   })
 })
@@ -177,8 +171,7 @@ describe('max(length)', () => {
     const schema = StringSchema.create().max(0)
 
     it('returns when `input` length is as expected.', () => {
-      const result = schema.validate('')
-      expect(result).toBe('')
+      expectSchema(schema, '').toReturn('')
     })
 
     it('throws when `input` length is greater than expected.', () => {
@@ -191,13 +184,11 @@ describe('max(length)', () => {
     const schema = StringSchema.create().max(8)
 
     it('returns when `input` length is less than expected.', () => {
-      const result = schema.validate('1234567')
-      expect(result).toBe('1234567')
+      expectSchema(schema, '1234567').toReturn('1234567')
     })
 
     it('returns when `input` length is as expected.', () => {
-      const result = schema.validate('12345678')
-      expect(result).toBe('12345678')
+      expectSchema(schema, '12345678').toReturn('12345678')
     })
 
     it('throws when `input` length is greater than expected.', () => {
@@ -225,8 +216,7 @@ describe('lowercase({ fix })', () => {
     })
 
     it('returns when `input` does not contain uppercase characters.', () => {
-      const result = schema.validate('example')
-      expect(result).toBe('example')
+      expectSchema(schema, 'example').toReturn('example')
     })
   })
 
@@ -239,8 +229,7 @@ describe('lowercase({ fix })', () => {
     })
 
     it('returns when `input` does not contain uppercase characters.', () => {
-      const result = schema.validate('example')
-      expect(result).toBe('example')
+      expectSchema(schema, 'example').toReturn('example')
     })
   })
 
@@ -249,13 +238,11 @@ describe('lowercase({ fix })', () => {
     const schema = StringSchema.create().lowercase({ fix: true })
 
     it('fixes when `input` contains uppercase characters.', () => {
-      const result = schema.validate('eXaMpLe')
-      expect(result).toBe('example')
+      expectSchema(schema, 'eXaMpLe').toReturn('example')
     })
 
     it('returns when `input` does not contain uppercase characters.', () => {
-      const result = schema.validate('example')
-      expect(result).toBe('example')
+      expectSchema(schema, 'example').toReturn('example')
     })
   })
 })
@@ -279,8 +266,7 @@ describe('uppercase({ fix })', () => {
     })
 
     it('returns when `input` does not contain lowercase characters.', () => {
-      const result = schema.validate('EXAMPLE')
-      expect(result).toBe('EXAMPLE')
+      expectSchema(schema, 'EXAMPLE').toReturn('EXAMPLE')
     })
   })
 
@@ -293,8 +279,7 @@ describe('uppercase({ fix })', () => {
     })
 
     it('returns when `input` does not contain lowercase characters.', () => {
-      const result = schema.validate('EXAMPLE')
-      expect(result).toBe('EXAMPLE')
+      expectSchema(schema, 'EXAMPLE').toReturn('EXAMPLE')
     })
   })
 
@@ -303,13 +288,11 @@ describe('uppercase({ fix })', () => {
     const schema = StringSchema.create().uppercase({ fix: true })
 
     it('fixes when `input` contains lowercase characters.', () => {
-      const result = schema.validate('eXaMpLe')
-      expect(result).toBe('EXAMPLE')
+      expectSchema(schema, 'eXaMpLe').toReturn('EXAMPLE')
     })
 
     it('returns when `input` does not contain lowercase characters.', () => {
-      const result = schema.validate('EXAMPLE')
-      expect(result).toBe('EXAMPLE')
+      expectSchema(schema, 'EXAMPLE').toReturn('EXAMPLE')
     })
   })
 })
@@ -341,8 +324,7 @@ describe('trim({ fix })', () => {
     })
 
     it('returns when `input` is not surrounded by whitespaces.', () => {
-      const result = schema.validate('EXAMPLE')
-      expect(result).toBe('EXAMPLE')
+      expectSchema(schema, 'EXAMPLE').toReturn('EXAMPLE')
     })
   })
 
@@ -363,8 +345,7 @@ describe('trim({ fix })', () => {
     })
 
     it('returns when `input` is not surrounded by whitespaces.', () => {
-      const result = schema.validate('EXAMPLE')
-      expect(result).toBe('EXAMPLE')
+      expectSchema(schema, 'EXAMPLE').toReturn('EXAMPLE')
     })
   })
 
@@ -373,23 +354,19 @@ describe('trim({ fix })', () => {
     const schema = StringSchema.create().trim({ fix: true })
 
     it('returns when `input` contains whitespaces at the beginning.', () => {
-      const result = schema.validate('   EXAMPLE')
-      expect(result).toBe('EXAMPLE')
+      expectSchema(schema, '   EXAMPLE').toReturn('EXAMPLE')
     })
 
     it('returns when `input` contains whitespaces at the end.', () => {
-      const result = schema.validate('EXAMPLE   ')
-      expect(result).toBe('EXAMPLE')
+      expectSchema(schema, 'EXAMPLE   ').toReturn('EXAMPLE')
     })
 
     it('returns when `input` is surrounded by whitespaces.', () => {
-      const result = schema.validate('   EXAMPLE   ')
-      expect(result).toBe('EXAMPLE')
+      expectSchema(schema, '   EXAMPLE   ').toReturn('EXAMPLE')
     })
 
     it('returns when `input` is not surrounded by whitespaces.', () => {
-      const result = schema.validate('EXAMPLE')
-      expect(result).toBe('EXAMPLE')
+      expectSchema(schema, 'EXAMPLE').toReturn('EXAMPLE')
     })
   })
 })
@@ -417,8 +394,7 @@ describe('startsWith(prefix, { fix })', () => {
     })
 
     it('returns when `input` starts with the expected `prefix`.', () => {
-      const result = schema.validate('prefix-string')
-      expect(result).toBe('prefix-string')
+      expectSchema(schema, 'prefix-string').toReturn('prefix-string')
     })
   })
 
@@ -435,8 +411,7 @@ describe('startsWith(prefix, { fix })', () => {
     })
 
     it('returns when `input` starts with the expected `prefix`.', () => {
-      const result = schema.validate('prefix-string')
-      expect(result).toBe('prefix-string')
+      expectSchema(schema, 'prefix-string').toReturn('prefix-string')
     })
   })
 
@@ -445,18 +420,15 @@ describe('startsWith(prefix, { fix })', () => {
     const schema = StringSchema.create().startsWith('prefix-', { fix: true })
 
     it('fixes when `input` does not start with the expected `prefix`.', () => {
-      const result = schema.validate('string')
-      expect(result).toBe('prefix-string')
+      expectSchema(schema, 'string').toReturn('prefix-string')
     })
 
     it('fixes when `input` starts with the expected `prefix` (case-sensitive).', () => {
-      const result = schema.validate('PREFIX-string')
-      expect(result).toBe('prefix-PREFIX-string')
+      expectSchema(schema, 'PREFIX-string').toReturn('prefix-PREFIX-string')
     })
 
     it('returns when `input` starts with the expected `prefix`.', () => {
-      const result = schema.validate('prefix-string')
-      expect(result).toBe('prefix-string')
+      expectSchema(schema, 'prefix-string').toReturn('prefix-string')
     })
   })
 })
@@ -484,8 +456,7 @@ describe('endsWith(suffix, { fix })', () => {
     })
 
     it('returns when `input` ends with the expected `suffix`.', () => {
-      const result = schema.validate('string-suffix')
-      expect(result).toBe('string-suffix')
+      expectSchema(schema, 'string-suffix').toReturn('string-suffix')
     })
   })
 
@@ -502,8 +473,7 @@ describe('endsWith(suffix, { fix })', () => {
     })
 
     it('returns when `input` ends with the expected `suffix`.', () => {
-      const result = schema.validate('string-suffix')
-      expect(result).toBe('string-suffix')
+      expectSchema(schema, 'string-suffix').toReturn('string-suffix')
     })
   })
 
@@ -512,18 +482,15 @@ describe('endsWith(suffix, { fix })', () => {
     const schema = StringSchema.create().endsWith('-suffix', { fix: true })
 
     it('fixes when `input` does not end with the expected `suffix`.', () => {
-      const result = schema.validate('string')
-      expect(result).toBe('string-suffix')
+      expectSchema(schema, 'string').toReturn('string-suffix')
     })
 
     it('fixes when `input` ends with the expected `suffix` (case-sensitive).', () => {
-      const result = schema.validate('string-SUFFIX')
-      expect(result).toBe('string-SUFFIX-suffix')
+      expectSchema(schema, 'string-SUFFIX').toReturn('string-SUFFIX-suffix')
     })
 
     it('returns when `input` ends with the expected `suffix`.', () => {
-      const result = schema.validate('string-suffix')
-      expect(result).toBe('string-suffix')
+      expectSchema(schema, 'string-suffix').toReturn('string-suffix')
     })
   })
 })
@@ -544,8 +511,7 @@ describe('includes(search)', () => {
   })
 
   it('returns when `input` includes the expected `search`.', () => {
-    const result = schema.validate('string')
-    expect(result).toBe('string')
+    expectSchema(schema, 'string').toReturn('string')
   })
 })
 
@@ -565,8 +531,7 @@ describe('excludes(search)', () => {
   })
 
   it('returns when `input` does not include the expected `search`.', () => {
-    const result = schema.validate('text')
-    expect(result).toBe('text')
+    expectSchema(schema, 'text').toReturn('text')
   })
 })
 
@@ -586,8 +551,7 @@ describe('match(pattern)', () => {
   })
 
   it('returns when `input` matches the `pattern`.', () => {
-    const result = schema.validate('abcde')
-    expect(result).toBe('abcde')
+    expectSchema(schema, 'abcde').toReturn('abcde')
   })
 })
 
@@ -603,12 +567,10 @@ describe('default(default)', () => {
   })
 
   it('returns `default` value when `input` is an empty string.', () => {
-    const result = schema.validate('')
-    expect(result).toBe('DEFAULT')
+    expectSchema(schema, '').toReturn('DEFAULT')
   })
 
   it('returns when `input` is not an empty string.', () => {
-    const result = schema.validate('string')
-    expect(result).toBe('string')
+    expectSchema(schema, 'string').toReturn('string')
   })
 })

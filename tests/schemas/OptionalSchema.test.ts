@@ -1,5 +1,5 @@
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it } from 'vitest'
 import { OptionalSchema } from '@/schemas/OptionalSchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
@@ -11,13 +11,13 @@ describe('.create(inner)', () => {
   const schema = OptionalSchema.create(StringSchema.create())
 
   it('returns when `input` matches the `inner` schema.', () => {
-    const result = schema.validate('STRING')
-    expect(result).toBe('STRING')
+    expectSchema(schema, 'STRING').toReturn('STRING')
+    expectSchema(schema, 'TEXT').toReturn('TEXT')
+    expectSchema(schema, 'EXAMPLE').toReturn('EXAMPLE')
   })
 
   it('returns when `input` is `undefined`.', () => {
-    const result = schema.validate(undefined)
-    expect(result).toBeUndefined()
+    expectSchema(schema, undefined).toReturn(undefined)
   })
 
   it('throws when `input` does not match the `inner` schema.', () => {
@@ -34,13 +34,13 @@ describe('.default(default)', () => {
   const schema = OptionalSchema.create(StringSchema.create()).default('DEFAULT')
 
   it('returns when the `input` matches the `inner` schema.', () => {
-    const result = schema.validate('STRING')
-    expect(result).toBe('STRING')
+    expectSchema(schema, 'STRING').toReturn('STRING')
+    expectSchema(schema, 'TEXT').toReturn('TEXT')
+    expectSchema(schema, 'EXAMPLE').toReturn('EXAMPLE')
   })
 
   it('returns `default` value when `input` is `undefined`.', () => {
-    const result = schema.validate(undefined)
-    expect(result).toBe('DEFAULT')
+    expectSchema(schema, undefined).toReturn('DEFAULT')
   })
 
   it('throws when `input` does not match the `inner` schema.', () => {

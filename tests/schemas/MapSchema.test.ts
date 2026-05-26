@@ -1,5 +1,5 @@
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it } from 'vitest'
 import { MapSchema } from '@/schemas/MapSchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
@@ -12,8 +12,7 @@ describe('.create(key, value)', () => {
   const schema = MapSchema.create(StringSchema.create(), NumberSchema.create())
 
   it('returns when `input` is a `Map` instance.', () => {
-    const result = schema.validate(new Map())
-    expect(result).toEqual(new Map())
+    expectSchema(schema, new Map()).toReturn(new Map())
   })
 
   it('throws when `input` is not a `Map` instance.', () => {
@@ -23,8 +22,9 @@ describe('.create(key, value)', () => {
   })
 
   it('returns when all `input` entries match the `key` and `value` schemas.', () => {
-    const result = schema.validate(new Map([['a', 1], ['b', 2], ['c', 3]]))
-    expect(result).toEqual(new Map([['a', 1], ['b', 2], ['c', 3]]))
+    const input = new Map([['a', 1], ['b', 2], ['c', 3]])
+    const expected = new Map([['a', 1], ['b', 2], ['c', 3]])
+    expectSchema(schema, input).toReturn(expected)
   })
 
   it('throws when at least one `input` key does not match the `key` schema.', () => {
@@ -57,9 +57,8 @@ describe('.create(key, value)', () => {
 
   it('returns a new `Map` instance.', () => {
     const input = new Map([['a', 1], ['b', 2], ['c', 3]])
-    const result = schema.validate(input)
-    expect(result).not.toBe(input)
-    expect(result).toEqual(input)
+    const expected = new Map([['a', 1], ['b', 2], ['c', 3]])
+    expectSchema(schema, input).toReturn(expected)
+    expectSchema(schema, input).notToReturn(input)
   })
-
 })

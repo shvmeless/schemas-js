@@ -1,5 +1,5 @@
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it } from 'vitest'
 import { NullableSchema } from '@/schemas/NullableSchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
@@ -11,13 +11,11 @@ describe('.create(inner)', () => {
   const schema = NullableSchema.create(StringSchema.create())
 
   it('returns when `input` matches the `inner` schema.', () => {
-    const result = schema.validate('STRING')
-    expect(result).toBe('STRING')
+    expectSchema(schema, 'STRING').toReturn('STRING')
   })
 
   it('returns when `input` is `null`.', () => {
-    const result = schema.validate(null)
-    expect(result).toBeNull()
+    expectSchema(schema, null).toReturn(null)
   })
 
   it('throws when `input` does not match the `inner` schema.', () => {
@@ -34,13 +32,11 @@ describe('.default(default)', () => {
   const schema = NullableSchema.create(StringSchema.create()).default('DEFAULT')
 
   it('returns when the `input` matches the `inner` schema.', () => {
-    const result = schema.validate('STRING')
-    expect(result).toBe('STRING')
+    expectSchema(schema, 'STRING').toReturn('STRING')
   })
 
   it('returns `default` value when `input` is `null`.', () => {
-    const result = schema.validate(null)
-    expect(result).toBe('DEFAULT')
+    expectSchema(schema, null).toReturn('DEFAULT')
   })
 
   it('throws when `input` does not match the `inner` schema.', () => {
