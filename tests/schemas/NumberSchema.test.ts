@@ -158,3 +158,112 @@ describe('lessThan(target, { clamp })', () => {
     })
   })
 })
+
+// METHOD
+describe('lessThanOrEqual(target, { clamp })', () => {
+
+  it('returns a new instance of the schema.', () => {
+    const base = NumberSchema.create()
+    const schema = base.lessThanOrEqual(250)
+    expect(schema).toBeInstanceOf(NumberSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  describe('when `target` is `NaN`', () => {
+    it('throws when `clamp` is `undefined`.', () => {
+      expectError(() => {
+        NumberSchema.create().lessThanOrEqual(NaN)
+      }).toHaveMessage('The `target` parameter cannot be NaN.')
+    })
+
+    it('throws when `clamp` is `false`.', () => {
+      expectError(() => {
+        NumberSchema.create().lessThanOrEqual(NaN, { clamp: false })
+      }).toHaveMessage('The `target` parameter cannot be NaN.')
+    })
+
+    it('throws when `clamp` is `true`.', () => {
+      expectError(() => {
+        NumberSchema.create().lessThanOrEqual(NaN, { clamp: true })
+      }).toHaveMessage('The `target` parameter cannot be NaN.')
+    })
+  })
+
+  describe('when `clamp` is `undefined`', () => {
+
+    const target = 500
+    const schema = NumberSchema.create().lessThanOrEqual(target)
+
+    it('returns when `input` is less than `target`.', () => {
+      expectValidation(schema, 499.999).toReturn(499.999)
+      expectValidation(schema, 499).toReturn(499)
+      expectValidation(schema, 0).toReturn(0)
+      expectValidation(schema, Number.MIN_SAFE_INTEGER).toReturn(Number.MIN_SAFE_INTEGER)
+      expectValidation(schema, -Infinity).toReturn(-Infinity)
+    })
+
+    it('returns when `input` is equal to `target`.', () => {
+      expectValidation(schema, 500).toReturn(500)
+    })
+
+    it('throws when `input` is greater than `target`.', () => {
+      expectValidation(schema, 500.001).toThrow(`The value must be less than or equal to ${target}.`)
+      expectValidation(schema, 501).toThrow(`The value must be less than or equal to ${target}.`)
+      expectValidation(schema, 1000).toThrow(`The value must be less than or equal to ${target}.`)
+      expectValidation(schema, Number.MAX_SAFE_INTEGER).toThrow(`The value must be less than or equal to ${target}.`)
+      expectValidation(schema, Infinity).toThrow(`The value must be less than or equal to ${target}.`)
+    })
+  })
+
+  describe('when `clamp` is `false`', () => {
+
+    const target = 500
+    const schema = NumberSchema.create().lessThanOrEqual(target, { clamp: false })
+
+    it('returns when `input` is less than `target`.', () => {
+      expectValidation(schema, 499.999).toReturn(499.999)
+      expectValidation(schema, 499).toReturn(499)
+      expectValidation(schema, 0).toReturn(0)
+      expectValidation(schema, Number.MIN_SAFE_INTEGER).toReturn(Number.MIN_SAFE_INTEGER)
+      expectValidation(schema, -Infinity).toReturn(-Infinity)
+    })
+
+    it('returns when `input` is equal to `target`.', () => {
+      expectValidation(schema, 500).toReturn(500)
+    })
+
+    it('throws when `input` is greater than `target`.', () => {
+      expectValidation(schema, 500.001).toThrow(`The value must be less than or equal to ${target}.`)
+      expectValidation(schema, 501).toThrow(`The value must be less than or equal to ${target}.`)
+      expectValidation(schema, 1000).toThrow(`The value must be less than or equal to ${target}.`)
+      expectValidation(schema, Number.MAX_SAFE_INTEGER).toThrow(`The value must be less than or equal to ${target}.`)
+      expectValidation(schema, Infinity).toThrow(`The value must be less than or equal to ${target}.`)
+    })
+  })
+
+  describe('when `clamp` is `true`', () => {
+
+    const target = 500
+    const schema = NumberSchema.create().lessThanOrEqual(target, { clamp: true })
+
+    it('returns when `input` is less than `target`.', () => {
+      expectValidation(schema, 499.999).toReturn(499.999)
+      expectValidation(schema, 499).toReturn(499)
+      expectValidation(schema, 0).toReturn(0)
+      expectValidation(schema, Number.MIN_SAFE_INTEGER).toReturn(Number.MIN_SAFE_INTEGER)
+      expectValidation(schema, -Infinity).toReturn(-Infinity)
+    })
+
+    it('returns when `input` is equal to `target`.', () => {
+      expectValidation(schema, 500).toReturn(500)
+    })
+
+    it('clamps when `input` is greater than `target`.', () => {
+      expectValidation(schema, 500.001).toReturn(500)
+      expectValidation(schema, 501).toReturn(500)
+      expectValidation(schema, 1000).toReturn(500)
+      expectValidation(schema, Number.MAX_SAFE_INTEGER).toReturn(500)
+      expectValidation(schema, Infinity).toReturn(500)
+    })
+  })
+})
