@@ -104,4 +104,14 @@ export class NumberSchema implements GenericSchema<number> {
     })
   }
 
+  // METHOD
+  public greaterThanOrEqual(target: number, options: { clamp?: boolean } = {}): NumberSchema {
+    if (Number.isNaN(target)) throw new Error('The `target` parameter cannot be NaN.')
+    return this.push((original, output) => {
+      if (output >= target) return output
+      if (options.clamp === true) return target
+      throw new ValidationError(original, `The value must be greater than or equal to ${stringify(target)}.`)
+    })
+  }
+
 }
