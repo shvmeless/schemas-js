@@ -154,4 +154,8 @@ export class NumberSchema implements GenericSchema<number> {
     })
   }
 
+  // METHOD
+  public trunc(): NumberSchema {
+    return this.push((output) => Math.trunc(output))
+  }
 }

@@ -653,5 +653,35 @@ describe('.safe()', () => {
     expectValidation(schema, Number.MIN_VALUE).toReturn(Number.MIN_VALUE)
     expectValidation(schema, Number.MAX_SAFE_INTEGER).toReturn(Number.MAX_SAFE_INTEGER)
   })
+})
 
+// METHOD
+describe('.trunc()', () => {
+
+  it('returns a new instance of the schema.', () => {
+    const schema = NumberSchema.create().trunc()
+    expect(schema).toBeInstanceOf(NumberSchema)
+  })
+
+  const schema = NumberSchema.create().trunc()
+
+  it('returns when `input` is an integer.', () => {
+    expectValidation(schema, Number.MIN_SAFE_INTEGER).toReturn(Number.MIN_SAFE_INTEGER)
+    expectValidation(schema, -999999).toReturn(-999999)
+    expectValidation(schema, -100).toReturn(-100)
+    expectValidation(schema, -0).toReturn(-0)
+    expectValidation(schema, 0).toReturn(0)
+    expectValidation(schema, 100).toReturn(100)
+    expectValidation(schema, 999999).toReturn(999999)
+    expectValidation(schema, Number.MAX_SAFE_INTEGER).toReturn(Number.MAX_SAFE_INTEGER)
+  })
+
+  it('truncates when `input` is a float.', () => {
+    expectValidation(schema, -999999.75).toReturn(-999999)
+    expectValidation(schema, -100.5).toReturn(-100)
+    expectValidation(schema, -0.25).toReturn(-0)
+    expectValidation(schema, 0.25).toReturn(0)
+    expectValidation(schema, 100.5).toReturn(100)
+    expectValidation(schema, 999999.75).toReturn(999999)
+  })
 })
