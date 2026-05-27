@@ -14,21 +14,36 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
   // PROPERTIES
   private readonly _schema: GenericSchema<T>
   private readonly _queue: Array<(original: Record<string, T>, output: Record<string, T>) => Record<string, T>>
+  private readonly _prune: boolean
 
   // CONSTRUCTOR
-  private constructor(schema: GenericSchema<T>, queue: Array<(original: Record<string, T>, output: Record<string, T>) => Record<string, T>>) {
+  private constructor(schema: GenericSchema<T>, queue: Array<(original: Record<string, T>, output: Record<string, T>) => Record<string, T>>, prune: boolean) {
     this._schema = schema
     this._queue = queue
+    this._prune = prune
   }
 
   // CONSTRUCTOR
   public static create<T>(schema: GenericSchema<T>): RecordSchema<T> {
-    return new RecordSchema<T>(schema, [])
+    return new RecordSchema<T>(schema, [], false)
   }
 
   // CONSTRUCTOR
   private push(fn: (original: Record<string, T>, output: Record<string, T>) => Record<string, T>): RecordSchema<T> {
-    return new RecordSchema<T>(this._schema, [...this._queue, fn])
+    return new RecordSchema<T>(this._schema, [...this._queue, fn], this._prune)
+  }
+
+  // CONSTRUCTOR
+  private clone(params: {
+    schema?: GenericSchema<T>
+    queue?: Array<(original: Record<string, T>, output: Record<string, T>) => Record<string, T>>
+    prune?: boolean
+  } = {}): RecordSchema<T> {
+    return new RecordSchema<T>(
+      params.schema ?? this._schema,
+      params.queue ?? this._queue,
+      params.prune ?? this._prune,
+    )
   }
 
   // METHOD
@@ -45,8 +60,10 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
       try {
         result[key] = this._schema.validate(value)
       } catch (error) {
-        if (error instanceof ValidationError) errors.add(key, error)
-        else throw error
+        if (error instanceof ValidationError) {
+          if (this._prune) continue
+          errors.add(key, error)
+        } else throw error
       }
     }
 
@@ -90,6 +107,11 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
   // METHOD
   public transform<V>(fn: (value: Record<string, T>) => V): TransformSchema<Record<string, T>, V> {
     return TransformSchema.create(this, fn)
+  }
+
+  // METHOD
+  public prune(): RecordSchema<T> {
+    return this.clone({ prune: true })
   }
 
   // METHOD

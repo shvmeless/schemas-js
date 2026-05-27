@@ -59,6 +59,45 @@ describe('.validate(input)', () => {
 })
 
 // METHOD
+describe('.prune()', () => {
+
+  const schema = RecordSchema.create(NumberSchema.create()).prune()
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(RecordSchema)
+  })
+
+  it('returns when `input` is an object.', () => {
+    expectValidation(schema, {}).toReturn({})
+  })
+
+  it('throws when `input` is not an object.', () => {
+    DataTypeGenerator.skip('objects').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be an object.')
+    })
+  })
+
+  it('returns when all `input` elements match the `shape` schema.', () => {
+    const input = { a: 1, b: 2, c: 3 }
+    const expected = { a: 1, b: 2, c: 3 }
+    expectValidation(schema, input).toReturn(expected)
+  })
+
+  it('prunes when some `input` elements do not match the `shape` schema.', () => {
+    const input = { a: 1, b: true, c: 3, d: false, e: 5 }
+    const expected = { a: 1, c: 3, e: 5 }
+    expectValidation(schema, input).toReturn(expected)
+  })
+
+  it('returns a new record.', () => {
+    const input = { a: 1, b: 2, c: 3 }
+    const expected = { a: 1, b: 2, c: 3 }
+    expectValidation(schema, input).toReturn(expected)
+    expectValidation(schema, input).notToReturn(input)
+  })
+})
+
+// METHOD
 describe('.length(length)', () => {
 
   it('returns a new instance of the schema.', () => {
