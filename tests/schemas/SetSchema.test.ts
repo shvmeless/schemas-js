@@ -50,7 +50,46 @@ describe('.validate(input)', () => {
     ])
   })
 
-  it('returns a new `Set instance`.', () => {
+  it('returns a new `Set` instance.', () => {
+    const input = new Set(['a', 'b', 'c'])
+    const expected = new Set(['a', 'b', 'c'])
+    expectValidation(schema, input).toReturn(expected)
+    expectValidation(schema, input).notToReturn(input)
+  })
+})
+
+// METHOD
+describe('.prune()', () => {
+
+  const schema = SetSchema.create(StringSchema.create()).prune()
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(SetSchema)
+  })
+
+  it('returns when `input` is a `Set` instance.', () => {
+    expectValidation(schema, new Set([])).toReturn(new Set([]))
+  })
+
+  it('throws when `input` is not a `Set` instance.', () => {
+    DataTypeGenerator.skip('sets').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be a Set.')
+    })
+  })
+
+  it('returns when all `input` elements match the `shape` schema.', () => {
+    const input = new Set(['a', 'b', 'c'])
+    const expected = new Set(['a', 'b', 'c'])
+    expectValidation(schema, input).toReturn(expected)
+  })
+
+  it('prunes when some `input` elements do not match the `shape` schema.', () => {
+    const input = new Set(['a', true, 'b', 255, 'c'])
+    const expected = new Set(['a', 'b', 'c'])
+    expectValidation(schema, input).toReturn(expected)
+  })
+
+  it('returns a new `Set` instance.', () => {
     const input = new Set(['a', 'b', 'c'])
     const expected = new Set(['a', 'b', 'c'])
     expectValidation(schema, input).toReturn(expected)

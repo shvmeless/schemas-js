@@ -14,21 +14,36 @@ export class SetSchema<T> implements GenericSchema<Set<T>> {
   // PROPERTIES
   private readonly _schema: GenericSchema<T>
   private readonly _queue: Array<(original: Set<T>, output: Set<T>) => Set<T>>
+  private readonly _prune: boolean
 
   // CONSTRUCTOR
-  private constructor(schema: GenericSchema<T>, queue: Array<(original: Set<T>, output: Set<T>) => Set<T>>) {
+  private constructor(schema: GenericSchema<T>, queue: Array<(original: Set<T>, output: Set<T>) => Set<T>>, prune: boolean) {
     this._schema = schema
     this._queue = queue
+    this._prune = prune
   }
 
   // CONSTRUCTOR
   public static create<T>(schema: GenericSchema<T>): SetSchema<T> {
-    return new SetSchema<T>(schema, [])
+    return new SetSchema<T>(schema, [], false)
   }
 
   // CONSTRUCTOR
   private push(fn: (original: Set<T>, output: Set<T>) => Set<T>): SetSchema<T> {
-    return new SetSchema<T>(this._schema, [...this._queue, fn])
+    return new SetSchema<T>(this._schema, [...this._queue, fn], false)
+  }
+
+  // CONSTRUCTOR
+  private clone(params: {
+    schema?: GenericSchema<T>
+    queue?: Array<(original: Set<T>, output: Set<T>) => Set<T>>
+    prune?: boolean
+  } = {}): SetSchema<T> {
+    return new SetSchema<T>(
+      params.schema ?? this._schema,
+      params.queue ?? this._queue,
+      params.prune ?? this._prune,
+    )
   }
 
   // METHOD
@@ -46,8 +61,10 @@ export class SetSchema<T> implements GenericSchema<Set<T>> {
         const value = this._schema.validate(element)
         result.add(value)
       } catch (error) {
-        if (error instanceof ValidationError) errors.add(element, error)
-        else throw error
+        if (error instanceof ValidationError) {
+          if (this._prune) continue
+          errors.add(element, error)
+        } else throw error
       }
     }
 
@@ -91,6 +108,11 @@ export class SetSchema<T> implements GenericSchema<Set<T>> {
   // METHOD
   public transform<V>(fn: (value: Set<T>) => V): TransformSchema<Set<T>, V> {
     return TransformSchema.create(this, fn)
+  }
+
+  // METHOD
+  public prune(): SetSchema<T> {
+    return this.clone({ prune: true })
   }
 
   // METHOD
