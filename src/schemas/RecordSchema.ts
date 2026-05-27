@@ -144,4 +144,12 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
     })
   }
 
+  // METHOD
+  public filter(callback: (value: T, key: string, array: Record<string, T>) => boolean): RecordSchema<T> {
+    return this.push((output) => {
+      const entries = Object.entries(output).filter(([key, value]) => callback(value, key, output))
+      return Object.fromEntries(entries)
+    })
+  }
+
 }

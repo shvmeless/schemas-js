@@ -285,3 +285,31 @@ describe('.max(length)', () => {
     })
   })
 })
+
+// METHOD
+describe('.filter(callback)', () => {
+
+  const schema = RecordSchema.create(NumberSchema.create()).filter((value) => (value % 10 === 0))
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(RecordSchema)
+  })
+
+  it('returns when `callback` returns `true` for all `input` elements.', () => {
+    const input = { a: 10, b: 20, c: 30 }
+    const expected = { a: 10, b: 20, c: 30 }
+    expectValidation(schema, input).toReturn(expected)
+  })
+
+  it('filters when `callback` returns `false` for some `input` elements.', () => {
+    const input = { a: 10, b: 22, c: 30 }
+    const expected = { a: 10, c: 30 }
+    expectValidation(schema, input).toReturn(expected)
+  })
+
+  it('filters when `callback` returns `false` for all `input` elements.', () => {
+    const input = { a: 11, b: 22, c: 33 }
+    const expected: Record<string, number> = {}
+    expectValidation(schema, input).toReturn(expected)
+  })
+})
