@@ -152,4 +152,15 @@ export class ArraySchema<T> implements GenericSchema<Array<T>> {
     })
   }
 
+  // METHOD
+  public some(callback: (value: T, index: number, array: Array<T>) => boolean): ArraySchema<T> {
+    return this.push((output) => {
+      for (let index = 0; index < output.length; index++) {
+        const value = output[index] as T
+        if (callback(value, index, output)) return output
+      }
+      throw new ValidationError(output, 'No element satisfies the given validation function.')
+    })
+  }
+
 }
