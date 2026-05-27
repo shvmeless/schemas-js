@@ -183,3 +183,66 @@ describe('.min(length)', () => {
     })
   })
 })
+
+// METHOD
+describe('.max(length)', () => {
+
+  it('returns a new instance of the schema.', () => {
+    const base = SetSchema.create(StringSchema.create())
+    const schema = base.max(5)
+    expect(schema).toBeInstanceOf(SetSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  describe('when `length` is `NaN`', () => {
+    it('throws when the schema is being built.', () => {
+      expectError(() => {
+        SetSchema.create(StringSchema.create()).max(NaN)
+      }).toHaveMessage('The length value must be zero or positive.')
+    })
+  })
+
+  describe('when `length` is a negative number', () => {
+    it('throws when the schema is being built.', () => {
+      expectError(() => {
+        SetSchema.create(StringSchema.create()).max(-8)
+      }).toHaveMessage('The length value must be zero or positive.')
+    })
+  })
+
+  describe('when `length` is zero', () => {
+
+    const schema = SetSchema.create(StringSchema.create()).max(0)
+
+    it('returns when `input` is empty.', () => {
+      expectValidation(schema, new Set([])).toReturn(new Set([]))
+    })
+
+    it('throws when `input` size is greater than expected.', () => {
+      const input = new Set(['A', 'B', 'C'])
+      expectValidation(schema, input).toThrow('The value must be at most 0 elements long.')
+    })
+  })
+
+  describe('when `length` is a positive number', () => {
+
+    const schema = SetSchema.create(StringSchema.create()).max(5)
+
+    it('throws when `input` size is less than expected.', () => {
+      const input = new Set(['A', 'B', 'C'])
+      const expected = new Set(['A', 'B', 'C'])
+      expectValidation(schema, input).toReturn(expected)
+    })
+
+    it('returns when `input` size is as expected.', () => {
+      const input = new Set(['A', 'B', 'C', 'D', 'E'])
+      const expected = new Set(['A', 'B', 'C', 'D', 'E'])
+      expectValidation(schema, input).toReturn(expected)
+    })
+
+    it('throws when `input` size is greater than expected.', () => {
+      const input = new Set(['A', 'B', 'C', 'D', 'E', 'F', 'G'])
+      expectValidation(schema, input).toThrow('The value must be at most 5 elements long.')
+    })
+  })
+})
