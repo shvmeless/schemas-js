@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { MapSchema } from '@/schemas/MapSchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
-import { expectValidation } from '@tests/helpers/expect'
+import { expectError, expectValidation } from '@tests/helpers/expect'
 import { NumberSchema } from '@/schemas/NumberSchema'
 
 // METHOD
@@ -70,5 +70,67 @@ describe('.validate(input)', () => {
     const expected = new Map([['a', 1], ['b', 2], ['c', 3]])
     expectValidation(schema, input).toReturn(expected)
     expectValidation(schema, input).notToReturn(input)
+  })
+})
+
+// METHOD
+describe('.size(length)', () => {
+
+  it('returns a new instance of the schema.', () => {
+    const base = MapSchema.create(StringSchema.create(), NumberSchema.create())
+    const schema = base.size(5)
+    expect(schema).toBeInstanceOf(MapSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  describe('when `length` is `NaN`', () => {
+    it('throws when the schema is being built.', () => {
+      expectError(() => {
+        MapSchema.create(StringSchema.create(), NumberSchema.create()).size(NaN)
+      }).toHaveMessage('The length value must be zero or positive.')
+    })
+  })
+
+  describe('when `length` is a negative number', () => {
+    it('throws when the schema is being built.', () => {
+      expectError(() => {
+        MapSchema.create(StringSchema.create(), NumberSchema.create()).size(-8)
+      }).toHaveMessage('The length value must be zero or positive.')
+    })
+  })
+
+  describe('when `length` is zero', () => {
+
+    const schema = MapSchema.create(StringSchema.create(), NumberSchema.create()).size(0)
+
+    it('returns when `input` size is as expected.', () => {
+      expectValidation(schema, new Map()).toReturn(new Map())
+    })
+
+    it('throws when `input` size is greater than expected.', () => {
+      const input = new Map([['A', 1], ['B', 2], ['C', 3]])
+      expectValidation(schema, input).toThrow('The value must be 0 elements long.')
+    })
+  })
+
+  describe('when `length` is a positive number', () => {
+
+    const schema = MapSchema.create(StringSchema.create(), NumberSchema.create()).size(5)
+
+    it('throws when `input` size is less than expected.', () => {
+      const input = new Map([['A', 1], ['B', 2], ['C', 3]])
+      expectValidation(schema, input).toThrow('The value must be 5 elements long.')
+    })
+
+    it('returns when `input` size is as expected.', () => {
+      const input = new Map([['A', 1], ['B', 2], ['C', 3], ['D', 4], ['E', 5]])
+      const expected = new Map([['A', 1], ['B', 2], ['C', 3], ['D', 4], ['E', 5]])
+      expectValidation(schema, input).toReturn(expected)
+    })
+
+    it('throws when `input` size is greater than expected.', () => {
+      const input = new Map([['A', 1], ['B', 2], ['C', 3], ['D', 4], ['E', 5], ['F', 6], ['G', 7]])
+      expectValidation(schema, input).toThrow('The value must be 5 elements long.')
+    })
   })
 })
