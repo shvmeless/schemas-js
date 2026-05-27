@@ -163,4 +163,14 @@ export class SetSchema<T> implements GenericSchema<Set<T>> {
     })
   }
 
+  // METHOD
+  public every(callback: (value: T, set: Set<T>) => boolean): SetSchema<T> {
+    return this.push((original, output) => {
+      for (const value of output) {
+        if (!callback(value, output)) throw new ValidationError(original, 'At least one element does not satisfy the given validation function.')
+      }
+      return output
+    })
+  }
+
 }
