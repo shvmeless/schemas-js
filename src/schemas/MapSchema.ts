@@ -150,4 +150,12 @@ export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
     })
   }
 
+  // METHOD
+  public filter(callback: (value: T, key: K, map: Map<K, T>) => boolean): MapSchema<K, T> {
+    return this.push((_, output) => {
+      const entries = Array.from(output).filter(([key, value]) => callback(value, key, output))
+      return new Map(entries)
+    })
+  }
+
 }
