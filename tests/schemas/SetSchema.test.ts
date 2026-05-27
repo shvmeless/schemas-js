@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import { SetSchema } from '@/schemas/SetSchema'
 import { StringSchema } from '@/schemas/StringSchema'
+import { NumberSchema } from '@/schemas/NumberSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectError, expectValidation } from '@tests/helpers/expect'
 
@@ -311,5 +312,32 @@ describe('.filter(callback)', () => {
     const input = new Set(['', '', ''])
     const expected: Set<string> = new Set([])
     expectValidation(schema, input).toReturn(expected)
+  })
+})
+
+// METHOD
+describe('.some(callback)', () => {
+
+  const schema = SetSchema.create(NumberSchema.create()).some((value) => (value % 10 === 0))
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(SetSchema)
+  })
+
+  it('returns when `callback` returns `true` for some `input` elements.', () => {
+    const input = new Set([10, 20, 30])
+    const expected = new Set([10, 20, 30])
+    expectValidation(schema, input).toReturn(expected)
+  })
+
+  it('returns when `callback` returns `false` for some `input` elements.', () => {
+    const input = new Set([10, 22, 30])
+    const expected = new Set([10, 22, 30])
+    expectValidation(schema, input).toReturn(expected)
+  })
+
+  it('throws when `callback` returns `false` for all `input` elements.', () => {
+    const input = new Set([11, 22, 33])
+    expectValidation(schema, input).toThrow('No element satisfies the given validation function.')
   })
 })
