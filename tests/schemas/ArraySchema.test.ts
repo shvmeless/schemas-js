@@ -335,3 +335,29 @@ describe('.some(callback)', () => {
     expectValidation(schema, input).toThrow('No element satisfies the given validation function.')
   })
 })
+
+// METHOD
+describe('.every(callback)', () => {
+
+  const schema = ArraySchema.create(StringSchema.create()).every((value) => (value !== ''))
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(ArraySchema)
+  })
+
+  it('returns when `callback` returns `true` for all `input` elements.', () => {
+    const input = ['A', 'B', 'C']
+    const expected = ['A', 'B', 'C']
+    expectValidation(schema, input).toReturn(expected)
+  })
+
+  it('throws when `callback` returns `false` for some `input` elements.', () => {
+    const input = ['A', '', 'C']
+    expectValidation(schema, input).toThrow('At least one element does not satisfy the given validation function.')
+  })
+
+  it('throws when `callback` returns `false` for all `input` elements.', () => {
+    const input = ['', '', '']
+    expectValidation(schema, input).toThrow('At least one element does not satisfy the given validation function.')
+  })
+})
