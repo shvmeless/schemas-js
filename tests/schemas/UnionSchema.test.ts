@@ -1,14 +1,26 @@
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { UnionSchema } from '@/schemas/UnionSchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { NumberSchema } from '@/schemas/NumberSchema'
 import { BooleanSchema } from '@/schemas/BooleanSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
-import { expectValidation } from '@tests/helpers/expect'
+import { expectValidation, expectError } from '@tests/helpers/expect'
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.create(...inner)', () => {
+
+  it('throws when no `inner` schemas are provided.', () => {
+    expectError(() => {
+      UnionSchema.create()
+    }).toHaveMessage('Must provide at least two schemas.')
+  })
+
+  it('throws when only one `inner` schema is provided.', () => {
+    expectError(() => {
+      UnionSchema.create(StringSchema.create())
+    }).toHaveMessage('Must provide at least two schemas.')
+  })
 
   const schema = UnionSchema.create(
     StringSchema.create(),
@@ -21,7 +33,7 @@ describe('.create(...inner)', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.validate(input)', () => {
 
   const schema = UnionSchema.create(

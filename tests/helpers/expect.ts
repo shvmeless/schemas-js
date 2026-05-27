@@ -8,7 +8,8 @@ import { ValidationError, type ValidationErrorIndex } from '@/errors/ValidationE
 // INTERFACE
 interface ExpectSchemaResult {
   toReturn(value: unknown): void
-  notToReturn(value: unknown): void
+  toReturnSame(value: unknown): void
+  toReturnNew(value: unknown): void
   toReturnInstanceOf(value: unknown): void
   toThrow(message: string, index?: Array<[unknown, {
     value: unknown
@@ -24,9 +25,14 @@ export function expectValidation(schema: GenericSchema<unknown>, input: unknown)
       const result = schema.validate(input)
       expect(result).toEqual(value)
     },
-    notToReturn(value: unknown): void {
+    toReturnSame(value: unknown): void {
       const result = schema.validate(input)
-      expect(result).not.toBe(value)
+      expect(result).toBe(value)
+    },
+    toReturnNew(value: unknown): void {
+      const result = schema.validate(input)
+      expect(result).toEqual(value)
+      expect(result).not.toBe(input)
     },
     toReturnInstanceOf(value: unknown): void {
       const result = schema.validate(input)
@@ -43,7 +49,6 @@ export function expectValidation(schema: GenericSchema<unknown>, input: unknown)
         expect.unreachable('Expected validation to throw an error.')
 
       } catch (error: unknown) {
-
         expect(error).toBeInstanceOf(ValidationError)
         const e = error as ValidationError
 
@@ -54,7 +59,6 @@ export function expectValidation(schema: GenericSchema<unknown>, input: unknown)
         expect(e.value).toBe(input)
         expect(e.message).toBe(message)
         expect(e.index).toStrictEqual(index ? new Map(index) : null)
-
       }
     },
   }

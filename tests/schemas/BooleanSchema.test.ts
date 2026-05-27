@@ -1,10 +1,10 @@
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { BooleanSchema } from '@/schemas/BooleanSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectValidation } from '@tests/helpers/expect'
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.create()', () => {
 
   const schema = BooleanSchema.create()
@@ -14,7 +14,7 @@ describe('.create()', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.validate(input)', () => {
 
   const schema = BooleanSchema.create()
@@ -29,5 +29,4 @@ describe('.validate(input)', () => {
       expectValidation(schema, value).toThrow('The value must be a boolean.')
     })
   })
-
 })

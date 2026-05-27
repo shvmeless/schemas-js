@@ -1,5 +1,5 @@
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { TupleSchema } from '@/schemas/TupleSchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { NumberSchema } from '@/schemas/NumberSchema'
@@ -7,7 +7,7 @@ import { BooleanSchema } from '@/schemas/BooleanSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectValidation } from '@tests/helpers/expect'
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.create(shapes)', () => {
 
   const schema = TupleSchema.create([StringSchema.create(), NumberSchema.create(), BooleanSchema.create()])
@@ -17,7 +17,7 @@ describe('.create(shapes)', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.validate(input)', () => {
 
   const schema = TupleSchema.create([StringSchema.create(), NumberSchema.create(), BooleanSchema.create()])
@@ -31,7 +31,7 @@ describe('.validate(input)', () => {
   it('returns when all `input` elements match the `shapes` schemas.', () => {
     const input = ['STRING', 74105280, true]
     const expected = ['STRING', 74105280, true]
-    expectValidation(schema, input).toReturn(expected)
+    expectValidation(schema, input).toReturnNew(expected)
   })
 
   it('throws when `input` contains fewer elements than expected.', () => {
@@ -57,16 +57,9 @@ describe('.validate(input)', () => {
       }],
     ])
   })
-
-  it('returns a new tuple.', () => {
-    const input = ['STRING', 74105280, true]
-    const expected = ['STRING', 74105280, true]
-    expectValidation(schema, input).toReturn(expected)
-    expectValidation(schema, input).notToReturn(input)
-  })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.strip()', () => {
 
   const base = TupleSchema.create([StringSchema.create(), NumberSchema.create(), BooleanSchema.create()])
@@ -86,7 +79,7 @@ describe('.strip()', () => {
   it('returns when all `input` elements match the `shapes` schemas.', () => {
     const input = ['STRING', 74105280, true]
     const expected = ['STRING', 74105280, true]
-    expectValidation(schema, input).toReturn(expected)
+    expectValidation(schema, input).toReturnNew(expected)
   })
 
   it('throws when `input` contains fewer elements than expected.', () => {
@@ -106,13 +99,6 @@ describe('.strip()', () => {
   it('strips when `input` contains unexpected elements.', () => {
     const input = ['STRING', 74105280, true, 'UNEXPECTED']
     const expected = ['STRING', 74105280, true]
-    expectValidation(schema, input).toReturn(expected)
-  })
-
-  it('returns a new tuple.', () => {
-    const input = ['STRING', 74105280, true]
-    const expected = ['STRING', 74105280, true]
-    expectValidation(schema, input).toReturn(expected)
-    expectValidation(schema, input).notToReturn(input)
+    expectValidation(schema, input).toReturnNew(expected)
   })
 })

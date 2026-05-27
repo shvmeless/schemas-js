@@ -1,11 +1,11 @@
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { ArraySchema } from '@/schemas/ArraySchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
-import { expectError, expectValidation } from '@tests/helpers/expect'
+import { expectValidation, expectError } from '@tests/helpers/expect'
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.create(shape)', () => {
 
   const schema = ArraySchema.create(StringSchema.create())
@@ -15,51 +15,15 @@ describe('.create(shape)', () => {
   })
 })
 
-// METHOD
-describe('.prune()', () => {
-
-  const schema = ArraySchema.create(StringSchema.create()).prune()
-
-  it('returns a new instance of the schema.', () => {
-    expect(schema).toBeInstanceOf(ArraySchema)
-  })
-
-  it('returns when `input` is an array.', () => {
-    expectValidation(schema, []).toReturn([])
-  })
-
-  it('throws when `input` is not an array.', () => {
-    DataTypeGenerator.skip('arrays').forEach((value) => {
-      expectValidation(schema, value).toThrow('The value must be an array.')
-    })
-  })
-
-  it('returns when all `input` elements match the `shape` schema.', () => {
-    const input = ['a', 'b', 'c']
-    const expected = ['a', 'b', 'c']
-    expectValidation(schema, input).toReturn(expected)
-  })
-
-  it('prunes when some `input` elements do not match the `shape` schema.', () => {
-    const input = ['a', true, 'b', 255, 'c']
-    const expected = ['a', 'b', 'c']
-    expectValidation(schema, input).toReturn(expected)
-  })
-
-  it('returns a new array.', () => {
-    const input = ['a', 'b', 'c']
-    expectValidation(schema, input).toReturn(['a', 'b', 'c'])
-    expectValidation(schema, input).notToReturn(input)
-  })
-})
-
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.validate(input)', () => {
 
   const schema = ArraySchema.create(StringSchema.create())
 
   it('returns when `input` is an array.', () => {
-    expectValidation(schema, []).toReturn([])
+    const input: Array<string> = []
+    const expected: Array<string> = []
+    expectValidation(schema, input).toReturnNew(expected)
   })
 
   it('throws when `input` is not an array.', () => {
@@ -69,11 +33,14 @@ describe('.validate(input)', () => {
   })
 
   it('returns when all `input` elements match the `shape` schema.', () => {
-    expectValidation(schema, ['a', 'b', 'c']).toReturn(['a', 'b', 'c'])
+    const input = ['a', 'b', 'c']
+    const expected = ['a', 'b', 'c']
+    expectValidation(schema, input).toReturnNew(expected)
   })
 
   it('throws when at least one `input` element does not match the `shape` schema.', () => {
-    expectValidation(schema, [true, 'b', 255]).toThrow('At least one element does not match the given schema.', [
+    const input = [true, 'b', 255]
+    expectValidation(schema, input).toThrow('At least one element does not match the given schema.', [
       [0, {
         value: true,
         message: 'The value must be a string.',
@@ -84,24 +51,46 @@ describe('.validate(input)', () => {
       }],
     ])
   })
-
-  it('returns a new array.', () => {
-    const input = ['a', 'b', 'c']
-    expectValidation(schema, input).toReturn(['a', 'b', 'c'])
-    expectValidation(schema, input).notToReturn(input)
-  })
 })
 
-// METHOD
-describe('.length(length)', () => {
+// METHOD ---------------------------------------------------------------------
+describe('.prune()', () => {
+
+  const base = ArraySchema.create(StringSchema.create())
+  const schema = base.prune()
 
   it('returns a new instance of the schema.', () => {
-    const base = ArraySchema.create(ArraySchema.create(StringSchema.create()))
-    const schema = base.length(5)
     expect(schema).toBeInstanceOf(ArraySchema)
     expect(schema).not.toBe(base)
   })
 
+  it('returns when `input` is an array.', () => {
+    const input: Array<string> = []
+    const expected: Array<string> = []
+    expectValidation(schema, input).toReturnNew(expected)
+  })
+
+  it('throws when `input` is not an array.', () => {
+    DataTypeGenerator.skip('arrays').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be an array.')
+    })
+  })
+
+  it('returns when all `input` elements match the `shape` schema.', () => {
+    const input = ['a', 'b', 'c']
+    const expected = ['a', 'b', 'c']
+    expectValidation(schema, input).toReturnNew(expected)
+  })
+
+  it('prunes when some `input` elements do not match the `shape` schema.', () => {
+    const input = ['a', true, 'b', 255, 'c']
+    const expected = ['a', 'b', 'c']
+    expectValidation(schema, input).toReturnNew(expected)
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
+describe('.length(length)', () => {
   describe('when `length` is `NaN`', () => {
     it('throws when the schema is being built.', () => {
       expectError(() => {
@@ -120,10 +109,18 @@ describe('.length(length)', () => {
 
   describe('when `length` is zero', () => {
 
-    const schema = ArraySchema.create(StringSchema.create()).length(0)
+    const base = ArraySchema.create(StringSchema.create())
+    const schema = base.length(0)
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(ArraySchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('returns when `input` length is as expected.', () => {
-      expectValidation(schema, []).toReturn([])
+      const input: Array<string> = []
+      const expected: Array<string> = []
+      expectValidation(schema, input).toReturnNew(expected)
     })
 
     it('throws when `input` length is greater than expected.', () => {
@@ -134,7 +131,13 @@ describe('.length(length)', () => {
 
   describe('when `length` is a positive number', () => {
 
-    const schema = ArraySchema.create(StringSchema.create()).length(5)
+    const base = ArraySchema.create(StringSchema.create())
+    const schema = base.length(5)
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(ArraySchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('throws when `input` length is less than expected.', () => {
       const input = ['A', 'B', 'C']
@@ -144,7 +147,7 @@ describe('.length(length)', () => {
     it('returns when `input` length is as expected.', () => {
       const input = ['A', 'B', 'C', 'D', 'E']
       const expected = ['A', 'B', 'C', 'D', 'E']
-      expectValidation(schema, input).toReturn(expected)
+      expectValidation(schema, input).toReturnNew(expected)
     })
 
     it('throws when `input` length is greater than expected.', () => {
@@ -154,16 +157,8 @@ describe('.length(length)', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.min(length)', () => {
-
-  it('returns a new instance of the schema.', () => {
-    const base = ArraySchema.create(ArraySchema.create(StringSchema.create()))
-    const schema = base.min(5)
-    expect(schema).toBeInstanceOf(ArraySchema)
-    expect(schema).not.toBe(base)
-  })
-
   describe('when `length` is `NaN`', () => {
     it('throws when the schema is being built.', () => {
       expectError(() => {
@@ -182,22 +177,36 @@ describe('.min(length)', () => {
 
   describe('when `length` is zero', () => {
 
-    const schema = ArraySchema.create(StringSchema.create()).min(0)
+    const base = ArraySchema.create(StringSchema.create())
+    const schema = base.min(0)
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(ArraySchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('returns when `input` is empty.', () => {
-      expectValidation(schema, []).toReturn([])
+      const input: Array<string> = []
+      const expected: Array<string> = []
+      expectValidation(schema, input).toReturnNew(expected)
     })
 
     it('returns when `input` length is greater than expected.', () => {
       const input = ['A', 'B', 'C']
       const expected = ['A', 'B', 'C']
-      expectValidation(schema, input).toReturn(expected)
+      expectValidation(schema, input).toReturnNew(expected)
     })
   })
 
   describe('when `length` is a positive number', () => {
 
-    const schema = ArraySchema.create(StringSchema.create()).min(5)
+    const base = ArraySchema.create(StringSchema.create())
+    const schema = base.min(5)
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(ArraySchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('throws when `input` length is less than expected.', () => {
       const input = ['A', 'B', 'C']
@@ -207,27 +216,19 @@ describe('.min(length)', () => {
     it('returns when `input` length is as expected.', () => {
       const input = ['A', 'B', 'C', 'D', 'E']
       const expected = ['A', 'B', 'C', 'D', 'E']
-      expectValidation(schema, input).toReturn(expected)
+      expectValidation(schema, input).toReturnNew(expected)
     })
 
     it('returns when `input` length is greater than expected.', () => {
       const input = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
       const expected = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
-      expectValidation(schema, input).toReturn(expected)
+      expectValidation(schema, input).toReturnNew(expected)
     })
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.max(length)', () => {
-
-  it('returns a new instance of the schema.', () => {
-    const base = ArraySchema.create(ArraySchema.create(StringSchema.create()))
-    const schema = base.max(5)
-    expect(schema).toBeInstanceOf(ArraySchema)
-    expect(schema).not.toBe(base)
-  })
-
   describe('when `length` is `NaN`', () => {
     it('throws when the schema is being built.', () => {
       expectError(() => {
@@ -246,10 +247,18 @@ describe('.max(length)', () => {
 
   describe('when `length` is zero', () => {
 
-    const schema = ArraySchema.create(StringSchema.create()).max(0)
+    const base = ArraySchema.create(StringSchema.create())
+    const schema = base.max(0)
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(ArraySchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('returns when `input` is empty.', () => {
-      expectValidation(schema, []).toReturn([])
+      const input: Array<string> = []
+      const expected: Array<string> = []
+      expectValidation(schema, input).toReturnNew(expected)
     })
 
     it('throws when `input` length is greater than expected.', () => {
@@ -260,18 +269,24 @@ describe('.max(length)', () => {
 
   describe('when `length` is a positive number', () => {
 
-    const schema = ArraySchema.create(StringSchema.create()).max(5)
+    const base = ArraySchema.create(StringSchema.create())
+    const schema = base.max(5)
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(ArraySchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('throws when `input` length is less than expected.', () => {
       const input = ['A', 'B', 'C']
       const expected = ['A', 'B', 'C']
-      expectValidation(schema, input).toReturn(expected)
+      expectValidation(schema, input).toReturnNew(expected)
     })
 
     it('returns when `input` length is as expected.', () => {
       const input = ['A', 'B', 'C', 'D', 'E']
       const expected = ['A', 'B', 'C', 'D', 'E']
-      expectValidation(schema, input).toReturn(expected)
+      expectValidation(schema, input).toReturnNew(expected)
     })
 
     it('throws when `input` length is greater than expected.', () => {
@@ -281,53 +296,57 @@ describe('.max(length)', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.filter(callback)', () => {
 
-  const schema = ArraySchema.create(StringSchema.create()).filter((value) => (value !== ''))
+  const base = ArraySchema.create(StringSchema.create())
+  const schema = base.filter((value) => (value !== ''))
 
   it('returns a new instance of the schema.', () => {
     expect(schema).toBeInstanceOf(ArraySchema)
+    expect(schema).not.toBe(base)
   })
 
   it('returns when `callback` returns `true` for all `input` elements.', () => {
     const input = ['A', 'B', 'C']
     const expected = ['A', 'B', 'C']
-    expectValidation(schema, input).toReturn(expected)
+    expectValidation(schema, input).toReturnNew(expected)
   })
 
   it('filters when `callback` returns `false` for some `input` elements.', () => {
     const input = ['A', '', 'C']
     const expected = ['A', 'C']
-    expectValidation(schema, input).toReturn(expected)
+    expectValidation(schema, input).toReturnNew(expected)
   })
 
   it('filters when `callback` returns `false` for all `input` elements.', () => {
     const input = ['', '', '']
     const expected: Array<string> = []
-    expectValidation(schema, input).toReturn(expected)
+    expectValidation(schema, input).toReturnNew(expected)
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.some(callback)', () => {
 
-  const schema = ArraySchema.create(StringSchema.create()).some((value) => (value !== ''))
+  const base = ArraySchema.create(StringSchema.create())
+  const schema = base.some((value) => (value !== ''))
 
   it('returns a new instance of the schema.', () => {
     expect(schema).toBeInstanceOf(ArraySchema)
+    expect(schema).not.toBe(base)
   })
 
   it('returns when `callback` returns `true` for some `input` elements.', () => {
     const input = ['A', 'B', 'C']
     const expected = ['A', 'B', 'C']
-    expectValidation(schema, input).toReturn(expected)
+    expectValidation(schema, input).toReturnNew(expected)
   })
 
   it('returns when `callback` returns `false` for some `input` elements.', () => {
     const input = ['A', '', 'C']
     const expected = ['A', '', 'C']
-    expectValidation(schema, input).toReturn(expected)
+    expectValidation(schema, input).toReturnNew(expected)
   })
 
   it('throws when `callback` returns `false` for all `input` elements.', () => {
@@ -336,19 +355,21 @@ describe('.some(callback)', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.every(callback)', () => {
 
-  const schema = ArraySchema.create(StringSchema.create()).every((value) => (value !== ''))
+  const base = ArraySchema.create(StringSchema.create())
+  const schema = base.every((value) => (value !== ''))
 
   it('returns a new instance of the schema.', () => {
     expect(schema).toBeInstanceOf(ArraySchema)
+    expect(schema).not.toBe(base)
   })
 
   it('returns when `callback` returns `true` for all `input` elements.', () => {
     const input = ['A', 'B', 'C']
     const expected = ['A', 'B', 'C']
-    expectValidation(schema, input).toReturn(expected)
+    expectValidation(schema, input).toReturnNew(expected)
   })
 
   it('throws when `callback` returns `false` for some `input` elements.', () => {
@@ -362,19 +383,21 @@ describe('.every(callback)', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.none(callback)', () => {
 
-  const schema = ArraySchema.create(StringSchema.create()).none((value) => (value === ''))
+  const base = ArraySchema.create(StringSchema.create())
+  const schema = base.none((value) => (value !== ''))
 
   it('returns a new instance of the schema.', () => {
     expect(schema).toBeInstanceOf(ArraySchema)
+    expect(schema).not.toBe(base)
   })
 
   it('returns when `callback` returns `true` for all `input` elements.', () => {
-    const input = ['A', 'B', 'C']
-    const expected = ['A', 'B', 'C']
-    expectValidation(schema, input).toReturn(expected)
+    const input = ['', '', '']
+    const expected = ['', '', '']
+    expectValidation(schema, input).toReturnNew(expected)
   })
 
   it('throws when `callback` returns `false` for some `input` elements.', () => {
@@ -383,7 +406,7 @@ describe('.none(callback)', () => {
   })
 
   it('throws when `callback` returns `false` for all `input` elements.', () => {
-    const input = ['', '', '']
+    const input = ['A', 'B', 'C']
     expectValidation(schema, input).toThrow('At least one element satisfies the given validation function.')
   })
 })

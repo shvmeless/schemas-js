@@ -1,5 +1,5 @@
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { ObjectSchema } from '@/schemas/ObjectSchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { NumberSchema } from '@/schemas/NumberSchema'
@@ -7,7 +7,7 @@ import { BooleanSchema } from '@/schemas/BooleanSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectValidation } from '@tests/helpers/expect'
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.create(shape)', () => {
 
   const schema = ObjectSchema.create({
@@ -21,7 +21,7 @@ describe('.create(shape)', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.validate(input)', () => {
 
   const schema = ObjectSchema.create({
@@ -39,7 +39,7 @@ describe('.validate(input)', () => {
   it('returns when `input` matches the `shape` schema.', () => {
     const input = { string: 'STRING', number: 74105280, boolean: true }
     const expected = { string: 'STRING', number: 74105280, boolean: true }
-    expectValidation(schema, input).toReturn(expected)
+    expectValidation(schema, input).toReturnNew(expected)
   })
 
   it('throws when `input` contains fewer properties than expected.', () => {
@@ -65,17 +65,9 @@ describe('.validate(input)', () => {
       }],
     ])
   })
-
-  it('returns a new object.', () => {
-    const input = { string: 'STRING', number: 74105280, boolean: true }
-    const expected = { string: 'STRING', number: 74105280, boolean: true }
-    expectValidation(schema, input).toReturn(expected)
-    expectValidation(schema, input).notToReturn(input)
-  })
-
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.strip()', () => {
 
   const base = ObjectSchema.create({
@@ -100,7 +92,7 @@ describe('.strip()', () => {
   it('returns when `input` matches the `shape` schema.', () => {
     const input = { string: 'STRING', number: 74105280, boolean: true }
     const expected = { string: 'STRING', number: 74105280, boolean: true }
-    expectValidation(schema, input).toReturn(expected)
+    expectValidation(schema, input).toReturnNew(expected)
   })
 
   it('throws when `input` contains fewer properties than expected.', () => {
@@ -120,13 +112,6 @@ describe('.strip()', () => {
   it('strips when `input` contains unexpected properties.', () => {
     const input = { string: 'STRING', number: 74105280, boolean: true, unexpected: 'UNEXPECTED' }
     const expected = { string: 'STRING', number: 74105280, boolean: true }
-    expectValidation(schema, input).toReturn(expected)
-  })
-
-  it('returns a new object.', () => {
-    const input = { string: 'STRING', number: 74105280, boolean: true }
-    const expected = { string: 'STRING', number: 74105280, boolean: true }
-    expectValidation(schema, input).toReturn(expected)
-    expectValidation(schema, input).notToReturn(input)
+    expectValidation(schema, input).toReturnNew(expected)
   })
 })
