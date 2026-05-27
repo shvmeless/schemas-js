@@ -1,52 +1,60 @@
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { OptionalSchema } from '@/schemas/OptionalSchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
-import { expectSchema } from '@tests/helpers/expect'
+import { expectValidation } from '@tests/helpers/expect'
 
-// METHOD
-describe('.create()', () => {
+// METHOD ---------------------------------------------------------------------
+describe('.create(inner)', () => {
 
   const schema = OptionalSchema.create(StringSchema.create())
 
-  it('validates an input that matches the given schema.', () => {
-    const result = schema.validate('STRING')
-    expect(result).toBe('STRING')
+  it('returns an instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(OptionalSchema)
   })
-
-  it('validates an undefined input.', () => {
-    const result = schema.validate(undefined)
-    expect(result).toBeUndefined()
-  })
-
-  it('throws when the value does not match the given schema.', () => {
-    DataTypeGenerator.skip('strings', 'undefined').forEach((value) => {
-      expectSchema(schema, value).toThrow('The value must be a string.')
-    })
-  })
-
 })
 
-// METHOD
-describe('.default()', () => {
+// METHOD ---------------------------------------------------------------------
+describe('.validate(input)', () => {
+
+  const schema = OptionalSchema.create(StringSchema.create())
+
+  it('returns when `input` matches the `inner` schema.', () => {
+    expectValidation(schema, 'STRING').toReturn('STRING')
+    expectValidation(schema, 'TEXT').toReturn('TEXT')
+    expectValidation(schema, 'EXAMPLE').toReturn('EXAMPLE')
+  })
+
+  it('returns when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn(undefined)
+  })
+
+  it('throws when `input` does not match the `inner` schema.', () => {
+    DataTypeGenerator.skip('strings', 'undefined').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be a string.')
+    })
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
+describe('.default(default)', () => {
 
   const schema = OptionalSchema.create(StringSchema.create()).default('DEFAULT')
 
-  it('validates an input that matches the given schema.', () => {
-    const result = schema.validate('STRING')
-    expect(result).toBe('STRING')
+  it('returns when the `input` matches the `inner` schema.', () => {
+    expectValidation(schema, 'STRING').toReturn('STRING')
+    expectValidation(schema, 'TEXT').toReturn('TEXT')
+    expectValidation(schema, 'EXAMPLE').toReturn('EXAMPLE')
   })
 
-  it('returns the default value for an undefined input.', () => {
-    const result = schema.validate(undefined)
-    expect(result).toBe('DEFAULT')
+  it('returns `default` value when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn('DEFAULT')
   })
 
-  it('throws when the value does not match the given schema.', () => {
+  it('throws when `input` does not match the `inner` schema.', () => {
     DataTypeGenerator.skip('strings', 'undefined').forEach((value) => {
-      expectSchema(schema, value).toThrow('The value must be a string.')
+      expectValidation(schema, value).toThrow('The value must be a string.')
     })
   })
-
 })

@@ -3,36 +3,55 @@ import globals from 'globals'
 import javascript from '@eslint/js'
 import typescript from 'typescript-eslint'
 import stylistic from '@stylistic/eslint-plugin'
-import { defineConfig } from "eslint/config"
+import { defineConfig } from 'eslint/config'
 
 // CONFIG
-export default defineConfig([
+export default defineConfig ([
   {
-    files: ["**/*.{js,mjs,cjs,ts,mts,cts}"],
-    plugins: { js: javascript },
+    ignores: ['**/.*', 'node_modules', 'dist'],
+  },
+  {
+    files: [
+      './src/**/*.{js,mjs,cjs,ts,mts,cts}',
+      './tests/**/*.{js,mjs,cjs,ts,mts,cts}',
+    ],
+    extends: [
+      javascript.configs.recommended,
+      typescript.configs.recommended,
+      stylistic.configs.recommended,
+    ],
     languageOptions: {
       globals: globals.node,
       parserOptions: {
         project: './tsconfig.json',
       },
     },
-  },
-  javascript.configs.recommended,
-  typescript.configs.recommended,
-  stylistic.configs.recommended,
-  {
     rules: {
       // STYLISTIC
       '@stylistic/padded-blocks': 'off',
       '@stylistic/arrow-parens': ['error', 'always'],
-      "@stylistic/brace-style": ["error", "1tbs", { "allowSingleLine": true }],
-      '@stylistic/quotes': ["error", "single", {
-        "avoidEscape": true,
-        "allowTemplateLiterals": "avoidEscape",
+      '@stylistic/function-call-spacing': ['error', 'never'],
+      '@stylistic/type-generic-spacing': ["error"],
+      '@stylistic/brace-style': ['error', '1tbs', {
+        allowSingleLine: true
+      }],
+      '@stylistic/space-before-function-paren': ['error', {
+        anonymous: 'always',
+        named: 'never',
+        asyncArrow: 'always',
+        catch: 'always'
+      }],
+      '@stylistic/quotes': ['error', 'single', {
+        avoidEscape: true,
+        allowTemplateLiterals: 'avoidEscape',
       }],
 
       // TYPESCRIPT
-      '@typescript-eslint/array-type': ['error', { default: 'generic', readonly: 'generic' }],
+      '@typescript-eslint/consistent-type-imports': 'error',
+      '@typescript-eslint/array-type': ['error', {
+        default: 'generic',
+        readonly: 'generic'
+      }],
 
       // SAFETY
       '@typescript-eslint/no-unsafe-argument': 'error',
@@ -46,34 +65,25 @@ export default defineConfig([
       '@typescript-eslint/no-unsafe-unary-minus': 'error',
 
       // STRICT
-      "@typescript-eslint/no-explicit-any": "error",
-      "@typescript-eslint/explicit-module-boundary-types": "error",
-      "@typescript-eslint/explicit-function-return-type": "error",
-      "@typescript-eslint/no-non-null-assertion": "error",
-      "no-invalid-this": "off",
-      "@typescript-eslint/no-invalid-this": "error",
-      "@typescript-eslint/unbound-method": "error",
-      "no-unused-vars": "off",
-      "@typescript-eslint/no-unused-vars": "error",
-      "consistent-return": "off",
-      "@typescript-eslint/consistent-return": "error",
-      "no-fallthrough": "error",
-      "@typescript-eslint/explicit-member-accessibility": "error",
-      "dot-notation": "off",
-      "@typescript-eslint/dot-notation": ["error", {
-        "allowPrivateClassPropertyAccess": false,
-        "allowProtectedClassPropertyAccess": false,
-        "allowIndexSignaturePropertyAccess": false,
+      '@typescript-eslint/explicit-function-return-type': 'error',
+      '@typescript-eslint/explicit-member-accessibility': 'error',
+      '@typescript-eslint/explicit-module-boundary-types': 'error',
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-non-null-assertion': 'error',
+      '@typescript-eslint/unbound-method': 'error',
+      '@typescript-eslint/use-unknown-in-catch-callback-variable': 'error',
+      'no-invalid-this': 'off',
+      '@typescript-eslint/no-invalid-this': 'error',
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': 'error',
+      'consistent-return': 'off',
+      '@typescript-eslint/consistent-return': 'error',
+      'dot-notation': 'off',
+      '@typescript-eslint/dot-notation': ['error', {
+        allowPrivateClassPropertyAccess: false,
+        allowProtectedClassPropertyAccess: false,
+        allowIndexSignaturePropertyAccess: false,
       }],
-      "@typescript-eslint/use-unknown-in-catch-callback-variable": "error",
-    }
-  },
-  {
-    ignores: [
-      'eslint.config.mjs',
-      'vitest.config.js',
-      'node_modules',
-      'dist',
-    ]
+    },
   },
 ])

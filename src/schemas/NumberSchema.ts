@@ -6,16 +6,27 @@ import { NullableSchema } from '@/schemas/NullableSchema'
 import { UnionSchema } from '@/schemas/UnionSchema'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { TransformSchema } from '@/schemas/TransformSchema'
+import { stringify } from '@/utils/stringify'
 
 // CLASS
 export class NumberSchema implements GenericSchema<number> {
 
+  // PROPERTIES
+  public readonly _queue: Array<(original: number, output: number) => number>
+
   // CONSTRUCTOR
-  private constructor() {}
+  private constructor(queue: Array<(original: number, output: number) => number>) {
+    this._queue = queue
+  }
+
+  // CONSTRUCTOR
+  private push(fn: (original: number, output: number) => number): NumberSchema {
+    return new NumberSchema([...this._queue, fn])
+  }
 
   // CONSTRUCTOR
   public static create(): NumberSchema {
-    return new NumberSchema()
+    return new NumberSchema([])
   }
 
   // METHOD
@@ -24,8 +35,13 @@ export class NumberSchema implements GenericSchema<number> {
     if (typeof input !== 'number') {
       throw new ValidationError(input, 'The value must be a number.')
     }
+    let output = input
+    for (const fn of this._queue) {
+      output = fn(input, output)
+    }
 
-    return input
+    return output
+
   }
 
   // METHOD
@@ -58,4 +74,103 @@ export class NumberSchema implements GenericSchema<number> {
     return TransformSchema.create(this, fn)
   }
 
+  // METHOD
+  public lessThan(target: number, options: { clamp?: boolean } = {}): NumberSchema {
+    if (Number.isNaN(target)) throw new Error('The `target` parameter cannot be NaN.')
+    return this.push((original, output) => {
+      if (output < target) return output
+      if (options.clamp === true) return target - 1
+      throw new ValidationError(original, `The value must be less than ${stringify(target)}.`)
+    })
+  }
+
+  // METHOD
+  public lessThanOrEqual(target: number, options: { clamp?: boolean } = {}): NumberSchema {
+    if (Number.isNaN(target)) throw new Error('The `target` parameter cannot be NaN.')
+    return this.push((original, output) => {
+      if (output <= target) return output
+      if (options.clamp === true) return target
+      throw new ValidationError(original, `The value must be less than or equal to ${stringify(target)}.`)
+    })
+  }
+
+  // METHOD
+  public greaterThan(target: number, options: { clamp?: boolean } = {}): NumberSchema {
+    if (Number.isNaN(target)) throw new Error('The `target` parameter cannot be NaN.')
+    return this.push((original, output) => {
+      if (output > target) return output
+      if (options.clamp === true) return target + 1
+      throw new ValidationError(original, `The value must be greater than ${stringify(target)}.`)
+    })
+  }
+
+  // METHOD
+  public greaterThanOrEqual(target: number, options: { clamp?: boolean } = {}): NumberSchema {
+    if (Number.isNaN(target)) throw new Error('The `target` parameter cannot be NaN.')
+    return this.push((original, output) => {
+      if (output >= target) return output
+      if (options.clamp === true) return target
+      throw new ValidationError(original, `The value must be greater than or equal to ${stringify(target)}.`)
+    })
+  }
+
+  // METHOD
+  public negative(): NumberSchema {
+    return this.push((original, output) => {
+      if (output < 0) return output
+      throw new ValidationError(original, 'The value must be a negative number.')
+    })
+  }
+
+  // METHOD
+  public positive(): NumberSchema {
+    return this.push((original, output) => {
+      if (output > 0) return output
+      throw new ValidationError(original, 'The value must be a positive number.')
+    })
+  }
+
+  // METHOD
+  public integer(): NumberSchema {
+    return this.push((original, output) => {
+      if (Number.isInteger(output)) return output
+      throw new ValidationError(original, 'The value must be an integer.')
+    })
+  }
+
+  // METHOD
+  public finite(): NumberSchema {
+    return this.push((original, output) => {
+      if (Number.isFinite(output)) return output
+      throw new ValidationError(original, 'The value must be a finite number.')
+    })
+  }
+
+  // METHOD
+  public safe(): NumberSchema {
+    return this.push((original, output) => {
+      if (output >= Number.MIN_SAFE_INTEGER && output <= Number.MAX_SAFE_INTEGER) return output
+      throw new ValidationError(original, 'The value must be a safe integer.')
+    })
+  }
+
+  // METHOD
+  public trunc(): NumberSchema {
+    return this.push((output) => Math.trunc(output))
+  }
+
+  // METHOD
+  public round(): NumberSchema {
+    return this.push((output) => Math.round(output))
+  }
+
+  // METHOD
+  public floor(): NumberSchema {
+    return this.push((output) => Math.floor(output))
+  }
+
+  // METHOD
+  public ceil(): NumberSchema {
+    return this.push((output) => Math.ceil(output))
+  }
 }

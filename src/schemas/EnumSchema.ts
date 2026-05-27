@@ -8,7 +8,7 @@ import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { TransformSchema } from '@/schemas/TransformSchema'
 
 // CLASS
-export class EnumSchema<T extends string | number> implements GenericSchema<T> {
+export class EnumSchema<T extends string | number = never> implements GenericSchema<T> {
 
   // PROPERTIES
   private readonly _values: ReadonlyArray<T>
@@ -17,12 +17,12 @@ export class EnumSchema<T extends string | number> implements GenericSchema<T> {
   private constructor(...values: ReadonlyArray<T>) {
     this._values = values
     if (this._values.length === 0) {
-      throw new Error('Must provide at least one value.')
+      throw new Error('Must provide at least one literal value.')
     }
   }
 
   // CONSTRUCTOR
-  public static create<T extends string | number>(...values: ReadonlyArray<T>): EnumSchema<T> {
+  public static create<T extends string | number = never>(...values: ReadonlyArray<T>): EnumSchema<T> {
     return new EnumSchema(...values)
   }
 

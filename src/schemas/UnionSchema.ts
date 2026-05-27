@@ -17,6 +17,7 @@ export class UnionSchema<T> implements GenericSchema<T> {
 
   // CONSTRUCTOR
   private constructor(...schemas: ReadonlyArray<GenericSchema<T>>) {
+    if (schemas.length < 2) throw new Error('Must provide at least two schemas.')
     this._schemas = schemas
   }
 

@@ -1,10 +1,16 @@
+/* eslint-disable @typescript-eslint/consistent-return */
+
 // IMPORTS
 import { expect } from 'vitest'
+import type { GenericSchema } from '@/schemas/GenericSchema'
 import { ValidationError, type ValidationErrorIndex } from '@/errors/ValidationError'
-import { GenericSchema } from '@/schemas/GenericSchema'
 
 // INTERFACE
 interface ExpectSchemaResult {
+  toReturn(value: unknown): void
+  toReturnSame(value: unknown): void
+  toReturnNew(value: unknown): void
+  toReturnInstanceOf(value: unknown): void
   toThrow(message: string, index?: Array<[unknown, {
     value: unknown
     message: string
@@ -13,8 +19,25 @@ interface ExpectSchemaResult {
 }
 
 // FUNCTION
-export function expectSchema(schema: GenericSchema<unknown>, input: unknown): ExpectSchemaResult {
+export function expectValidation(schema: GenericSchema<unknown>, input: unknown): ExpectSchemaResult {
   return {
+    toReturn(value: unknown): void {
+      const result = schema.validate(input)
+      expect(result).toEqual(value)
+    },
+    toReturnSame(value: unknown): void {
+      const result = schema.validate(input)
+      expect(result).toBe(value)
+    },
+    toReturnNew(value: unknown): void {
+      const result = schema.validate(input)
+      expect(result).toEqual(value)
+      expect(result).not.toBe(input)
+    },
+    toReturnInstanceOf(value: unknown): void {
+      const result = schema.validate(input)
+      expect(result).toBeInstanceOf(value)
+    },
     toThrow(message: string, index?: Array<[unknown, {
       value: unknown
       message: string
@@ -26,7 +49,6 @@ export function expectSchema(schema: GenericSchema<unknown>, input: unknown): Ex
         expect.unreachable('Expected validation to throw an error.')
 
       } catch (error: unknown) {
-
         expect(error).toBeInstanceOf(ValidationError)
         const e = error as ValidationError
 
@@ -37,8 +59,24 @@ export function expectSchema(schema: GenericSchema<unknown>, input: unknown): Ex
         expect(e.value).toBe(input)
         expect(e.message).toBe(message)
         expect(e.index).toStrictEqual(index ? new Map(index) : null)
-
       }
     },
+  }
+}
+
+// FUNCTION
+export function expectError(fn: () => void): { toHaveMessage(message: string): void } {
+  let error: Error
+  try {
+    fn()
+    expect.unreachable('Expected to throw an error.')
+  } catch (e: unknown) {
+    expect(e).toBeInstanceOf(Error)
+    error = e as Error
+    return {
+      toHaveMessage(message: string): void {
+        expect(error.message).toBe(message)
+      },
+    }
   }
 }

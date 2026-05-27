@@ -1,52 +1,56 @@
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { NullableSchema } from '@/schemas/NullableSchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
-import { expectSchema } from '@tests/helpers/expect'
+import { expectValidation } from '@tests/helpers/expect'
 
-// METHOD
-describe('.create()', () => {
+// METHOD ---------------------------------------------------------------------
+describe('.create(inner)', () => {
 
   const schema = NullableSchema.create(StringSchema.create())
 
-  it('validates an input that matches the given schema.', () => {
-    const result = schema.validate('STRING')
-    expect(result).toBe('STRING')
+  it('returns an instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(NullableSchema)
   })
-
-  it('validates a null input.', () => {
-    const result = schema.validate(null)
-    expect(result).toBeNull()
-  })
-
-  it('throws when the value does not match the given schema.', () => {
-    DataTypeGenerator.skip('strings', 'null').forEach((value) => {
-      expectSchema(schema, value).toThrow('The value must be a string.')
-    })
-  })
-
 })
 
-// METHOD
-describe('.default()', () => {
+// METHOD ---------------------------------------------------------------------
+describe('.validate(input)', () => {
+
+  const schema = NullableSchema.create(StringSchema.create())
+
+  it('returns when `input` matches the `inner` schema.', () => {
+    expectValidation(schema, 'STRING').toReturn('STRING')
+  })
+
+  it('returns when `input` is `null`.', () => {
+    expectValidation(schema, null).toReturn(null)
+  })
+
+  it('throws when `input` does not match the `inner` schema.', () => {
+    DataTypeGenerator.skip('strings', 'null').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be a string.')
+    })
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
+describe('.default(default)', () => {
 
   const schema = NullableSchema.create(StringSchema.create()).default('DEFAULT')
 
-  it('validates an input that matches the given schema.', () => {
-    const result = schema.validate('STRING')
-    expect(result).toBe('STRING')
+  it('returns when the `input` matches the `inner` schema.', () => {
+    expectValidation(schema, 'STRING').toReturn('STRING')
   })
 
-  it('returns the default value for a null input.', () => {
-    const result = schema.validate(null)
-    expect(result).toBe('DEFAULT')
+  it('returns `default` value when `input` is `null`.', () => {
+    expectValidation(schema, null).toReturn('DEFAULT')
   })
 
-  it('throws when the value does not match the given schema.', () => {
+  it('throws when `input` does not match the `inner` schema.', () => {
     DataTypeGenerator.skip('strings', 'null').forEach((value) => {
-      expectSchema(schema, value).toThrow('The value must be a string.')
+      expectValidation(schema, value).toThrow('The value must be a string.')
     })
   })
-
 })
