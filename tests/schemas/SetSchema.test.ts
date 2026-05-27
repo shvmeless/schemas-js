@@ -119,3 +119,67 @@ describe('.size(length)', () => {
     })
   })
 })
+
+// METHOD
+describe('.min(length)', () => {
+
+  it('returns a new instance of the schema.', () => {
+    const base = SetSchema.create(StringSchema.create())
+    const schema = base.min(5)
+    expect(schema).toBeInstanceOf(SetSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  describe('when `length` is `NaN`', () => {
+    it('throws when the schema is being built.', () => {
+      expectError(() => {
+        SetSchema.create(StringSchema.create()).min(NaN)
+      }).toHaveMessage('The length value must be zero or positive.')
+    })
+  })
+
+  describe('when `length` is a negative number', () => {
+    it('throws when the schema is being built.', () => {
+      expectError(() => {
+        SetSchema.create(StringSchema.create()).min(-8)
+      }).toHaveMessage('The length value must be zero or positive.')
+    })
+  })
+
+  describe('when `length` is zero', () => {
+
+    const schema = SetSchema.create(StringSchema.create()).min(0)
+
+    it('returns when `input` is empty.', () => {
+      expectValidation(schema, new Set([])).toReturn(new Set([]))
+    })
+
+    it('returns when `input` size is greater than expected.', () => {
+      const input = new Set(['A', 'B', 'C'])
+      const expected = new Set(['A', 'B', 'C'])
+      expectValidation(schema, input).toReturn(expected)
+    })
+  })
+
+  describe('when `length` is a positive number', () => {
+
+    const schema = SetSchema.create(StringSchema.create()).min(5)
+
+    it('throws when `input` size is less than expected.', () => {
+      const input = new Set(['A', 'B', 'C'])
+      expectValidation(schema, input).toThrow('The value must be at least 5 elements long.')
+    })
+
+    it('returns when `input` size is as expected.', () => {
+      const input = new Set(['A', 'B', 'C', 'D', 'E'])
+      const expected = new Set(['A', 'B', 'C', 'D', 'E'])
+      expectValidation(schema, input).toReturn(expected)
+    })
+
+    it('returns when `input` size is greater than expected.', () => {
+      const input = new Set(['A', 'B', 'C', 'D', 'E', 'F', 'G'])
+      const expected = new Set(['A', 'B', 'C', 'D', 'E', 'F', 'G'])
+      expectValidation(schema, input).toReturn(expected)
+    })
+  })
+})
