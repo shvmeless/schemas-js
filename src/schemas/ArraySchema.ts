@@ -6,21 +6,44 @@ import { NullableSchema } from '@/schemas/NullableSchema'
 import { OptionalSchema } from '@/schemas/OptionalSchema'
 import { TransformSchema } from '@/schemas/TransformSchema'
 import { UnionSchema } from '@/schemas/UnionSchema'
+import { stringify } from '@/utils/stringify'
 
 // CLASS
 export class ArraySchema<T> implements GenericSchema<Array<T>> {
 
   // PROPERTIES
   private readonly _schema: GenericSchema<T>
+  private readonly _queue: Array<(original: Array<T>, output: Array<T>) => Array<T>>
+  private readonly _prune: boolean
 
   // CONSTRUCTOR
-  private constructor(schema: GenericSchema<T>) {
+  private constructor(schema: GenericSchema<T>, queue: Array<(original: Array<T>, output: Array<T>) => Array<T>>, prune: boolean) {
     this._schema = schema
+    this._queue = queue
+    this._prune = prune
   }
 
   // CONSTRUCTOR
   public static create<T>(schema: GenericSchema<T>): ArraySchema<T> {
-    return new ArraySchema<T>(schema)
+    return new ArraySchema<T>(schema, [], false)
+  }
+
+  // CONSTRUCTOR
+  private clone(params: {
+    schema?: GenericSchema<T>
+    queue?: Array<(original: Array<T>, output: Array<T>) => Array<T>>
+    prune?: boolean
+  } = {}): ArraySchema<T> {
+    return new ArraySchema<T>(
+      params.schema ?? this._schema,
+      params.queue ?? this._queue,
+      params.prune ?? this._prune,
+    )
+  }
+
+  // CONSTRUCTOR
+  private push(fn: (original: Array<T>, output: Array<T>) => Array<T>): ArraySchema<T> {
+    return new ArraySchema<T>(this._schema, [...this._queue, fn], this._prune)
   }
 
   // METHOD
@@ -30,20 +53,27 @@ export class ArraySchema<T> implements GenericSchema<Array<T>> {
       throw new ValidationError(input, 'The value must be an array.')
     }
 
-    const result: Array<T> = []
+    let result: Array<T> = []
     const errors = ValidationError.prepare()
 
     input.forEach((element, index) => {
       try {
-        result[index] = this._schema.validate(element)
+        const value = this._schema.validate(element)
+        result.push(value)
       } catch (error) {
-        if (error instanceof ValidationError) errors.add(index, error)
-        else throw error
+        if (error instanceof ValidationError) {
+          if (this._prune) return
+          errors.add(index, error)
+        } else throw error
       }
     })
 
     if (errors.size > 0) {
       errors.throw(input, 'At least one element does not match the given schema.')
+    }
+
+    for (const fn of this._queue) {
+      result = fn(input as Array<T>, result)
     }
 
     return result
@@ -78,6 +108,81 @@ export class ArraySchema<T> implements GenericSchema<Array<T>> {
   // METHOD
   public transform<V>(fn: (value: Array<T>) => V): TransformSchema<Array<T>, V> {
     return TransformSchema.create(this, fn)
+  }
+
+  // METHOD
+  public prune(): ArraySchema<T> {
+    return this.clone({ prune: true })
+  }
+
+  // METHOD
+  public length(length: number): ArraySchema<T> {
+    if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
+    if (length < 0) throw new Error('The length value must be zero or positive.')
+    return this.push((original, output) => {
+      if (output.length !== length) throw new ValidationError(original, `The value must be ${stringify(length)} elements long.`)
+      return output
+    })
+  }
+
+  // METHOD
+  public min(length: number): ArraySchema<T> {
+    if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
+    if (length < 0) throw new Error('The length value must be zero or positive.')
+    return this.push((original, output) => {
+      if (output.length < length) throw new ValidationError(original, `The value must be at least ${stringify(length)} elements long.`)
+      return output
+    })
+  }
+
+  // METHOD
+  public max(length: number): ArraySchema<T> {
+    if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
+    if (length < 0) throw new Error('The length value must be zero or positive.')
+    return this.push((original, output) => {
+      if (output.length > length) throw new ValidationError(original, `The value must be at most ${stringify(length)} elements long.`)
+      return output
+    })
+  }
+
+  // METHOD
+  public filter(callback: (value: T, index: number, array: Array<T>) => boolean): ArraySchema<T> {
+    return this.push((output) => {
+      return output.filter(callback)
+    })
+  }
+
+  // METHOD
+  public some(callback: (value: T, index: number, array: Array<T>) => boolean): ArraySchema<T> {
+    return this.push((output) => {
+      for (let index = 0; index < output.length; index++) {
+        const value = output[index] as T
+        if (callback(value, index, output)) return output
+      }
+      throw new ValidationError(output, 'No element satisfies the given validation function.')
+    })
+  }
+
+  // METHOD
+  public every(callback: (value: T, index: number, array: Array<T>) => boolean): ArraySchema<T> {
+    return this.push((output) => {
+      for (let index = 0; index < output.length; index++) {
+        const value = output[index] as T
+        if (!callback(value, index, output)) throw new ValidationError(output, 'At least one element does not satisfy the given validation function.')
+      }
+      return output
+    })
+  }
+
+  // METHOD
+  public none(callback: (value: T, index: number, array: Array<T>) => boolean): ArraySchema<T> {
+    return this.push((output) => {
+      for (let index = 0; index < output.length; index++) {
+        const value = output[index] as T
+        if (callback(value, index, output)) throw new ValidationError(output, 'At least one element satisfies the given validation function.')
+      }
+      return output
+    })
   }
 
 }
