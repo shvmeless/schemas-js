@@ -112,4 +112,14 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
     })
   }
 
+  // METHOD
+  public max(length: number): RecordSchema<T> {
+    if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
+    if (length < 0) throw new Error('The length value must be zero or positive.')
+    return this.push((original, output) => {
+      if (Object.entries(output).length > length) throw new ValidationError(original, `The value must be at most ${stringify(length)} elements long.`)
+      return output
+    })
+  }
+
 }
