@@ -158,4 +158,14 @@ export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
     })
   }
 
+  // METHOD
+  public some(callback: (value: T, key: K, map: Map<K, T>) => boolean): MapSchema<K, T> {
+    return this.push((original, output) => {
+      for (const [key, value] of output) {
+        if (callback(value, key, output)) return output
+      }
+      throw new ValidationError(original, 'No element satisfies the given validation function.')
+    })
+  }
+
 }
