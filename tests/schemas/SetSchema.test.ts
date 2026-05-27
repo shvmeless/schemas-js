@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { SetSchema } from '@/schemas/SetSchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
-import { expectValidation } from '@tests/helpers/expect'
+import { expectError, expectValidation } from '@tests/helpers/expect'
 
 // METHOD
 describe('.create(shape)', () => {
@@ -55,5 +55,67 @@ describe('.validate(input)', () => {
     const expected = new Set(['a', 'b', 'c'])
     expectValidation(schema, input).toReturn(expected)
     expectValidation(schema, input).notToReturn(input)
+  })
+})
+
+// METHOD
+describe('.size(length)', () => {
+
+  it('returns a new instance of the schema.', () => {
+    const base = SetSchema.create(StringSchema.create())
+    const schema = base.size(5)
+    expect(schema).toBeInstanceOf(SetSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  describe('when `length` is `NaN`', () => {
+    it('throws when the schema is being built.', () => {
+      expectError(() => {
+        SetSchema.create(StringSchema.create()).size(NaN)
+      }).toHaveMessage('The length value must be zero or positive.')
+    })
+  })
+
+  describe('when `length` is a negative number', () => {
+    it('throws when the schema is being built.', () => {
+      expectError(() => {
+        SetSchema.create(StringSchema.create()).size(-8)
+      }).toHaveMessage('The length value must be zero or positive.')
+    })
+  })
+
+  describe('when `length` is zero', () => {
+
+    const schema = SetSchema.create(StringSchema.create()).size(0)
+
+    it('returns when `input` size is as expected.', () => {
+      expectValidation(schema, new Set()).toReturn(new Set())
+    })
+
+    it('throws when `input` size is greater than expected.', () => {
+      const input = new Set(['A', 'B', 'C'])
+      expectValidation(schema, input).toThrow('The value must be 0 elements long.')
+    })
+  })
+
+  describe('when `length` is a positive number', () => {
+
+    const schema = SetSchema.create(StringSchema.create()).size(5)
+
+    it('throws when `input` size is less than expected.', () => {
+      const input = new Set(['A', 'B', 'C'])
+      expectValidation(schema, input).toThrow('The value must be 5 elements long.')
+    })
+
+    it('returns when `input` size is as expected.', () => {
+      const input = new Set(['A', 'B', 'C', 'D', 'E'])
+      const expected = new Set(['A', 'B', 'C', 'D', 'E'])
+      expectValidation(schema, input).toReturn(expected)
+    })
+
+    it('throws when `input` size is greater than expected.', () => {
+      const input = new Set(['A', 'B', 'C', 'D', 'E', 'F', 'G'])
+      expectValidation(schema, input).toThrow('The value must be 5 elements long.')
+    })
   })
 })
