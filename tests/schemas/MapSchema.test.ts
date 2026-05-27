@@ -74,6 +74,51 @@ describe('.validate(input)', () => {
 })
 
 // METHOD
+describe('.prune()', () => {
+
+  const schema = MapSchema.create(StringSchema.create(), NumberSchema.create()).prune()
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(MapSchema)
+  })
+
+  it('returns when `input` is a `Map` instance.', () => {
+    expectValidation(schema, new Map([])).toReturn(new Map([]))
+  })
+
+  it('throws when `input` is not a `Map` instance.', () => {
+    DataTypeGenerator.skip('maps').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be a Map.')
+    })
+  })
+
+  it('returns when all `input` elements match the `shape` schema.', () => {
+    const input = new Map([['A', 1], ['B', 2], ['C', 3]])
+    const expected = new Map([['A', 1], ['B', 2], ['C', 3]])
+    expectValidation(schema, input).toReturn(expected)
+  })
+
+  it('prunes when some `input` keys do not match the `shape` schema.', () => {
+    const input = new Map<string | boolean, number>([['A', 1], [true, 2], ['C', 3], [false, 4], ['E', 5]])
+    const expected = new Map<string, number | boolean>([['A', 1], ['C', 3], ['E', 5]])
+    expectValidation(schema, input).toReturn(expected)
+  })
+
+  it('prunes when some `input` values do not match the `shape` schema.', () => {
+    const input = new Map<string, number | boolean>([['A', 1], ['B', true], ['C', 3], ['D', false], ['E', 5]])
+    const expected = new Map<string, number | boolean>([['A', 1], ['C', 3], ['E', 5]])
+    expectValidation(schema, input).toReturn(expected)
+  })
+
+  it('returns a new `Map` instance.', () => {
+    const input = new Map([['A', 1], ['B', 2], ['C', 3]])
+    const expected = new Map([['A', 1], ['B', 2], ['C', 3]])
+    expectValidation(schema, input).toReturn(expected)
+    expectValidation(schema, input).notToReturn(input)
+  })
+})
+
+// METHOD
 describe('.size(length)', () => {
 
   it('returns a new instance of the schema.', () => {

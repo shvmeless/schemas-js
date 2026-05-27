@@ -15,22 +15,39 @@ export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
   private readonly _keySchema: GenericSchema<K>
   private readonly _valueSchema: GenericSchema<T>
   private readonly _queue: Array<(original: Map<K, T>, output: Map<K, T>) => Map<K, T>>
+  private readonly _prune: boolean
 
   // CONSTRUCTOR
-  private constructor(keySchema: GenericSchema<K>, valueSchema: GenericSchema<T>, queue: Array<(original: Map<K, T>, output: Map<K, T>) => Map<K, T>>) {
+  private constructor(keySchema: GenericSchema<K>, valueSchema: GenericSchema<T>, queue: Array<(original: Map<K, T>, output: Map<K, T>) => Map<K, T>>, prune: boolean) {
     this._keySchema = keySchema
     this._valueSchema = valueSchema
     this._queue = queue
+    this._prune = prune
   }
 
   // CONSTRUCTOR
   public static create<K, T>(keySchema: GenericSchema<K>, valueSchema: GenericSchema<T>): MapSchema<K, T> {
-    return new MapSchema(keySchema, valueSchema, [])
+    return new MapSchema(keySchema, valueSchema, [], false)
   }
 
   // CONSTRUCTOR
   private push(fn: (original: Map<K, T>, output: Map<K, T>) => Map<K, T>): MapSchema<K, T> {
-    return new MapSchema(this._keySchema, this._valueSchema, [...this._queue, fn])
+    return new MapSchema(this._keySchema, this._valueSchema, [...this._queue, fn], false)
+  }
+
+  // CONSTRUCTOR
+  private clone(params: {
+    keySchema?: GenericSchema<K>
+    valueSchema?: GenericSchema<T>
+    queue?: Array<(original: Map<K, T>, output: Map<K, T>) => Map<K, T>>
+    prune?: boolean
+  } = {}): MapSchema<K, T> {
+    return new MapSchema(
+      params.keySchema ?? this._keySchema,
+      params.valueSchema ?? this._valueSchema,
+      params.queue ?? this._queue,
+      params.prune ?? this._prune,
+    )
   }
 
   // METHOD
@@ -49,8 +66,10 @@ export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
         const validatedValue = this._valueSchema.validate(value)
         result.set(validatedKey, validatedValue)
       } catch (error) {
-        if (error instanceof ValidationError) errors.add(key, error)
-        else throw error
+        if (error instanceof ValidationError) {
+          if (this._prune) return
+          errors.add(key, error)
+        } else throw error
       }
     })
 
@@ -94,6 +113,11 @@ export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
   // METHOD
   public transform<V>(fn: (value: Map<K, T>) => V): TransformSchema<Map<K, T>, V> {
     return TransformSchema.create(this, fn)
+  }
+
+  // METHOD
+  public prune(): MapSchema<K, T> {
+    return this.clone({ prune: true })
   }
 
   // METHOD
