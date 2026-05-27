@@ -313,3 +313,30 @@ describe('.filter(callback)', () => {
     expectValidation(schema, input).toReturn(expected)
   })
 })
+
+// METHOD
+describe('.some(callback)', () => {
+
+  const schema = RecordSchema.create(NumberSchema.create()).some((value) => (value % 10 === 0))
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(RecordSchema)
+  })
+
+  it('returns when `callback` returns `true` for some `input` elements.', () => {
+    const input = { a: 10, b: 20, c: 30 }
+    const expected = { a: 10, b: 20, c: 30 }
+    expectValidation(schema, input).toReturn(expected)
+  })
+
+  it('returns when `callback` returns `false` for some `input` elements.', () => {
+    const input = { a: 10, b: 22, c: 30 }
+    const expected = { a: 10, b: 22, c: 30 }
+    expectValidation(schema, input).toReturn(expected)
+  })
+
+  it('throws when `callback` returns `false` for all `input` elements.', () => {
+    const input = { a: 11, b: 22, c: 33 }
+    expectValidation(schema, input).toThrow('No element satisfies the given validation function.')
+  })
+})
