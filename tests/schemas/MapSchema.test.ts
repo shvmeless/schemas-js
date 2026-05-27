@@ -361,3 +361,29 @@ describe('.some(callback)', () => {
     expectValidation(schema, input).toThrow('No element satisfies the given validation function.')
   })
 })
+
+// METHOD
+describe('.every(callback)', () => {
+
+  const schema = MapSchema.create(StringSchema.create(), NumberSchema.create()).every((value) => (value % 10 === 0))
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(MapSchema)
+  })
+
+  it('returns when `callback` returns `true` for all `input` elements.', () => {
+    const input = new Map([['A', 10], ['B', 20], ['C', 30]])
+    const expected = new Map([['A', 10], ['B', 20], ['C', 30]])
+    expectValidation(schema, input).toReturn(expected)
+  })
+
+  it('throws when `callback` returns `false` for some `input` elements.', () => {
+    const input = new Map([['A', 10], ['B', 22], ['C', 30]])
+    expectValidation(schema, input).toThrow('At least one element does not satisfy the given validation function.')
+  })
+
+  it('throws when `callback` returns `false` for all `input` elements.', () => {
+    const input = new Map([['A', 11], ['B', 22], ['C', 33]])
+    expectValidation(schema, input).toThrow('At least one element does not satisfy the given validation function.')
+  })
+})
