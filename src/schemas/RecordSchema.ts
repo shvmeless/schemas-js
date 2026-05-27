@@ -172,4 +172,14 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
     })
   }
 
+  // METHOD
+  public none(callback: (value: T, key: string, array: Record<string, T>) => boolean): RecordSchema<T> {
+    return this.push((original, output) => {
+      for (const [index, value] of Object.entries(output)) {
+        if (callback(value, index, output)) throw new ValidationError(original, 'At least one element satisfies the given validation function.')
+      }
+      return output
+    })
+  }
+
 }

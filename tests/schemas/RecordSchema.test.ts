@@ -366,3 +366,29 @@ describe('.every(callback)', () => {
     expectValidation(schema, input).toThrow('At least one element does not satisfy the given validation function.')
   })
 })
+
+// METHOD
+describe('.none(callback)', () => {
+
+  const schema = RecordSchema.create(NumberSchema.create()).none((value) => (value % 10 === 0))
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(RecordSchema)
+  })
+
+  it('returns when `callback` returns `true` for all `input` elements.', () => {
+    const input = { a: 11, b: 22, c: 33 }
+    const expected = { a: 11, b: 22, c: 33 }
+    expectValidation(schema, input).toReturn(expected)
+  })
+
+  it('throws when `callback` returns `false` for some `input` elements.', () => {
+    const input = { a: 10, b: 22, c: 30 }
+    expectValidation(schema, input).toThrow('At least one element satisfies the given validation function.')
+  })
+
+  it('throws when `callback` returns `false` for all `input` elements.', () => {
+    const input = { a: 10, b: 20, c: 30 }
+    expectValidation(schema, input).toThrow('At least one element satisfies the given validation function.')
+  })
+})
