@@ -145,4 +145,12 @@ export class SetSchema<T> implements GenericSchema<Set<T>> {
     })
   }
 
+  // METHOD
+  public filter(callback: (value: T, set: Set<T>) => boolean): SetSchema<T> {
+    return this.push((_, output) => {
+      const entries = Array.from(output).filter((value) => callback(value, output))
+      return new Set(entries)
+    })
+  }
+
 }
