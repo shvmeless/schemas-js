@@ -1,11 +1,11 @@
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { OptionalSchema } from '@/schemas/OptionalSchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectValidation } from '@tests/helpers/expect'
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.create(inner)', () => {
 
   const schema = OptionalSchema.create(StringSchema.create())
@@ -15,7 +15,7 @@ describe('.create(inner)', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.validate(input)', () => {
 
   const schema = OptionalSchema.create(StringSchema.create())
@@ -37,7 +37,7 @@ describe('.validate(input)', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.default(default)', () => {
 
   const schema = OptionalSchema.create(StringSchema.create()).default('DEFAULT')

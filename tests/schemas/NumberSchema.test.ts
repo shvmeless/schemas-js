@@ -1,10 +1,10 @@
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { NumberSchema } from '@/schemas/NumberSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
-import { expectError, expectValidation } from '@tests/helpers/expect'
+import { expectValidation, expectError } from '@tests/helpers/expect'
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.create()', () => {
 
   const schema = NumberSchema.create()
@@ -14,7 +14,7 @@ describe('.create()', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.validate(input)', () => {
 
   const schema = NumberSchema.create()
@@ -50,16 +50,8 @@ describe('.validate(input)', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.lessThan(target, { clamp })', () => {
-
-  it('returns a new instance of the schema.', () => {
-    const base = NumberSchema.create()
-    const schema = base.lessThan(250)
-    expect(schema).toBeInstanceOf(NumberSchema)
-    expect(schema).not.toBe(base)
-  })
-
   describe('when `target` is `NaN`', () => {
     it('throws when `clamp` is `undefined`.', () => {
       expectError(() => {
@@ -82,8 +74,13 @@ describe('.lessThan(target, { clamp })', () => {
 
   describe('when `clamp` is `undefined`', () => {
 
-    const target = 500
-    const schema = NumberSchema.create().lessThan(target)
+    const base = NumberSchema.create()
+    const schema = base.lessThan(500)
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(NumberSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('returns when `input` is less than `target`.', () => {
       expectValidation(schema, 499.999).toReturn(499.999)
@@ -98,18 +95,23 @@ describe('.lessThan(target, { clamp })', () => {
     })
 
     it('throws when `input` is greater than `target`.', () => {
-      expectValidation(schema, 500.001).toThrow(`The value must be less than ${target}.`)
-      expectValidation(schema, 501).toThrow(`The value must be less than ${target}.`)
-      expectValidation(schema, 1000).toThrow(`The value must be less than ${target}.`)
-      expectValidation(schema, Number.MAX_SAFE_INTEGER).toThrow(`The value must be less than ${target}.`)
-      expectValidation(schema, Infinity).toThrow(`The value must be less than ${target}.`)
+      expectValidation(schema, 500.001).toThrow('The value must be less than 500.')
+      expectValidation(schema, 501).toThrow('The value must be less than 500.')
+      expectValidation(schema, 1000).toThrow('The value must be less than 500.')
+      expectValidation(schema, Number.MAX_SAFE_INTEGER).toThrow('The value must be less than 500.')
+      expectValidation(schema, Infinity).toThrow('The value must be less than 500.')
     })
   })
 
   describe('when `clamp` is `false`', () => {
 
-    const target = 500
-    const schema = NumberSchema.create().lessThan(target, { clamp: false })
+    const base = NumberSchema.create()
+    const schema = base.lessThan(500, { clamp: false })
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(NumberSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('returns when `input` is less than `target`.', () => {
       expectValidation(schema, 499.999).toReturn(499.999)
@@ -120,22 +122,27 @@ describe('.lessThan(target, { clamp })', () => {
     })
 
     it('throws when `input` is equal to `target`.', () => {
-      expectValidation(schema, 500).toThrow(`The value must be less than ${target}.`)
+      expectValidation(schema, 500).toThrow('The value must be less than 500.')
     })
 
     it('throws when `input` is greater than `target`.', () => {
-      expectValidation(schema, 500.001).toThrow(`The value must be less than ${target}.`)
-      expectValidation(schema, 501).toThrow(`The value must be less than ${target}.`)
-      expectValidation(schema, 1000).toThrow(`The value must be less than ${target}.`)
-      expectValidation(schema, Number.MAX_SAFE_INTEGER).toThrow(`The value must be less than ${target}.`)
-      expectValidation(schema, Infinity).toThrow(`The value must be less than ${target}.`)
+      expectValidation(schema, 500.001).toThrow('The value must be less than 500.')
+      expectValidation(schema, 501).toThrow('The value must be less than 500.')
+      expectValidation(schema, 1000).toThrow('The value must be less than 500.')
+      expectValidation(schema, Number.MAX_SAFE_INTEGER).toThrow('The value must be less than 500.')
+      expectValidation(schema, Infinity).toThrow('The value must be less than 500.')
     })
   })
 
   describe('when `clamp` is `true`', () => {
 
-    const target = 500
-    const schema = NumberSchema.create().lessThan(target, { clamp: true })
+    const base = NumberSchema.create()
+    const schema = base.lessThan(500, { clamp: true })
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(NumberSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('returns when `input` is less than `target`.', () => {
       expectValidation(schema, 499.999).toReturn(499.999)
@@ -159,16 +166,8 @@ describe('.lessThan(target, { clamp })', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.lessThanOrEqual(target, { clamp })', () => {
-
-  it('returns a new instance of the schema.', () => {
-    const base = NumberSchema.create()
-    const schema = base.lessThanOrEqual(250)
-    expect(schema).toBeInstanceOf(NumberSchema)
-    expect(schema).not.toBe(base)
-  })
-
   describe('when `target` is `NaN`', () => {
     it('throws when `clamp` is `undefined`.', () => {
       expectError(() => {
@@ -191,8 +190,13 @@ describe('.lessThanOrEqual(target, { clamp })', () => {
 
   describe('when `clamp` is `undefined`', () => {
 
-    const target = 500
-    const schema = NumberSchema.create().lessThanOrEqual(target)
+    const base = NumberSchema.create()
+    const schema = base.lessThanOrEqual(500)
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(NumberSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('returns when `input` is less than `target`.', () => {
       expectValidation(schema, 499.999).toReturn(499.999)
@@ -207,18 +211,23 @@ describe('.lessThanOrEqual(target, { clamp })', () => {
     })
 
     it('throws when `input` is greater than `target`.', () => {
-      expectValidation(schema, 500.001).toThrow(`The value must be less than or equal to ${target}.`)
-      expectValidation(schema, 501).toThrow(`The value must be less than or equal to ${target}.`)
-      expectValidation(schema, 1000).toThrow(`The value must be less than or equal to ${target}.`)
-      expectValidation(schema, Number.MAX_SAFE_INTEGER).toThrow(`The value must be less than or equal to ${target}.`)
-      expectValidation(schema, Infinity).toThrow(`The value must be less than or equal to ${target}.`)
+      expectValidation(schema, 500.001).toThrow('The value must be less than or equal to 500.')
+      expectValidation(schema, 501).toThrow('The value must be less than or equal to 500.')
+      expectValidation(schema, 1000).toThrow('The value must be less than or equal to 500.')
+      expectValidation(schema, Number.MAX_SAFE_INTEGER).toThrow('The value must be less than or equal to 500.')
+      expectValidation(schema, Infinity).toThrow('The value must be less than or equal to 500.')
     })
   })
 
   describe('when `clamp` is `false`', () => {
 
-    const target = 500
-    const schema = NumberSchema.create().lessThanOrEqual(target, { clamp: false })
+    const base = NumberSchema.create()
+    const schema = base.lessThanOrEqual(500, { clamp: false })
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(NumberSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('returns when `input` is less than `target`.', () => {
       expectValidation(schema, 499.999).toReturn(499.999)
@@ -233,18 +242,23 @@ describe('.lessThanOrEqual(target, { clamp })', () => {
     })
 
     it('throws when `input` is greater than `target`.', () => {
-      expectValidation(schema, 500.001).toThrow(`The value must be less than or equal to ${target}.`)
-      expectValidation(schema, 501).toThrow(`The value must be less than or equal to ${target}.`)
-      expectValidation(schema, 1000).toThrow(`The value must be less than or equal to ${target}.`)
-      expectValidation(schema, Number.MAX_SAFE_INTEGER).toThrow(`The value must be less than or equal to ${target}.`)
-      expectValidation(schema, Infinity).toThrow(`The value must be less than or equal to ${target}.`)
+      expectValidation(schema, 500.001).toThrow('The value must be less than or equal to 500.')
+      expectValidation(schema, 501).toThrow('The value must be less than or equal to 500.')
+      expectValidation(schema, 1000).toThrow('The value must be less than or equal to 500.')
+      expectValidation(schema, Number.MAX_SAFE_INTEGER).toThrow('The value must be less than or equal to 500.')
+      expectValidation(schema, Infinity).toThrow('The value must be less than or equal to 500.')
     })
   })
 
   describe('when `clamp` is `true`', () => {
 
-    const target = 500
-    const schema = NumberSchema.create().lessThanOrEqual(target, { clamp: true })
+    const base = NumberSchema.create()
+    const schema = base.lessThanOrEqual(500, { clamp: true })
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(NumberSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('returns when `input` is less than `target`.', () => {
       expectValidation(schema, 499.999).toReturn(499.999)
@@ -268,16 +282,8 @@ describe('.lessThanOrEqual(target, { clamp })', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.greaterThan(target, { clamp })', () => {
-
-  it('returns a new instance of the schema.', () => {
-    const base = NumberSchema.create()
-    const schema = base.greaterThan(250)
-    expect(schema).toBeInstanceOf(NumberSchema)
-    expect(schema).not.toBe(base)
-  })
-
   describe('when `target` is `NaN`', () => {
     it('throws when `clamp` is `undefined`.', () => {
       expectError(() => {
@@ -300,19 +306,24 @@ describe('.greaterThan(target, { clamp })', () => {
 
   describe('when `clamp` is `undefined`', () => {
 
-    const target = 500
-    const schema = NumberSchema.create().greaterThan(target)
+    const base = NumberSchema.create()
+    const schema = base.greaterThan(500)
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(NumberSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('throws when `input` is less than `target`.', () => {
-      expectValidation(schema, 499.999).toThrow(`The value must be greater than ${target}.`)
-      expectValidation(schema, 499).toThrow(`The value must be greater than ${target}.`)
-      expectValidation(schema, 0).toThrow(`The value must be greater than ${target}.`)
-      expectValidation(schema, Number.MIN_SAFE_INTEGER).toThrow(`The value must be greater than ${target}.`)
-      expectValidation(schema, -Infinity).toThrow(`The value must be greater than ${target}.`)
+      expectValidation(schema, 499.999).toThrow('The value must be greater than 500.')
+      expectValidation(schema, 499).toThrow('The value must be greater than 500.')
+      expectValidation(schema, 0).toThrow('The value must be greater than 500.')
+      expectValidation(schema, Number.MIN_SAFE_INTEGER).toThrow('The value must be greater than 500.')
+      expectValidation(schema, -Infinity).toThrow('The value must be greater than 500.')
     })
 
     it('throws when `input` is equal to `target`.', () => {
-      expectValidation(schema, 500).toThrow(`The value must be greater than ${target}.`)
+      expectValidation(schema, 500).toThrow('The value must be greater than 500.')
     })
 
     it('returns when `input` is greater than `target`.', () => {
@@ -326,19 +337,24 @@ describe('.greaterThan(target, { clamp })', () => {
 
   describe('when `clamp` is `false`', () => {
 
-    const target = 500
-    const schema = NumberSchema.create().greaterThan(target, { clamp: false })
+    const base = NumberSchema.create()
+    const schema = base.greaterThan(500, { clamp: false })
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(NumberSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('throws when `input` is less than `target`.', () => {
-      expectValidation(schema, 499.999).toThrow(`The value must be greater than ${target}.`)
-      expectValidation(schema, 499).toThrow(`The value must be greater than ${target}.`)
-      expectValidation(schema, 0).toThrow(`The value must be greater than ${target}.`)
-      expectValidation(schema, Number.MIN_SAFE_INTEGER).toThrow(`The value must be greater than ${target}.`)
-      expectValidation(schema, -Infinity).toThrow(`The value must be greater than ${target}.`)
+      expectValidation(schema, 499.999).toThrow('The value must be greater than 500.')
+      expectValidation(schema, 499).toThrow('The value must be greater than 500.')
+      expectValidation(schema, 0).toThrow('The value must be greater than 500.')
+      expectValidation(schema, Number.MIN_SAFE_INTEGER).toThrow('The value must be greater than 500.')
+      expectValidation(schema, -Infinity).toThrow('The value must be greater than 500.')
     })
 
     it('throws when `input` is equal to `target`.', () => {
-      expectValidation(schema, 500).toThrow(`The value must be greater than ${target}.`)
+      expectValidation(schema, 500).toThrow('The value must be greater than 500.')
     })
 
     it('returns when `input` is greater than `target`.', () => {
@@ -352,8 +368,13 @@ describe('.greaterThan(target, { clamp })', () => {
 
   describe('when `clamp` is `true`', () => {
 
-    const target = 500
-    const schema = NumberSchema.create().greaterThan(target, { clamp: true })
+    const base = NumberSchema.create()
+    const schema = base.greaterThan(500, { clamp: true })
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(NumberSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('clamps when `input` is less than `target`.', () => {
       expectValidation(schema, 499.999).toReturn(501)
@@ -377,16 +398,8 @@ describe('.greaterThan(target, { clamp })', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.greaterThanOrEqual(target, { clamp })', () => {
-
-  it('returns a new instance of the schema.', () => {
-    const base = NumberSchema.create()
-    const schema = base.greaterThanOrEqual(250)
-    expect(schema).toBeInstanceOf(NumberSchema)
-    expect(schema).not.toBe(base)
-  })
-
   describe('when `target` is `NaN`', () => {
     it('throws when `clamp` is `undefined`.', () => {
       expectError(() => {
@@ -409,15 +422,20 @@ describe('.greaterThanOrEqual(target, { clamp })', () => {
 
   describe('when `clamp` is `undefined`', () => {
 
-    const target = 500
-    const schema = NumberSchema.create().greaterThanOrEqual(target)
+    const base = NumberSchema.create()
+    const schema = base.greaterThanOrEqual(500)
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(NumberSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('throws when `input` is less than `target`.', () => {
-      expectValidation(schema, 499.999).toThrow(`The value must be greater than or equal to ${target}.`)
-      expectValidation(schema, 499).toThrow(`The value must be greater than or equal to ${target}.`)
-      expectValidation(schema, 0).toThrow(`The value must be greater than or equal to ${target}.`)
-      expectValidation(schema, Number.MIN_SAFE_INTEGER).toThrow(`The value must be greater than or equal to ${target}.`)
-      expectValidation(schema, -Infinity).toThrow(`The value must be greater than or equal to ${target}.`)
+      expectValidation(schema, 499.999).toThrow('The value must be greater than or equal to 500.')
+      expectValidation(schema, 499).toThrow('The value must be greater than or equal to 500.')
+      expectValidation(schema, 0).toThrow('The value must be greater than or equal to 500.')
+      expectValidation(schema, Number.MIN_SAFE_INTEGER).toThrow('The value must be greater than or equal to 500.')
+      expectValidation(schema, -Infinity).toThrow('The value must be greater than or equal to 500.')
     })
 
     it('throws when `input` is equal to `target`.', () => {
@@ -435,15 +453,20 @@ describe('.greaterThanOrEqual(target, { clamp })', () => {
 
   describe('when `clamp` is `false`', () => {
 
-    const target = 500
-    const schema = NumberSchema.create().greaterThanOrEqual(target, { clamp: false })
+    const base = NumberSchema.create()
+    const schema = base.greaterThanOrEqual(500, { clamp: false })
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(NumberSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('throws when `input` is less than `target`.', () => {
-      expectValidation(schema, 499.999).toThrow(`The value must be greater than or equal to ${target}.`)
-      expectValidation(schema, 499).toThrow(`The value must be greater than or equal to ${target}.`)
-      expectValidation(schema, 0).toThrow(`The value must be greater than or equal to ${target}.`)
-      expectValidation(schema, Number.MIN_SAFE_INTEGER).toThrow(`The value must be greater than or equal to ${target}.`)
-      expectValidation(schema, -Infinity).toThrow(`The value must be greater than or equal to ${target}.`)
+      expectValidation(schema, 499.999).toThrow('The value must be greater than or equal to 500.')
+      expectValidation(schema, 499).toThrow('The value must be greater than or equal to 500.')
+      expectValidation(schema, 0).toThrow('The value must be greater than or equal to 500.')
+      expectValidation(schema, Number.MIN_SAFE_INTEGER).toThrow('The value must be greater than or equal to 500.')
+      expectValidation(schema, -Infinity).toThrow('The value must be greater than or equal to 500.')
     })
 
     it('throws when `input` is equal to `target`.', () => {
@@ -461,8 +484,13 @@ describe('.greaterThanOrEqual(target, { clamp })', () => {
 
   describe('when `clamp` is `true`', () => {
 
-    const target = 500
-    const schema = NumberSchema.create().greaterThanOrEqual(target, { clamp: true })
+    const base = NumberSchema.create()
+    const schema = base.greaterThanOrEqual(500, { clamp: true })
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(NumberSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('clamps when `input` is less than `target`.', () => {
       expectValidation(schema, 499.999).toReturn(500)
@@ -486,17 +514,16 @@ describe('.greaterThanOrEqual(target, { clamp })', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.negative()', () => {
 
+  const base = NumberSchema.create()
+  const schema = base.negative()
+
   it('returns a new instance of the schema.', () => {
-    const base = NumberSchema.create()
-    const schema = base.negative()
     expect(schema).toBeInstanceOf(NumberSchema)
     expect(schema).not.toBe(base)
   })
-
-  const schema = NumberSchema.create().negative()
 
   it('throws when `input` is a negative number.', () => {
     expectValidation(schema, -0.001).toReturn(-0.001)
@@ -518,17 +545,16 @@ describe('.negative()', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.positive()', () => {
 
+  const base = NumberSchema.create()
+  const schema = base.positive()
+
   it('returns a new instance of the schema.', () => {
-    const base = NumberSchema.create()
-    const schema = base.positive()
     expect(schema).toBeInstanceOf(NumberSchema)
     expect(schema).not.toBe(base)
   })
-
-  const schema = NumberSchema.create().positive()
 
   it('throws when `input` is a negative number.', () => {
     expectValidation(schema, -0.001).toThrow('The value must be a positive number.')
@@ -550,15 +576,16 @@ describe('.positive()', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.integer()', () => {
 
-  it('returns a new instance of the schema.', () => {
-    const schema = NumberSchema.create().integer()
-    expect(schema).toBeInstanceOf(NumberSchema)
-  })
+  const base = NumberSchema.create()
+  const schema = base.integer()
 
-  const schema = NumberSchema.create().integer()
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(NumberSchema)
+    expect(schema).not.toBe(base)
+  })
 
   it('throws when `input` is `NaN`.', () => {
     expectValidation(schema, NaN).toThrow('The value must be an integer.')
@@ -590,15 +617,16 @@ describe('.integer()', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.finite()', () => {
 
-  it('returns a new instance of the schema.', () => {
-    const schema = NumberSchema.create().finite()
-    expect(schema).toBeInstanceOf(NumberSchema)
-  })
+  const base = NumberSchema.create()
+  const schema = base.finite()
 
-  const schema = NumberSchema.create().finite()
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(NumberSchema)
+    expect(schema).not.toBe(base)
+  })
 
   it('throws when `input` is `NaN`.', () => {
     expectValidation(schema, NaN).toThrow('The value must be a finite number.')
@@ -621,15 +649,16 @@ describe('.finite()', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.safe()', () => {
 
-  it('returns a new instance of the schema.', () => {
-    const schema = NumberSchema.create().safe()
-    expect(schema).toBeInstanceOf(NumberSchema)
-  })
+  const base = NumberSchema.create()
+  const schema = base.safe()
 
-  const schema = NumberSchema.create().safe()
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(NumberSchema)
+    expect(schema).not.toBe(base)
+  })
 
   it('throws when `input` is `NaN`.', () => {
     expectValidation(schema, NaN).toThrow('The value must be a safe integer.')
@@ -655,15 +684,16 @@ describe('.safe()', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.trunc()', () => {
 
-  it('returns a new instance of the schema.', () => {
-    const schema = NumberSchema.create().trunc()
-    expect(schema).toBeInstanceOf(NumberSchema)
-  })
+  const base = NumberSchema.create()
+  const schema = base.trunc()
 
-  const schema = NumberSchema.create().trunc()
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(NumberSchema)
+    expect(schema).not.toBe(base)
+  })
 
   it('returns when `input` is an integer.', () => {
     expectValidation(schema, Number.MIN_SAFE_INTEGER).toReturn(Number.MIN_SAFE_INTEGER)
@@ -686,15 +716,16 @@ describe('.trunc()', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.round()', () => {
 
-  it('returns a new instance of the schema.', () => {
-    const schema = NumberSchema.create().round()
-    expect(schema).toBeInstanceOf(NumberSchema)
-  })
+  const base = NumberSchema.create()
+  const schema = base.round()
 
-  const schema = NumberSchema.create().round()
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(NumberSchema)
+    expect(schema).not.toBe(base)
+  })
 
   it('returns when `input` is an integer.', () => {
     expectValidation(schema, Number.MIN_SAFE_INTEGER).toReturn(Number.MIN_SAFE_INTEGER)
@@ -717,15 +748,16 @@ describe('.round()', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.floor()', () => {
 
-  it('returns a new instance of the schema.', () => {
-    const schema = NumberSchema.create().floor()
-    expect(schema).toBeInstanceOf(NumberSchema)
-  })
+  const base = NumberSchema.create()
+  const schema = base.floor()
 
-  const schema = NumberSchema.create().floor()
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(NumberSchema)
+    expect(schema).not.toBe(base)
+  })
 
   it('returns when `input` is an integer.', () => {
     expectValidation(schema, Number.MIN_SAFE_INTEGER).toReturn(Number.MIN_SAFE_INTEGER)
@@ -748,15 +780,16 @@ describe('.floor()', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.ceil()', () => {
 
-  it('returns a new instance of the schema.', () => {
-    const schema = NumberSchema.create().ceil()
-    expect(schema).toBeInstanceOf(NumberSchema)
-  })
+  const base = NumberSchema.create()
+  const schema = base.ceil()
 
-  const schema = NumberSchema.create().ceil()
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(NumberSchema)
+    expect(schema).not.toBe(base)
+  })
 
   it('returns when `input` is an integer.', () => {
     expectValidation(schema, Number.MIN_SAFE_INTEGER).toReturn(Number.MIN_SAFE_INTEGER)

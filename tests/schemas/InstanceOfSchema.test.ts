@@ -1,10 +1,10 @@
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { InstanceOfSchema } from '@/schemas/InstanceOfSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectValidation } from '@tests/helpers/expect'
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.create(constructor)', () => {
 
   const schema = InstanceOfSchema.create(Date)
@@ -14,7 +14,7 @@ describe('.create(constructor)', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.validate(input)', () => {
 
   const schema = InstanceOfSchema.create(Date)
@@ -35,5 +35,10 @@ describe('.validate(input)', () => {
     expectValidation(schema, new Map()).toThrow('Expected instance of Date.')
     expectValidation(schema, new Set()).toThrow('Expected instance of Date.')
     expectValidation(schema, new ArrayBuffer()).toThrow('Expected instance of Date.')
+  })
+
+  it('returns the same `input` instance.', () => {
+    const input = new Date()
+    expectValidation(schema, input).toReturnSame(input)
   })
 })

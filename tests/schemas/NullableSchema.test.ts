@@ -1,11 +1,11 @@
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { NullableSchema } from '@/schemas/NullableSchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectValidation } from '@tests/helpers/expect'
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.create(inner)', () => {
 
   const schema = NullableSchema.create(StringSchema.create())
@@ -15,7 +15,7 @@ describe('.create(inner)', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.validate(input)', () => {
 
   const schema = NullableSchema.create(StringSchema.create())
@@ -33,10 +33,9 @@ describe('.validate(input)', () => {
       expectValidation(schema, value).toThrow('The value must be a string.')
     })
   })
-
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.default(default)', () => {
 
   const schema = NullableSchema.create(StringSchema.create()).default('DEFAULT')
@@ -54,5 +53,4 @@ describe('.default(default)', () => {
       expectValidation(schema, value).toThrow('The value must be a string.')
     })
   })
-
 })

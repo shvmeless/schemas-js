@@ -154,21 +154,21 @@ export class ArraySchema<T> implements GenericSchema<Array<T>> {
 
   // METHOD
   public some(callback: (value: T, index: number, array: Array<T>) => boolean): ArraySchema<T> {
-    return this.push((output) => {
+    return this.push((original, output) => {
       for (let index = 0; index < output.length; index++) {
         const value = output[index] as T
         if (callback(value, index, output)) return output
       }
-      throw new ValidationError(output, 'No element satisfies the given validation function.')
+      throw new ValidationError(original, 'No element satisfies the given validation function.')
     })
   }
 
   // METHOD
   public every(callback: (value: T, index: number, array: Array<T>) => boolean): ArraySchema<T> {
-    return this.push((output) => {
+    return this.push((original, output) => {
       for (let index = 0; index < output.length; index++) {
         const value = output[index] as T
-        if (!callback(value, index, output)) throw new ValidationError(output, 'At least one element does not satisfy the given validation function.')
+        if (!callback(value, index, output)) throw new ValidationError(original, 'At least one element does not satisfy the given validation function.')
       }
       return output
     })
@@ -176,10 +176,10 @@ export class ArraySchema<T> implements GenericSchema<Array<T>> {
 
   // METHOD
   public none(callback: (value: T, index: number, array: Array<T>) => boolean): ArraySchema<T> {
-    return this.push((output) => {
+    return this.push((original, output) => {
       for (let index = 0; index < output.length; index++) {
         const value = output[index] as T
-        if (callback(value, index, output)) throw new ValidationError(output, 'At least one element satisfies the given validation function.')
+        if (callback(value, index, output)) throw new ValidationError(original, 'At least one element satisfies the given validation function.')
       }
       return output
     })

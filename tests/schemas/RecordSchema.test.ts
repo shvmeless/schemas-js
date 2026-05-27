@@ -1,11 +1,11 @@
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { RecordSchema } from '@/schemas/RecordSchema'
 import { NumberSchema } from '@/schemas/NumberSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
-import { expectError, expectValidation } from '@tests/helpers/expect'
+import { expectValidation, expectError } from '@tests/helpers/expect'
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.create(shape)', () => {
 
   const schema = RecordSchema.create(NumberSchema.create())
@@ -15,13 +15,15 @@ describe('.create(shape)', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.validate(input)', () => {
 
   const schema = RecordSchema.create(NumberSchema.create())
 
   it('returns when `input` is an object.', () => {
-    expectValidation(schema, {}).toReturn({})
+    const input: Record<string, number> = {}
+    const expected: Record<string, number> = {}
+    expectValidation(schema, input).toReturnNew(expected)
   })
 
   it('throws when `input` is not an object.', () => {
@@ -33,7 +35,7 @@ describe('.validate(input)', () => {
   it('returns when all `input` entries match the `shape` schema.', () => {
     const input = { a: 1, b: 2, c: 3 }
     const expected = { a: 1, b: 2, c: 3 }
-    expectValidation(schema, input).toReturn(expected)
+    expectValidation(schema, input).toReturnNew(expected)
   })
 
   it('throws when at least one `input` entry does not match the `shape` schema.', () => {
@@ -49,26 +51,23 @@ describe('.validate(input)', () => {
       }],
     ])
   })
-
-  it('returns a new record.', () => {
-    const input = { a: 1, b: 2, c: 3 }
-    const expected = { a: 1, b: 2, c: 3 }
-    expectValidation(schema, input).toReturn(expected)
-    expectValidation(schema, input).notToReturn(input)
-  })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.prune()', () => {
 
-  const schema = RecordSchema.create(NumberSchema.create()).prune()
+  const base = RecordSchema.create(NumberSchema.create())
+  const schema = base.prune()
 
   it('returns a new instance of the schema.', () => {
     expect(schema).toBeInstanceOf(RecordSchema)
+    expect(schema).not.toBe(base)
   })
 
   it('returns when `input` is an object.', () => {
-    expectValidation(schema, {}).toReturn({})
+    const input: Record<string, number> = {}
+    const expected: Record<string, number> = {}
+    expectValidation(schema, input).toReturnNew(expected)
   })
 
   it('throws when `input` is not an object.', () => {
@@ -77,36 +76,21 @@ describe('.prune()', () => {
     })
   })
 
-  it('returns when all `input` elements match the `shape` schema.', () => {
+  it('returns when all `input` entries match the `shape` schema.', () => {
     const input = { a: 1, b: 2, c: 3 }
     const expected = { a: 1, b: 2, c: 3 }
-    expectValidation(schema, input).toReturn(expected)
+    expectValidation(schema, input).toReturnNew(expected)
   })
 
-  it('prunes when some `input` elements do not match the `shape` schema.', () => {
+  it('prunes when some `input` entries do not match the `shape` schema.', () => {
     const input = { a: 1, b: true, c: 3, d: false, e: 5 }
     const expected = { a: 1, c: 3, e: 5 }
-    expectValidation(schema, input).toReturn(expected)
-  })
-
-  it('returns a new record.', () => {
-    const input = { a: 1, b: 2, c: 3 }
-    const expected = { a: 1, b: 2, c: 3 }
-    expectValidation(schema, input).toReturn(expected)
-    expectValidation(schema, input).notToReturn(input)
+    expectValidation(schema, input).toReturnNew(expected)
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.length(length)', () => {
-
-  it('returns a new instance of the schema.', () => {
-    const base = RecordSchema.create(NumberSchema.create())
-    const schema = base.length(5)
-    expect(schema).toBeInstanceOf(RecordSchema)
-    expect(schema).not.toBe(base)
-  })
-
   describe('when `length` is `NaN`', () => {
     it('throws when the schema is being built.', () => {
       expectError(() => {
@@ -125,50 +109,56 @@ describe('.length(length)', () => {
 
   describe('when `length` is zero', () => {
 
-    const schema = RecordSchema.create(NumberSchema.create()).length(0)
+    const base = RecordSchema.create(NumberSchema.create())
+    const schema = base.length(0)
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(RecordSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('returns when `input` length is as expected.', () => {
-      expectValidation(schema, {}).toReturn({})
+      const input: Record<string, number> = {}
+      const expected: Record<string, number> = {}
+      expectValidation(schema, input).toReturnNew(expected)
     })
 
     it('throws when `input` length is greater than expected.', () => {
       const input = { a: 1, b: 2, c: 3 }
-      expectValidation(schema, input).toThrow('The value must be 0 elements long.')
+      expectValidation(schema, input).toThrow('The value must be 0 entries long.')
     })
   })
 
   describe('when `length` is a positive number', () => {
 
-    const schema = RecordSchema.create(NumberSchema.create()).length(5)
+    const base = RecordSchema.create(NumberSchema.create())
+    const schema = base.length(5)
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(RecordSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('throws when `input` length is less than expected.', () => {
       const input = { a: 1, b: 2, c: 3 }
-      expectValidation(schema, input).toThrow('The value must be 5 elements long.')
+      expectValidation(schema, input).toThrow('The value must be 5 entries long.')
     })
 
     it('returns when `input` length is as expected.', () => {
       const input = { a: 1, b: 2, c: 3, d: 4, e: 5 }
       const expected = { a: 1, b: 2, c: 3, d: 4, e: 5 }
-      expectValidation(schema, input).toReturn(expected)
+      expectValidation(schema, input).toReturnNew(expected)
     })
 
     it('throws when `input` length is greater than expected.', () => {
       const input = { a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7 }
-      expectValidation(schema, input).toThrow('The value must be 5 elements long.')
+      expectValidation(schema, input).toThrow('The value must be 5 entries long.')
     })
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.min(length)', () => {
-
-  it('returns a new instance of the schema.', () => {
-    const base = RecordSchema.create(NumberSchema.create())
-    const schema = base.min(5)
-    expect(schema).toBeInstanceOf(RecordSchema)
-    expect(schema).not.toBe(base)
-  })
-
   describe('when `length` is `NaN`', () => {
     it('throws when the schema is being built.', () => {
       expectError(() => {
@@ -187,52 +177,58 @@ describe('.min(length)', () => {
 
   describe('when `length` is zero', () => {
 
-    const schema = RecordSchema.create(NumberSchema.create()).min(0)
+    const base = RecordSchema.create(NumberSchema.create())
+    const schema = base.min(0)
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(RecordSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('returns when `input` is empty.', () => {
-      expectValidation(schema, {}).toReturn({})
+      const input: Record<string, number> = {}
+      const expected: Record<string, number> = {}
+      expectValidation(schema, input).toReturnNew(expected)
     })
 
     it('returns when `input` length is greater than expected.', () => {
       const input = { a: 1, b: 2, c: 3 }
       const expected = { a: 1, b: 2, c: 3 }
-      expectValidation(schema, input).toReturn(expected)
+      expectValidation(schema, input).toReturnNew(expected)
     })
   })
 
   describe('when `length` is a positive number', () => {
 
-    const schema = RecordSchema.create(NumberSchema.create()).min(5)
+    const base = RecordSchema.create(NumberSchema.create())
+    const schema = base.min(5)
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(RecordSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('throws when `input` length is less than expected.', () => {
       const input = { a: 1, b: 2, c: 3 }
-      expectValidation(schema, input).toThrow('The value must be at least 5 elements long.')
+      expectValidation(schema, input).toThrow('The value must be at least 5 entries long.')
     })
 
     it('returns when `input` length is as expected.', () => {
       const input = { a: 1, b: 2, c: 3, d: 4, e: 5 }
       const expected = { a: 1, b: 2, c: 3, d: 4, e: 5 }
-      expectValidation(schema, input).toReturn(expected)
+      expectValidation(schema, input).toReturnNew(expected)
     })
 
     it('returns when `input` length is greater than expected.', () => {
       const input = { a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7 }
       const expected = { a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7 }
-      expectValidation(schema, input).toReturn(expected)
+      expectValidation(schema, input).toReturnNew(expected)
     })
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.max(length)', () => {
-
-  it('returns a new instance of the schema.', () => {
-    const base = RecordSchema.create(NumberSchema.create())
-    const schema = base.max(5)
-    expect(schema).toBeInstanceOf(RecordSchema)
-    expect(schema).not.toBe(base)
-  })
-
   describe('when `length` is `NaN`', () => {
     it('throws when the schema is being built.', () => {
       expectError(() => {
@@ -251,144 +247,166 @@ describe('.max(length)', () => {
 
   describe('when `length` is zero', () => {
 
-    const schema = RecordSchema.create(NumberSchema.create()).max(0)
+    const base = RecordSchema.create(NumberSchema.create())
+    const schema = base.max(0)
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(RecordSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('returns when `input` is empty.', () => {
-      expectValidation(schema, {}).toReturn({})
+      const input: Record<string, number> = {}
+      const expected: Record<string, number> = {}
+      expectValidation(schema, input).toReturnNew(expected)
     })
 
     it('throws when `input` length is greater than expected.', () => {
       const input = { a: 1, b: 2, c: 3 }
-      expectValidation(schema, input).toThrow('The value must be at most 0 elements long.')
+      expectValidation(schema, input).toThrow('The value must be at most 0 entries long.')
     })
   })
 
   describe('when `length` is a positive number', () => {
 
-    const schema = RecordSchema.create(NumberSchema.create()).max(5)
+    const base = RecordSchema.create(NumberSchema.create())
+    const schema = base.max(5)
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(RecordSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('throws when `input` length is less than expected.', () => {
       const input = { a: 1, b: 2, c: 3 }
       const expected = { a: 1, b: 2, c: 3 }
-      expectValidation(schema, input).toReturn(expected)
+      expectValidation(schema, input).toReturnNew(expected)
     })
 
     it('returns when `input` length is as expected.', () => {
       const input = { a: 1, b: 2, c: 3, d: 4, e: 5 }
       const expected = { a: 1, b: 2, c: 3, d: 4, e: 5 }
-      expectValidation(schema, input).toReturn(expected)
+      expectValidation(schema, input).toReturnNew(expected)
     })
 
     it('throws when `input` length is greater than expected.', () => {
       const input = { a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7 }
-      expectValidation(schema, input).toThrow('The value must be at most 5 elements long.')
+      expectValidation(schema, input).toThrow('The value must be at most 5 entries long.')
     })
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.filter(callback)', () => {
 
-  const schema = RecordSchema.create(NumberSchema.create()).filter((value) => (value % 10 === 0))
+  const base = RecordSchema.create(NumberSchema.create())
+  const schema = base.filter((value) => (value % 10 === 0))
 
   it('returns a new instance of the schema.', () => {
     expect(schema).toBeInstanceOf(RecordSchema)
+    expect(schema).not.toBe(base)
   })
 
-  it('returns when `callback` returns `true` for all `input` elements.', () => {
+  it('returns when `callback` returns `true` for all `input` entries.', () => {
     const input = { a: 10, b: 20, c: 30 }
     const expected = { a: 10, b: 20, c: 30 }
-    expectValidation(schema, input).toReturn(expected)
+    expectValidation(schema, input).toReturnNew(expected)
   })
 
-  it('filters when `callback` returns `false` for some `input` elements.', () => {
+  it('filters when `callback` returns `false` for some `input` entries.', () => {
     const input = { a: 10, b: 22, c: 30 }
     const expected = { a: 10, c: 30 }
-    expectValidation(schema, input).toReturn(expected)
+    expectValidation(schema, input).toReturnNew(expected)
   })
 
-  it('filters when `callback` returns `false` for all `input` elements.', () => {
+  it('filters when `callback` returns `false` for all `input` entries.', () => {
     const input = { a: 11, b: 22, c: 33 }
     const expected: Record<string, number> = {}
-    expectValidation(schema, input).toReturn(expected)
+    expectValidation(schema, input).toReturnNew(expected)
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.some(callback)', () => {
 
-  const schema = RecordSchema.create(NumberSchema.create()).some((value) => (value % 10 === 0))
+  const base = RecordSchema.create(NumberSchema.create())
+  const schema = base.some((value) => (value % 10 === 0))
 
   it('returns a new instance of the schema.', () => {
     expect(schema).toBeInstanceOf(RecordSchema)
+    expect(schema).not.toBe(base)
   })
 
-  it('returns when `callback` returns `true` for some `input` elements.', () => {
+  it('returns when `callback` returns `true` for some `input` entries.', () => {
     const input = { a: 10, b: 20, c: 30 }
     const expected = { a: 10, b: 20, c: 30 }
-    expectValidation(schema, input).toReturn(expected)
+    expectValidation(schema, input).toReturnNew(expected)
   })
 
-  it('returns when `callback` returns `false` for some `input` elements.', () => {
+  it('returns when `callback` returns `false` for some `input` entries.', () => {
     const input = { a: 10, b: 22, c: 30 }
     const expected = { a: 10, b: 22, c: 30 }
-    expectValidation(schema, input).toReturn(expected)
+    expectValidation(schema, input).toReturnNew(expected)
   })
 
-  it('throws when `callback` returns `false` for all `input` elements.', () => {
+  it('throws when `callback` returns `false` for all `input` entries.', () => {
     const input = { a: 11, b: 22, c: 33 }
-    expectValidation(schema, input).toThrow('No element satisfies the given validation function.')
+    expectValidation(schema, input).toThrow('No entry satisfies the given validation function.')
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.every(callback)', () => {
 
-  const schema = RecordSchema.create(NumberSchema.create()).every((value) => (value % 10 === 0))
+  const base = RecordSchema.create(NumberSchema.create())
+  const schema = base.every((value) => (value % 10 === 0))
 
   it('returns a new instance of the schema.', () => {
     expect(schema).toBeInstanceOf(RecordSchema)
+    expect(schema).not.toBe(base)
   })
 
-  it('returns when `callback` returns `true` for all `input` elements.', () => {
+  it('returns when `callback` returns `true` for all `input` entries.', () => {
     const input = { a: 10, b: 20, c: 30 }
     const expected = { a: 10, b: 20, c: 30 }
-    expectValidation(schema, input).toReturn(expected)
+    expectValidation(schema, input).toReturnNew(expected)
   })
 
-  it('throws when `callback` returns `false` for some `input` elements.', () => {
+  it('throws when `callback` returns `false` for some `input` entries.', () => {
     const input = { a: 10, b: 22, c: 30 }
-    expectValidation(schema, input).toThrow('At least one element does not satisfy the given validation function.')
+    expectValidation(schema, input).toThrow('At least one entry does not satisfy the given validation function.')
   })
 
-  it('throws when `callback` returns `false` for all `input` elements.', () => {
+  it('throws when `callback` returns `false` for all `input` entries.', () => {
     const input = { a: 11, b: 22, c: 33 }
-    expectValidation(schema, input).toThrow('At least one element does not satisfy the given validation function.')
+    expectValidation(schema, input).toThrow('At least one entry does not satisfy the given validation function.')
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.none(callback)', () => {
 
-  const schema = RecordSchema.create(NumberSchema.create()).none((value) => (value % 10 === 0))
+  const base = RecordSchema.create(NumberSchema.create())
+  const schema = base.none((value) => (value % 10 === 0))
 
   it('returns a new instance of the schema.', () => {
     expect(schema).toBeInstanceOf(RecordSchema)
+    expect(schema).not.toBe(base)
   })
 
-  it('returns when `callback` returns `true` for all `input` elements.', () => {
+  it('returns when `callback` returns `true` for all `input` entries.', () => {
     const input = { a: 11, b: 22, c: 33 }
     const expected = { a: 11, b: 22, c: 33 }
-    expectValidation(schema, input).toReturn(expected)
+    expectValidation(schema, input).toReturnNew(expected)
   })
 
-  it('throws when `callback` returns `false` for some `input` elements.', () => {
+  it('throws when `callback` returns `false` for some `input` entries.', () => {
     const input = { a: 10, b: 22, c: 30 }
-    expectValidation(schema, input).toThrow('At least one element satisfies the given validation function.')
+    expectValidation(schema, input).toThrow('At least one entry satisfies the given validation function.')
   })
 
-  it('throws when `callback` returns `false` for all `input` elements.', () => {
+  it('throws when `callback` returns `false` for all `input` entries.', () => {
     const input = { a: 10, b: 20, c: 30 }
-    expectValidation(schema, input).toThrow('At least one element satisfies the given validation function.')
+    expectValidation(schema, input).toThrow('At least one entry satisfies the given validation function.')
   })
 })

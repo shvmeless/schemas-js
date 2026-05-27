@@ -125,7 +125,7 @@ export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
     return this.push((original, output) => {
-      if (output.size !== length) throw new ValidationError(original, `The value must be ${stringify(length)} elements long.`)
+      if (output.size !== length) throw new ValidationError(original, `The value must be ${stringify(length)} entries long.`)
       return output
     })
   }
@@ -135,7 +135,7 @@ export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
     return this.push((original, output) => {
-      if (output.size < length) throw new ValidationError(original, `The value must be at least ${stringify(length)} elements long.`)
+      if (output.size < length) throw new ValidationError(original, `The value must be at least ${stringify(length)} entries long.`)
       return output
     })
   }
@@ -145,7 +145,7 @@ export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
     return this.push((original, output) => {
-      if (output.size > length) throw new ValidationError(original, `The value must be at most ${stringify(length)} elements long.`)
+      if (output.size > length) throw new ValidationError(original, `The value must be at most ${stringify(length)} entries long.`)
       return output
     })
   }
@@ -164,7 +164,7 @@ export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
       for (const [key, value] of output) {
         if (callback(value, key, output)) return output
       }
-      throw new ValidationError(original, 'No element satisfies the given validation function.')
+      throw new ValidationError(original, 'No entry satisfies the given validation function.')
     })
   }
 
@@ -172,7 +172,7 @@ export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
   public every(callback: (value: T, key: K, map: Map<K, T>) => boolean): MapSchema<K, T> {
     return this.push((original, output) => {
       for (const [key, value] of output) {
-        if (!callback(value, key, output)) throw new ValidationError(original, 'At least one element does not satisfy the given validation function.')
+        if (!callback(value, key, output)) throw new ValidationError(original, 'At least one entry does not satisfy the given validation function.')
       }
       return output
     })
@@ -182,7 +182,7 @@ export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
   public none(callback: (value: T, key: K, map: Map<K, T>) => boolean): MapSchema<K, T> {
     return this.push((original, output) => {
       for (const [key, value] of output) {
-        if (callback(value, key, output)) throw new ValidationError(original, 'At least one element satisfies the given validation function.')
+        if (callback(value, key, output)) throw new ValidationError(original, 'At least one entry satisfies the given validation function.')
       }
       return output
     })

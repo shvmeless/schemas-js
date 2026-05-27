@@ -1,5 +1,5 @@
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { GenericSchema } from '@/schemas/GenericSchema'
 import { ObjectSchema } from '@/schemas/ObjectSchema'
 import { StringSchema } from '@/schemas/StringSchema'
@@ -7,7 +7,7 @@ import { NumberSchema } from '@/schemas/NumberSchema'
 import { BooleanSchema } from '@/schemas/BooleanSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.isValid()', () => {
 
   const schema = ObjectSchema.create({
@@ -31,5 +31,4 @@ describe('.isValid()', () => {
     })
     expect(result).toBe(true)
   })
-
 })

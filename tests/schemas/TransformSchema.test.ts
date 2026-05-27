@@ -1,11 +1,11 @@
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { TransformSchema } from '@/schemas/TransformSchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectValidation } from '@tests/helpers/expect'
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.create(inner, transform)', () => {
 
   const schema = TransformSchema.create(StringSchema.create(), (value) => (value.length))
@@ -15,7 +15,7 @@ describe('.create(inner, transform)', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.validate(input)', () => {
 
   const schema = TransformSchema.create(StringSchema.create(), (value) => (value.length))
@@ -31,5 +31,4 @@ describe('.validate(input)', () => {
       expectValidation(schema, value).toThrow('The value must be a string.')
     })
   })
-
 })

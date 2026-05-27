@@ -1,11 +1,11 @@
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { StringSchema } from '@/schemas/StringSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectValidation, expectError } from '@tests/helpers/expect'
 
-// METHOD
-describe('create()', () => {
+// METHOD ---------------------------------------------------------------------
+describe('.create()', () => {
 
   const schema = StringSchema.create()
 
@@ -14,8 +14,8 @@ describe('create()', () => {
   })
 })
 
-// METHOD
-describe('validate(input)', () => {
+// METHOD ---------------------------------------------------------------------
+describe('.validate(input)', () => {
 
   const schema = StringSchema.create()
 
@@ -36,16 +36,8 @@ describe('validate(input)', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.length(length)', () => {
-
-  it('returns a new instance of the schema.', () => {
-    const base = StringSchema.create()
-    const schema = base.length(8)
-    expect(schema).toBeInstanceOf(StringSchema)
-    expect(schema).not.toBe(base)
-  })
-
   describe('when `length` is `NaN`', () => {
     it('throws when the schema is being built.', () => {
       expectError(() => {
@@ -64,7 +56,8 @@ describe('.length(length)', () => {
 
   describe('when `length` is zero', () => {
 
-    const schema = StringSchema.create().length(0)
+    const base = StringSchema.create()
+    const schema = base.length(0)
 
     it('returns when `input` length is as expected.', () => {
       expectValidation(schema, '').toReturn('')
@@ -77,7 +70,8 @@ describe('.length(length)', () => {
 
   describe('when `length` is a positive number', () => {
 
-    const schema = StringSchema.create().length(8)
+    const base = StringSchema.create()
+    const schema = base.length(8)
 
     it('throws when `input` length is less than expected.', () => {
       expectValidation(schema, '1234567').toThrow('The value must be 8 characters long.')
@@ -93,16 +87,8 @@ describe('.length(length)', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.min(length)', () => {
-
-  it('returns a new instance of the schema.', () => {
-    const base = StringSchema.create()
-    const schema = base.min(8)
-    expect(schema).toBeInstanceOf(StringSchema)
-    expect(schema).not.toBe(base)
-  })
-
   describe('when `length` is `NaN`', () => {
     it('throws when the schema is being built.', () => {
       expectError(() => {
@@ -121,7 +107,8 @@ describe('.min(length)', () => {
 
   describe('when `length` is zero', () => {
 
-    const schema = StringSchema.create().min(0)
+    const base = StringSchema.create()
+    const schema = base.min(0)
 
     it('returns when `input` length is as expected.', () => {
       expectValidation(schema, '').toReturn('')
@@ -134,7 +121,8 @@ describe('.min(length)', () => {
 
   describe('when `length` is a positive number', () => {
 
-    const schema = StringSchema.create().min(8)
+    const base = StringSchema.create()
+    const schema = base.min(8)
 
     it('throws when `input` length is less than expected.', () => {
       expectValidation(schema, '1234567').toThrow('The value must be at least 8 characters long.')
@@ -150,16 +138,8 @@ describe('.min(length)', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.max(length)', () => {
-
-  it('returns a new instance of the schema.', () => {
-    const base = StringSchema.create()
-    const schema = base.max(8)
-    expect(schema).toBeInstanceOf(StringSchema)
-    expect(schema).not.toBe(base)
-  })
-
   describe('when `length` is `NaN`', () => {
     it('throws when the schema is being built.', () => {
       expectError(() => {
@@ -178,7 +158,13 @@ describe('.max(length)', () => {
 
   describe('when `length` is zero', () => {
 
-    const schema = StringSchema.create().max(0)
+    const base = StringSchema.create()
+    const schema = base.max(0)
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(StringSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('returns when `input` length is as expected.', () => {
       expectValidation(schema, '').toReturn('')
@@ -191,7 +177,13 @@ describe('.max(length)', () => {
 
   describe('when `length` is a positive number', () => {
 
-    const schema = StringSchema.create().max(8)
+    const base = StringSchema.create()
+    const schema = base.max(8)
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(StringSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('returns when `input` length is less than expected.', () => {
       expectValidation(schema, '1234567').toReturn('1234567')
@@ -207,19 +199,17 @@ describe('.max(length)', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.lowercase({ fix })', () => {
-
-  it('returns a new instance of the schema.', () => {
-    const base = StringSchema.create()
-    const schema = base.lowercase()
-    expect(schema).toBeInstanceOf(StringSchema)
-    expect(schema).not.toBe(base)
-  })
-
   describe('when `fix` is `undefined`', () => {
 
-    const schema = StringSchema.create().lowercase()
+    const base = StringSchema.create()
+    const schema = base.lowercase()
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(StringSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('throws when `input` contains uppercase characters.', () => {
       expectValidation(schema, 'eXaMpLe').toThrow('The value must be lowercase.')
@@ -232,7 +222,13 @@ describe('.lowercase({ fix })', () => {
 
   describe('when `fix` is `false`', () => {
 
-    const schema = StringSchema.create().lowercase({ fix: false })
+    const base = StringSchema.create()
+    const schema = base.lowercase({ fix: false })
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(StringSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('throws when `input` contains uppercase characters.', () => {
       expectValidation(schema, 'eXaMpLe').toThrow('The value must be lowercase.')
@@ -245,7 +241,13 @@ describe('.lowercase({ fix })', () => {
 
   describe('when `fix` is `true`', () => {
 
-    const schema = StringSchema.create().lowercase({ fix: true })
+    const base = StringSchema.create()
+    const schema = base.lowercase({ fix: true })
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(StringSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('fixes when `input` contains uppercase characters.', () => {
       expectValidation(schema, 'eXaMpLe').toReturn('example')
@@ -257,19 +259,17 @@ describe('.lowercase({ fix })', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.uppercase({ fix })', () => {
-
-  it('returns a new instance of the schema.', () => {
-    const base = StringSchema.create()
-    const schema = base.uppercase()
-    expect(schema).toBeInstanceOf(StringSchema)
-    expect(schema).not.toBe(base)
-  })
-
   describe('when `fix` is `undefined`', () => {
 
-    const schema = StringSchema.create().uppercase()
+    const base = StringSchema.create()
+    const schema = base.uppercase()
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(StringSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('throws when `input` contains lowercase characters.', () => {
       expectValidation(schema, 'eXaMpLe').toThrow('The value must be uppercase.')
@@ -282,7 +282,13 @@ describe('.uppercase({ fix })', () => {
 
   describe('when `fix` is `false`', () => {
 
-    const schema = StringSchema.create().uppercase({ fix: false })
+    const base = StringSchema.create()
+    const schema = base.uppercase({ fix: false })
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(StringSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('throws when `input` contains lowercase characters.', () => {
       expectValidation(schema, 'eXaMpLe').toThrow('The value must be uppercase.')
@@ -295,7 +301,13 @@ describe('.uppercase({ fix })', () => {
 
   describe('when `fix` is `true`', () => {
 
-    const schema = StringSchema.create().uppercase({ fix: true })
+    const base = StringSchema.create()
+    const schema = base.uppercase({ fix: true })
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(StringSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('fixes when `input` contains lowercase characters.', () => {
       expectValidation(schema, 'eXaMpLe').toReturn('EXAMPLE')
@@ -307,19 +319,17 @@ describe('.uppercase({ fix })', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.trim({ fix })', () => {
-
-  it('returns a new instance of the schema.', () => {
-    const base = StringSchema.create()
-    const schema = base.trim()
-    expect(schema).toBeInstanceOf(StringSchema)
-    expect(schema).not.toBe(base)
-  })
-
   describe('when `fix` is `undefined`', () => {
 
-    const schema = StringSchema.create().trim()
+    const base = StringSchema.create()
+    const schema = base.trim()
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(StringSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('throws when `input` contains whitespaces at the beginning.', () => {
       expectValidation(schema, '   EXAMPLE').toThrow('The value must be trimmed.')
@@ -340,7 +350,13 @@ describe('.trim({ fix })', () => {
 
   describe('when `fix` is `false`', () => {
 
-    const schema = StringSchema.create().trim({ fix: false })
+    const base = StringSchema.create()
+    const schema = base.trim({ fix: false })
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(StringSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('throws when `input` contains whitespaces at the beginning.', () => {
       expectValidation(schema, '   EXAMPLE').toThrow('The value must be trimmed.')
@@ -361,7 +377,13 @@ describe('.trim({ fix })', () => {
 
   describe('when `fix` is `true`', () => {
 
-    const schema = StringSchema.create().trim({ fix: true })
+    const base = StringSchema.create()
+    const schema = base.trim({ fix: true })
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(StringSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('returns when `input` contains whitespaces at the beginning.', () => {
       expectValidation(schema, '   EXAMPLE').toReturn('EXAMPLE')
@@ -381,19 +403,18 @@ describe('.trim({ fix })', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.startsWith(prefix, { fix })', () => {
-
-  it('returns a new instance of the schema.', () => {
-    const base = StringSchema.create()
-    const schema = base.startsWith('prefix-')
-    expect(schema).toBeInstanceOf(StringSchema)
-    expect(schema).not.toBe(base)
-  })
 
   describe('when `fix` is `undefined`', () => {
 
-    const schema = StringSchema.create().startsWith('prefix-')
+    const base = StringSchema.create()
+    const schema = base.startsWith('prefix-')
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(StringSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('throws when `input` does not start with the expected `prefix`.', () => {
       expectValidation(schema, 'string').toThrow('The value must start with "prefix-".')
@@ -410,7 +431,13 @@ describe('.startsWith(prefix, { fix })', () => {
 
   describe('when `fix` is `false`', () => {
 
-    const schema = StringSchema.create().startsWith('prefix-', { fix: false })
+    const base = StringSchema.create()
+    const schema = base.startsWith('prefix-', { fix: false })
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(StringSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('throws when `input` does not start with the expected `prefix`.', () => {
       expectValidation(schema, 'string').toThrow('The value must start with "prefix-".')
@@ -427,7 +454,13 @@ describe('.startsWith(prefix, { fix })', () => {
 
   describe('when `fix` is `true`', () => {
 
-    const schema = StringSchema.create().startsWith('prefix-', { fix: true })
+    const base = StringSchema.create()
+    const schema = base.startsWith('prefix-', { fix: true })
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(StringSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('fixes when `input` does not start with the expected `prefix`.', () => {
       expectValidation(schema, 'string').toReturn('prefix-string')
@@ -443,19 +476,17 @@ describe('.startsWith(prefix, { fix })', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.endsWith(suffix, { fix })', () => {
-
-  it('returns a new instance of the schema.', () => {
-    const base = StringSchema.create()
-    const schema = base.endsWith('-suffix')
-    expect(schema).toBeInstanceOf(StringSchema)
-    expect(schema).not.toBe(base)
-  })
-
   describe('when `fix` is `undefined`', () => {
 
-    const schema = StringSchema.create().endsWith('-suffix')
+    const base = StringSchema.create()
+    const schema = base.endsWith('-suffix')
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(StringSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('throws when `input` does not end with the expected `suffix`.', () => {
       expectValidation(schema, 'string').toThrow('The value must end with "-suffix".')
@@ -472,7 +503,13 @@ describe('.endsWith(suffix, { fix })', () => {
 
   describe('when `fix` is `false`', () => {
 
-    const schema = StringSchema.create().endsWith('-suffix', { fix: false })
+    const base = StringSchema.create()
+    const schema = base.endsWith('-suffix', { fix: false })
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(StringSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('throws when `input` does not end with the expected `suffix`.', () => {
       expectValidation(schema, 'string').toThrow('The value must end with "-suffix".')
@@ -489,7 +526,13 @@ describe('.endsWith(suffix, { fix })', () => {
 
   describe('when `fix` is `true`', () => {
 
-    const schema = StringSchema.create().endsWith('-suffix', { fix: true })
+    const base = StringSchema.create()
+    const schema = base.endsWith('-suffix', { fix: true })
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(StringSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('fixes when `input` does not end with the expected `suffix`.', () => {
       expectValidation(schema, 'string').toReturn('string-suffix')
@@ -505,7 +548,7 @@ describe('.endsWith(suffix, { fix })', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.includes(search)', () => {
 
   const base = StringSchema.create()
@@ -525,7 +568,7 @@ describe('.includes(search)', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.excludes(search)', () => {
 
   const base = StringSchema.create()
@@ -545,7 +588,7 @@ describe('.excludes(search)', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.match(pattern)', () => {
 
   const base = StringSchema.create()
@@ -565,7 +608,7 @@ describe('.match(pattern)', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.default(default)', () => {
 
   const base = StringSchema.create()

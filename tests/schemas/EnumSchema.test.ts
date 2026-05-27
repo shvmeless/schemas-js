@@ -1,11 +1,18 @@
 // IMPORTS
-import { describe, expect, it } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { EnumSchema } from '@/schemas/EnumSchema'
-import { expectValidation } from '@tests/helpers/expect'
 import { DataTypeGenerator } from '@tests/helpers/generator'
+import { expectValidation, expectError } from '@tests/helpers/expect'
 
-// METHOD
-describe('.create(literals)', () => {
+// METHOD ---------------------------------------------------------------------
+describe('.create(...literals)', () => {
+
+  it('throws when no `literals` are provided.', () => {
+    expectError(() => {
+      EnumSchema.create()
+    }).toHaveMessage('Must provide at least one literal value.')
+  })
+
   describe('when `literals` are string values', () => {
 
     const schema = EnumSchema.create('A', 'B', 'C')
@@ -25,7 +32,7 @@ describe('.create(literals)', () => {
   })
 })
 
-// METHOD
+// METHOD ---------------------------------------------------------------------
 describe('.validate(input)', () => {
   describe('when `literals` are string values', () => {
 
