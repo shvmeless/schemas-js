@@ -115,4 +115,15 @@ export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
       return output
     })
   }
+
+  // METHOD
+  public max(length: number): MapSchema<K, T> {
+    if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
+    if (length < 0) throw new Error('The length value must be zero or positive.')
+    return this.push((original, output) => {
+      if (output.size > length) throw new ValidationError(original, `The value must be at most ${stringify(length)} elements long.`)
+      return output
+    })
+  }
+
 }

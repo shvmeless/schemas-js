@@ -198,3 +198,66 @@ describe('.min(length)', () => {
     })
   })
 })
+
+// METHOD
+describe('.max(length)', () => {
+
+  it('returns a new instance of the schema.', () => {
+    const base = MapSchema.create(StringSchema.create(), NumberSchema.create())
+    const schema = base.max(5)
+    expect(schema).toBeInstanceOf(MapSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  describe('when `length` is `NaN`', () => {
+    it('throws when the schema is being built.', () => {
+      expectError(() => {
+        MapSchema.create(StringSchema.create(), NumberSchema.create()).max(NaN)
+      }).toHaveMessage('The length value must be zero or positive.')
+    })
+  })
+
+  describe('when `length` is a negative number', () => {
+    it('throws when the schema is being built.', () => {
+      expectError(() => {
+        MapSchema.create(StringSchema.create(), NumberSchema.create()).max(-8)
+      }).toHaveMessage('The length value must be zero or positive.')
+    })
+  })
+
+  describe('when `length` is zero', () => {
+
+    const schema = MapSchema.create(StringSchema.create(), NumberSchema.create()).max(0)
+
+    it('returns when `input` is empty.', () => {
+      expectValidation(schema, new Map([])).toReturn(new Map([]))
+    })
+
+    it('throws when `input` size is greater than expected.', () => {
+      const input = new Map([['A', 1], ['B', 2], ['C', 3]])
+      expectValidation(schema, input).toThrow('The value must be at most 0 elements long.')
+    })
+  })
+
+  describe('when `length` is a positive number', () => {
+
+    const schema = MapSchema.create(StringSchema.create(), NumberSchema.create()).max(5)
+
+    it('throws when `input` size is less than expected.', () => {
+      const input = new Map([['A', 1], ['B', 2], ['C', 3]])
+      const expected = new Map([['A', 1], ['B', 2], ['C', 3]])
+      expectValidation(schema, input).toReturn(expected)
+    })
+
+    it('returns when `input` size is as expected.', () => {
+      const input = new Map([['A', 1], ['B', 2], ['C', 3], ['D', 4], ['E', 5]])
+      const expected = new Map([['A', 1], ['B', 2], ['C', 3], ['D', 4], ['E', 5]])
+      expectValidation(schema, input).toReturn(expected)
+    })
+
+    it('throws when `input` size is greater than expected.', () => {
+      const input = new Map([['A', 1], ['B', 2], ['C', 3], ['D', 4], ['E', 5], ['F', 6], ['G', 7]])
+      expectValidation(schema, input).toThrow('The value must be at most 5 elements long.')
+    })
+  })
+})
