@@ -3,7 +3,6 @@ import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/schemas/GenericSchema'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { NullableSchema } from '@/schemas/NullableSchema'
-import { OptionalSchema } from '@/schemas/OptionalSchema'
 import { TransformSchema } from '@/schemas/TransformSchema'
 import { UnionSchema } from '@/schemas/UnionSchema'
 import { stringify } from '@/utils/stringify'
@@ -83,11 +82,6 @@ export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
 
     return result
 
-  }
-
-  // METHOD
-  public optional(): OptionalSchema<Map<K, T>, undefined> {
-    return OptionalSchema.create(this)
   }
 
   // METHOD

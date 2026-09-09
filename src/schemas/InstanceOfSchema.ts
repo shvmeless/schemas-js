@@ -1,7 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/schemas/GenericSchema'
-import { OptionalSchema } from '@/schemas/OptionalSchema'
 import { NullableSchema } from '@/schemas/NullableSchema'
 import { UnionSchema } from '@/schemas/UnionSchema'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
@@ -36,11 +35,6 @@ export class InstanceOfSchema<T extends AnyConstructor> implements GenericSchema
 
     return input as InstanceType<T>
 
-  }
-
-  // METHOD
-  public optional(): OptionalSchema<InstanceType<T>, undefined> {
-    return OptionalSchema.create(this)
   }
 
   // METHOD

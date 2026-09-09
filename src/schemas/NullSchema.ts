@@ -1,7 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/schemas/GenericSchema'
-import { OptionalSchema } from '@/schemas/OptionalSchema'
 import { UnionSchema } from '@/schemas/UnionSchema'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { TransformSchema } from '@/schemas/TransformSchema'
@@ -25,11 +24,6 @@ export class NullSchema implements GenericSchema<null> {
     }
 
     return input
-  }
-
-  // METHOD
-  public optional(): OptionalSchema<null, undefined> {
-    return OptionalSchema.create(this)
   }
 
   // METHOD
