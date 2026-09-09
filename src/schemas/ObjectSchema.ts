@@ -3,7 +3,6 @@ import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/schemas/GenericSchema'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { TransformSchema } from '@/schemas/TransformSchema'
-import { UnionSchema } from '@/schemas/UnionSchema'
 
 // CLASS
 export class ObjectSchema<T> implements GenericSchema<T> {
@@ -70,11 +69,6 @@ export class ObjectSchema<T> implements GenericSchema<T> {
   // METHOD
   public strip(): ObjectSchema<T> {
     return new ObjectSchema(this._schema, true)
-  }
-
-  // METHOD
-  public or<NT>(schema: GenericSchema<NT>): UnionSchema<T | NT> {
-    return UnionSchema.create(this as GenericSchema<T>, schema)
   }
 
   // METHOD

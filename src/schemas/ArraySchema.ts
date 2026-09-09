@@ -3,7 +3,6 @@ import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/schemas/GenericSchema'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { TransformSchema } from '@/schemas/TransformSchema'
-import { UnionSchema } from '@/schemas/UnionSchema'
 import { stringify } from '@/utils/stringify'
 
 // CLASS
@@ -76,11 +75,6 @@ export class ArraySchema<T> implements GenericSchema<Array<T>> {
 
     return result
 
-  }
-
-  // METHOD
-  public or<NT>(schema: GenericSchema<NT>): UnionSchema<Array<T> | NT> {
-    return UnionSchema.create(this as GenericSchema<Array<T>>, schema)
   }
 
   // METHOD

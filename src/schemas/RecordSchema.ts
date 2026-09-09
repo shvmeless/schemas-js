@@ -1,7 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/schemas/GenericSchema'
-import { UnionSchema } from '@/schemas/UnionSchema'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { TransformSchema } from '@/schemas/TransformSchema'
 import { stringify } from '@/utils/stringify'
@@ -75,11 +74,6 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
 
     return result
 
-  }
-
-  // METHOD
-  public or<NT>(schema: GenericSchema<NT>): UnionSchema<Record<string, T> | NT> {
-    return UnionSchema.create(this as GenericSchema<Record<string, T>>, schema)
   }
 
   // METHOD

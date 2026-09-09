@@ -1,7 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/schemas/GenericSchema'
-import { UnionSchema } from '@/schemas/UnionSchema'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { TransformSchema } from '@/schemas/TransformSchema'
 
@@ -24,11 +23,6 @@ export class BooleanSchema implements GenericSchema<boolean> {
     }
 
     return input
-  }
-
-  // METHOD
-  public or<NT>(schema: GenericSchema<NT>): UnionSchema<boolean | NT> {
-    return UnionSchema.create(this as GenericSchema<boolean>, schema)
   }
 
   // METHOD
