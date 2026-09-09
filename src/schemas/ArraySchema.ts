@@ -1,7 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/schemas/GenericSchema'
-import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { TransformSchema } from '@/schemas/TransformSchema'
 import { stringify } from '@/utils/stringify'
 
@@ -75,11 +74,6 @@ export class ArraySchema<T> implements GenericSchema<Array<T>> {
 
     return result
 
-  }
-
-  // METHOD
-  public fallback(value: Array<T>): FallbackSchema<Array<T>> {
-    return FallbackSchema.create(this, value)
   }
 
   // METHOD

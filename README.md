@@ -40,7 +40,6 @@ Additionally, some classes provide special functionality, usually created intern
 - **`NullableSchema`** - Validates that the input matches a specific schema or is `null`.
 - **`OptionalSchema`** - Validates that the input matches a specific schema or is `undefined`.
 - **`UnionSchema`** - Validates that the input matches any of the provided schemas.
-- **`FallbackSchema`** - Provides a fallback output when input validation fails.
 - **`TransformSchema`** - Transforms the input after validation.
 
 _**Note:** These classes are also available in the `classes` module, which can be imported from `@shvmeless/schemas/classes`, *but it is **not recommended** to use them directly*._
@@ -136,15 +135,6 @@ const schema = schemas.string().or(schemas.number());
 
 schema.validate('STRING'); // 'STRING'
 schema.validate(123); // 123
-```
-
-- **`fallback`** - Provides a fallback output when input validation fails.
-
-```typescript
-const schema = schemas.string().fallback('DEFAULT');
-
-schema.validate('STRING'); // 'STRING'
-schema.validate(123); // 'DEFAULT'
 ```
 
 - **`transform`** - Transforms validated input into a new output, including type changes.

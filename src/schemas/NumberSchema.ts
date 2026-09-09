@@ -1,7 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/schemas/GenericSchema'
-import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { TransformSchema } from '@/schemas/TransformSchema'
 import { stringify } from '@/utils/stringify'
 
@@ -39,11 +38,6 @@ export class NumberSchema implements GenericSchema<number> {
 
     return output
 
-  }
-
-  // METHOD
-  public fallback(value: number): FallbackSchema<number> {
-    return FallbackSchema.create(this, value)
   }
 
   // METHOD

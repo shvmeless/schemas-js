@@ -1,7 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/schemas/GenericSchema'
-import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { TransformSchema } from '@/schemas/TransformSchema'
 
 // TYPE
@@ -33,11 +32,6 @@ export class InstanceOfSchema<T extends AnyConstructor> implements GenericSchema
 
     return input as InstanceType<T>
 
-  }
-
-  // METHOD
-  public fallback(value: InstanceType<T>): FallbackSchema<InstanceType<T>> {
-    return FallbackSchema.create(this, value)
   }
 
   // METHOD

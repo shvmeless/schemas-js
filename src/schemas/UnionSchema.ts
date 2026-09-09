@@ -1,7 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/schemas/GenericSchema'
-import { FallbackSchema } from '@/schemas/FallbackSchema'
 
 // TYPES
 type InferSchemaType<I> = I extends GenericSchema<infer T> ? T : never
@@ -38,11 +37,6 @@ export class UnionSchema<T> implements GenericSchema<T> {
 
     throw new ValidationError(input, 'The value does not match any of the given schemas.')
 
-  }
-
-  // METHOD
-  public fallback(value: T): FallbackSchema<T> {
-    return FallbackSchema.create(this, value)
   }
 
 }

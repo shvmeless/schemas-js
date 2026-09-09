@@ -1,7 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/schemas/GenericSchema'
-import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { TransformSchema } from '@/schemas/TransformSchema'
 import { stringify } from '@/utils/stringify'
 
@@ -74,11 +73,6 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
 
     return result
 
-  }
-
-  // METHOD
-  public fallback(value: Record<string, T>): FallbackSchema<Record<string, T>> {
-    return FallbackSchema.create(this, value)
   }
 
   // METHOD

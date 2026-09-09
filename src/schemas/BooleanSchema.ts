@@ -1,7 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/schemas/GenericSchema'
-import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { TransformSchema } from '@/schemas/TransformSchema'
 
 // CLASS
@@ -23,11 +22,6 @@ export class BooleanSchema implements GenericSchema<boolean> {
     }
 
     return input
-  }
-
-  // METHOD
-  public fallback(value: boolean): FallbackSchema<boolean> {
-    return FallbackSchema.create(this, value)
   }
 
   // METHOD
