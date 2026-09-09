@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema } from '@/schemas/GenericSchema'
+import type { GenericSchema } from '@/lib/GenericSchema'
 
 // CLASS
 export class EnumSchema<T extends string | number = never> implements GenericSchema<T> {
@@ -16,12 +16,16 @@ export class EnumSchema<T extends string | number = never> implements GenericSch
     }
   }
 
-  // CONSTRUCTOR
+  // --------------------------------------------------------------------------
+
+  // FACTORY
   public static create<T extends string | number = never>(...values: ReadonlyArray<T>): EnumSchema<T> {
     return new EnumSchema(...values)
   }
 
-  // METHOD
+  // --------------------------------------------------------------------------
+
+  // VALIDATOR
   public validate(input: unknown): T {
 
     if (!this._values.includes(input as T)) {

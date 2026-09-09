@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema } from '@/schemas/GenericSchema'
+import type { GenericSchema } from '@/lib/GenericSchema'
 
 // CLASS
 export class LiteralSchema<T extends string | number | boolean> implements GenericSchema<T> {
@@ -13,12 +13,16 @@ export class LiteralSchema<T extends string | number | boolean> implements Gener
     this._literal = literal
   }
 
-  // CONSTRUCTOR
+  // --------------------------------------------------------------------------
+
+  // FACTORY
   public static create<T extends string | number | boolean>(literal: T): LiteralSchema<T> {
     return new LiteralSchema(literal)
   }
 
-  // METHOD
+  // --------------------------------------------------------------------------
+
+  // VALIDATOR
   public validate(input: unknown): T {
 
     if (input !== this._literal) {

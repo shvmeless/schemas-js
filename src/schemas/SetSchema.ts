@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema } from '@/schemas/GenericSchema'
+import type { GenericSchema } from '@/lib/GenericSchema'
 import { stringify } from '@/utils/stringify'
 
 // CLASS
@@ -18,17 +18,16 @@ export class SetSchema<T> implements GenericSchema<Set<T>> {
     this._prune = prune
   }
 
-  // CONSTRUCTOR
+  // --------------------------------------------------------------------------
+
+  // FACTORY
   public static create<T>(schema: GenericSchema<T>): SetSchema<T> {
     return new SetSchema<T>(schema, [], false)
   }
 
-  // CONSTRUCTOR
-  private push(fn: (original: Set<T>, output: Set<T>) => Set<T>): SetSchema<T> {
-    return new SetSchema<T>(this._schema, [...this._queue, fn], false)
-  }
+  // --------------------------------------------------------------------------
 
-  // CONSTRUCTOR
+  // UPDATER
   private clone(params: {
     schema?: GenericSchema<T>
     queue?: Array<(original: Set<T>, output: Set<T>) => Set<T>>
@@ -41,7 +40,14 @@ export class SetSchema<T> implements GenericSchema<Set<T>> {
     )
   }
 
-  // METHOD
+  // UPDATER
+  private push(fn: (original: Set<T>, output: Set<T>) => Set<T>): SetSchema<T> {
+    return new SetSchema<T>(this._schema, [...this._queue, fn], false)
+  }
+
+  // --------------------------------------------------------------------------
+
+  // VALIDATOR
   public validate(input: unknown): Set<T> {
 
     if (!(input instanceof Set)) {
@@ -74,6 +80,8 @@ export class SetSchema<T> implements GenericSchema<Set<T>> {
     return result
 
   }
+
+  // --------------------------------------------------------------------------
 
   // METHOD
   public prune(): SetSchema<T> {

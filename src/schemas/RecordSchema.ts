@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema } from '@/schemas/GenericSchema'
+import type { GenericSchema } from '@/lib/GenericSchema'
 import { stringify } from '@/utils/stringify'
 
 // CLASS
@@ -18,17 +18,16 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
     this._prune = prune
   }
 
-  // CONSTRUCTOR
+  // --------------------------------------------------------------------------
+
+  // FACTORY
   public static create<T>(schema: GenericSchema<T>): RecordSchema<T> {
     return new RecordSchema<T>(schema, [], false)
   }
 
-  // CONSTRUCTOR
-  private push(fn: (original: Record<string, T>, output: Record<string, T>) => Record<string, T>): RecordSchema<T> {
-    return new RecordSchema<T>(this._schema, [...this._queue, fn], this._prune)
-  }
+  // --------------------------------------------------------------------------
 
-  // CONSTRUCTOR
+  // UPDATER
   private clone(params: {
     schema?: GenericSchema<T>
     queue?: Array<(original: Record<string, T>, output: Record<string, T>) => Record<string, T>>
@@ -41,7 +40,14 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
     )
   }
 
-  // METHOD
+  // UPDATER
+  private push(fn: (original: Record<string, T>, output: Record<string, T>) => Record<string, T>): RecordSchema<T> {
+    return new RecordSchema<T>(this._schema, [...this._queue, fn], this._prune)
+  }
+
+  // --------------------------------------------------------------------------
+
+  // VALIDATOR
   public validate(input: unknown): Record<string, T> {
 
     if (typeof input !== 'object' || input === null || Array.isArray(input) || (Object.getPrototypeOf(input) !== Object.prototype && Object.getPrototypeOf(input) !== null)) {
@@ -73,6 +79,8 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
     return result
 
   }
+
+  // --------------------------------------------------------------------------
 
   // METHOD
   public prune(): RecordSchema<T> {

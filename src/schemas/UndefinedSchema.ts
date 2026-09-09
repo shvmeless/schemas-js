@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema } from '@/schemas/GenericSchema'
+import type { GenericSchema } from '@/lib/GenericSchema'
 
 // CLASS
 export class UndefinedSchema implements GenericSchema<undefined> {
@@ -8,12 +8,16 @@ export class UndefinedSchema implements GenericSchema<undefined> {
   // CONSTRUCTOR
   private constructor() {}
 
-  // CONSTRUCTOR
+  // --------------------------------------------------------------------------
+
+  // FACTORY
   public static create(): UndefinedSchema {
     return new UndefinedSchema()
   }
 
-  // METHOD
+  // --------------------------------------------------------------------------
+
+  // VALIDATOR
   public validate(input: unknown): undefined {
 
     if (input !== undefined) {

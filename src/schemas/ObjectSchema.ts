@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema } from '@/schemas/GenericSchema'
+import type { GenericSchema } from '@/lib/GenericSchema'
 
 // CLASS
 export class ObjectSchema<T> implements GenericSchema<T> {
@@ -15,12 +15,16 @@ export class ObjectSchema<T> implements GenericSchema<T> {
     this._strip = strip
   }
 
+  // --------------------------------------------------------------------------
+
   // FACTORY
   public static create<T>(schema: { [K in keyof T]: GenericSchema<T[K]> }): ObjectSchema<T> {
     return new ObjectSchema(schema, false)
   }
 
-  // METHOD
+  // --------------------------------------------------------------------------
+
+  // VALIDATOR
   public validate(input: unknown): T {
 
     if (typeof input !== 'object' || input === null || Array.isArray(input) || (Object.getPrototypeOf(input) !== Object.prototype && Object.getPrototypeOf(input) !== null)) {
@@ -63,6 +67,8 @@ export class ObjectSchema<T> implements GenericSchema<T> {
     return result as T
 
   }
+
+  // --------------------------------------------------------------------------
 
   // METHOD
   public strip(): ObjectSchema<T> {

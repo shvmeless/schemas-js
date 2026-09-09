@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema } from '@/schemas/GenericSchema'
+import type { GenericSchema } from '@/lib/GenericSchema'
 import { stringify } from '@/utils/stringify'
 
 // CLASS
@@ -14,17 +14,23 @@ export class StringSchema implements GenericSchema<string> {
     this._queue = queue
   }
 
-  // CONSTRUCTOR
+  // --------------------------------------------------------------------------
+
+  // FACTORY
   public static create(): StringSchema {
     return new StringSchema([])
   }
 
-  // CONSTRUCTOR
+  // --------------------------------------------------------------------------
+
+  // UPDATER
   private push(fn: (original: string, output: string) => string): StringSchema {
     return new StringSchema([...this._queue, fn])
   }
 
-  // METHOD
+  // --------------------------------------------------------------------------
+
+  // VALIDATOR
   public validate(input: unknown): string {
 
     if (typeof input !== 'string') {
@@ -39,6 +45,8 @@ export class StringSchema implements GenericSchema<string> {
     return output
 
   }
+
+  // --------------------------------------------------------------------------
 
   // METHOD
   public length(length: number): StringSchema {

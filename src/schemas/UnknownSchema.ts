@@ -1,5 +1,5 @@
 // IMPORTS
-import type { GenericSchema } from '@/schemas/GenericSchema'
+import type { GenericSchema } from '@/lib/GenericSchema'
 
 // CLASS
 export class UnknownSchema implements GenericSchema<unknown> {
@@ -7,12 +7,16 @@ export class UnknownSchema implements GenericSchema<unknown> {
   // CONSTRUCTOR
   private constructor() {}
 
-  // CONSTRUCTOR
+  // --------------------------------------------------------------------------
+
+  // FACTORY
   public static create(): UnknownSchema {
     return new UnknownSchema()
   }
 
-  // METHOD
+  // --------------------------------------------------------------------------
+
+  // VALIDATOR
   public validate(input: unknown): unknown {
     return input
   }

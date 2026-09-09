@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema } from '@/schemas/GenericSchema'
+import type { GenericSchema } from '@/lib/GenericSchema'
 
 // TYPES
 type InferSchemaType<I> = I extends GenericSchema<infer T> ? T : never
@@ -18,12 +18,16 @@ export class UnionSchema<T> implements GenericSchema<T> {
     this._schemas = schemas
   }
 
-  // CONSTRUCTOR
+  // --------------------------------------------------------------------------
+
+  // FACTORY
   public static create<A extends ReadonlyArray<GenericSchema<unknown>>>(...schemas: A): UnionSchema<SchemaTypeUnion<A>> {
     return new UnionSchema(...schemas as ReadonlyArray<GenericSchema<SchemaTypeUnion<A>>>)
   }
 
-  // METHOD
+  // --------------------------------------------------------------------------
+
+  // VALIDATOR
   public validate(input: unknown): T {
 
     for (const schema of this._schemas) {

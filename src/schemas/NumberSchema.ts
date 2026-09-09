@@ -1,30 +1,36 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema } from '@/schemas/GenericSchema'
+import type { GenericSchema } from '@/lib/GenericSchema'
 import { stringify } from '@/utils/stringify'
 
 // CLASS
 export class NumberSchema implements GenericSchema<number> {
 
   // PROPERTIES
-  public readonly _queue: Array<(original: number, output: number) => number>
+  private readonly _queue: Array<(original: number, output: number) => number>
 
   // CONSTRUCTOR
   private constructor(queue: Array<(original: number, output: number) => number>) {
     this._queue = queue
   }
 
-  // CONSTRUCTOR
-  private push(fn: (original: number, output: number) => number): NumberSchema {
-    return new NumberSchema([...this._queue, fn])
-  }
+  // --------------------------------------------------------------------------
 
-  // CONSTRUCTOR
+  // FACTORY
   public static create(): NumberSchema {
     return new NumberSchema([])
   }
 
-  // METHOD
+  // --------------------------------------------------------------------------
+
+  // UPDATER
+  private push(fn: (original: number, output: number) => number): NumberSchema {
+    return new NumberSchema([...this._queue, fn])
+  }
+
+  // --------------------------------------------------------------------------
+
+  // VALIDATOR
   public validate(input: unknown): number {
 
     if (typeof input !== 'number') {
@@ -38,6 +44,8 @@ export class NumberSchema implements GenericSchema<number> {
     return output
 
   }
+
+  // --------------------------------------------------------------------------
 
   // METHOD
   public lessThan(target: number, options: { clamp?: boolean } = {}): NumberSchema {

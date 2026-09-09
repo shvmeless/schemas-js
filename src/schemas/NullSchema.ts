@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema } from '@/schemas/GenericSchema'
+import type { GenericSchema } from '@/lib/GenericSchema'
 
 // CLASS
 export class NullSchema implements GenericSchema<null> {
@@ -8,12 +8,16 @@ export class NullSchema implements GenericSchema<null> {
   // CONSTRUCTOR
   private constructor() {}
 
-  // CONSTRUCTOR
+  // --------------------------------------------------------------------------
+
+  // FACTORY
   public static create(): NullSchema {
     return new NullSchema()
   }
 
-  // METHOD
+  // --------------------------------------------------------------------------
+
+  // VALIDATOR
   public validate(input: unknown): null {
 
     if (input !== null) {

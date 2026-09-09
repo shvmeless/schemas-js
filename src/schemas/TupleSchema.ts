@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema } from '@/schemas/GenericSchema'
+import type { GenericSchema } from '@/lib/GenericSchema'
 
 // CLASS
 export class TupleSchema<T extends ReadonlyArray<unknown>> implements GenericSchema<T> {
@@ -15,12 +15,16 @@ export class TupleSchema<T extends ReadonlyArray<unknown>> implements GenericSch
     this._strip = strip
   }
 
-  // CONSTRUCTOR
+  // --------------------------------------------------------------------------
+
+  // FACTORY
   public static create<T extends ReadonlyArray<unknown>>(shape: { [K in keyof T]: GenericSchema<T[K]> }): TupleSchema<T> {
     return new TupleSchema(shape, false)
   }
 
-  // METHOD
+  // --------------------------------------------------------------------------
+
+  // VALIDATOR
   public validate(input: unknown): T {
 
     if (!Array.isArray(input)) {
@@ -62,6 +66,8 @@ export class TupleSchema<T extends ReadonlyArray<unknown>> implements GenericSch
     return result as unknown as T
 
   }
+
+  // --------------------------------------------------------------------------
 
   // METHOD
   public strip(): TupleSchema<T> {

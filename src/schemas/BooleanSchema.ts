@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema } from '@/schemas/GenericSchema'
+import type { GenericSchema } from '@/lib/GenericSchema'
 
 // CLASS
 export class BooleanSchema implements GenericSchema<boolean> {
@@ -8,12 +8,16 @@ export class BooleanSchema implements GenericSchema<boolean> {
   // CONSTRUCTOR
   private constructor() {}
 
-  // CONSTRUCTOR
+  // --------------------------------------------------------------------------
+
+  // FACTORY
   public static create(): BooleanSchema {
     return new BooleanSchema()
   }
 
-  // METHOD
+  // --------------------------------------------------------------------------
+
+  // VALIDATOR
   public validate(input: unknown): boolean {
 
     if (typeof input !== 'boolean') {

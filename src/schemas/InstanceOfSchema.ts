@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema } from '@/schemas/GenericSchema'
+import type { GenericSchema } from '@/lib/GenericSchema'
 
 // TYPE
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -17,12 +17,16 @@ export class InstanceOfSchema<T extends AnyConstructor> implements GenericSchema
     this._constructor = constructor
   }
 
-  // CONSTRUCTOR
+  // --------------------------------------------------------------------------
+
+  // FACTORY
   public static create<T extends AnyConstructor>(constructor: T): InstanceOfSchema<T> {
     return new InstanceOfSchema(constructor)
   }
 
-  // METHOD
+  // --------------------------------------------------------------------------
+
+  // VALIDATOR
   public validate(input: unknown): InstanceType<T> {
 
     if (!(input instanceof this._constructor)) {

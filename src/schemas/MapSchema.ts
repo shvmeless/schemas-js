@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema } from '@/schemas/GenericSchema'
+import type { GenericSchema } from '@/lib/GenericSchema'
 import { stringify } from '@/utils/stringify'
 
 // CLASS
@@ -20,17 +20,16 @@ export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
     this._prune = prune
   }
 
-  // CONSTRUCTOR
+  // --------------------------------------------------------------------------
+
+  // FACTORY
   public static create<K, T>(keySchema: GenericSchema<K>, valueSchema: GenericSchema<T>): MapSchema<K, T> {
     return new MapSchema(keySchema, valueSchema, [], false)
   }
 
-  // CONSTRUCTOR
-  private push(fn: (original: Map<K, T>, output: Map<K, T>) => Map<K, T>): MapSchema<K, T> {
-    return new MapSchema(this._keySchema, this._valueSchema, [...this._queue, fn], false)
-  }
+  // --------------------------------------------------------------------------
 
-  // CONSTRUCTOR
+  // UPDATER
   private clone(params: {
     keySchema?: GenericSchema<K>
     valueSchema?: GenericSchema<T>
@@ -45,7 +44,14 @@ export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
     )
   }
 
-  // METHOD
+  // UPDATER
+  private push(fn: (original: Map<K, T>, output: Map<K, T>) => Map<K, T>): MapSchema<K, T> {
+    return new MapSchema(this._keySchema, this._valueSchema, [...this._queue, fn], false)
+  }
+
+  // --------------------------------------------------------------------------
+
+  // VALIDATOR
   public validate(input: unknown): Map<K, T> {
 
     if (!(input instanceof Map)) {
@@ -79,6 +85,8 @@ export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
     return result
 
   }
+
+  // --------------------------------------------------------------------------
 
   // METHOD
   public prune(): MapSchema<K, T> {
