@@ -9,14 +9,14 @@ export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
   // PROPERTIES
   private readonly _keySchema: GenericSchema<K>
   private readonly _valueSchema: GenericSchema<T>
-  private readonly _queue: Array<(original: Map<K, T>, output: Map<K, T>) => Map<K, T>>
+  private readonly _validations: Array<(initial: Map<K, T>, current: Map<K, T>) => undefined>
   private readonly _prune: boolean
 
   // CONSTRUCTOR
-  private constructor(keySchema: GenericSchema<K>, valueSchema: GenericSchema<T>, queue: Array<(original: Map<K, T>, output: Map<K, T>) => Map<K, T>>, prune: boolean) {
+  private constructor(keySchema: GenericSchema<K>, valueSchema: GenericSchema<T>, validations: Array<(initial: Map<K, T>, current: Map<K, T>) => undefined>, prune: boolean) {
     this._keySchema = keySchema
     this._valueSchema = valueSchema
-    this._queue = queue
+    this._validations = validations
     this._prune = prune
   }
 
@@ -33,20 +33,20 @@ export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
   private clone(params: {
     keySchema?: GenericSchema<K>
     valueSchema?: GenericSchema<T>
-    queue?: Array<(original: Map<K, T>, output: Map<K, T>) => Map<K, T>>
+    validations?: Array<(initial: Map<K, T>, current: Map<K, T>) => undefined>
     prune?: boolean
   } = {}): MapSchema<K, T> {
     return new MapSchema(
       params.keySchema ?? this._keySchema,
       params.valueSchema ?? this._valueSchema,
-      params.queue ?? this._queue,
+      params.validations ?? this._validations,
       params.prune ?? this._prune,
     )
   }
 
   // UPDATER
-  private push(fn: (original: Map<K, T>, output: Map<K, T>) => Map<K, T>): MapSchema<K, T> {
-    return new MapSchema(this._keySchema, this._valueSchema, [...this._queue, fn], false)
+  private push(fn: (initial: Map<K, T>, current: Map<K, T>) => undefined): MapSchema<K, T> {
+    return new MapSchema(this._keySchema, this._valueSchema, [...this._validations, fn], false)
   }
 
   // --------------------------------------------------------------------------
@@ -58,7 +58,7 @@ export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
       throw new ValidationError(input, 'The value must be a Map.')
     }
 
-    let result = new Map<K, T>()
+    const result = new Map<K, T>()
     const errors = ValidationError.prepare()
 
     input.forEach((value: unknown, key: unknown) => {
@@ -78,8 +78,8 @@ export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
       errors.throw(input, 'At least one entry does not match the given schema.')
     }
 
-    for (const fn of this._queue) {
-      result = fn(input as Map<K, T>, result)
+    for (const fn of this._validations) {
+      fn(input as Map<K, T>, result)
     }
 
     return result
@@ -97,9 +97,8 @@ export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
   public size(length: number): MapSchema<K, T> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this.push((original, output) => {
-      if (output.size !== length) throw new ValidationError(original, `The value must be ${stringify(length)} entries long.`)
-      return output
+    return this.push((initial, current) => {
+      if (current.size !== length) throw new ValidationError(initial, `The value must be ${stringify(length)} entries long.`)
     })
   }
 
@@ -107,9 +106,8 @@ export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
   public min(length: number): MapSchema<K, T> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this.push((original, output) => {
-      if (output.size < length) throw new ValidationError(original, `The value must be at least ${stringify(length)} entries long.`)
-      return output
+    return this.push((initial, current) => {
+      if (current.size < length) throw new ValidationError(initial, `The value must be at least ${stringify(length)} entries long.`)
     })
   }
 
@@ -117,47 +115,36 @@ export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
   public max(length: number): MapSchema<K, T> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this.push((original, output) => {
-      if (output.size > length) throw new ValidationError(original, `The value must be at most ${stringify(length)} entries long.`)
-      return output
-    })
-  }
-
-  // METHOD
-  public filter(callback: (value: T, key: K, map: Map<K, T>) => boolean): MapSchema<K, T> {
-    return this.push((_, output) => {
-      const entries = Array.from(output).filter(([key, value]) => callback(value, key, output))
-      return new Map(entries)
+    return this.push((initial, current) => {
+      if (current.size > length) throw new ValidationError(initial, `The value must be at most ${stringify(length)} entries long.`)
     })
   }
 
   // METHOD
   public some(callback: (value: T, key: K, map: Map<K, T>) => boolean): MapSchema<K, T> {
-    return this.push((original, output) => {
-      for (const [key, value] of output) {
-        if (callback(value, key, output)) return output
+    return this.push((initial, current) => {
+      for (const [key, value] of current) {
+        if (callback(value, key, current)) return
       }
-      throw new ValidationError(original, 'No entry satisfies the given validation function.')
+      throw new ValidationError(initial, 'No entry satisfies the given validation function.')
     })
   }
 
   // METHOD
   public every(callback: (value: T, key: K, map: Map<K, T>) => boolean): MapSchema<K, T> {
-    return this.push((original, output) => {
-      for (const [key, value] of output) {
-        if (!callback(value, key, output)) throw new ValidationError(original, 'At least one entry does not satisfy the given validation function.')
+    return this.push((initial, current) => {
+      for (const [key, value] of current) {
+        if (!callback(value, key, current)) throw new ValidationError(initial, 'At least one entry does not satisfy the given validation function.')
       }
-      return output
     })
   }
 
   // METHOD
   public none(callback: (value: T, key: K, map: Map<K, T>) => boolean): MapSchema<K, T> {
-    return this.push((original, output) => {
-      for (const [key, value] of output) {
-        if (callback(value, key, output)) throw new ValidationError(original, 'At least one entry satisfies the given validation function.')
+    return this.push((initial, current) => {
+      for (const [key, value] of current) {
+        if (callback(value, key, current)) throw new ValidationError(initial, 'At least one entry satisfies the given validation function.')
       }
-      return output
     })
   }
 

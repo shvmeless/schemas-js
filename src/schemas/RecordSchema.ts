@@ -8,13 +8,13 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
 
   // PROPERTIES
   private readonly _schema: GenericSchema<T>
-  private readonly _queue: Array<(original: Record<string, T>, output: Record<string, T>) => Record<string, T>>
+  private readonly _validations: Array<(initial: Record<string, T>, current: Record<string, T>) => undefined>
   private readonly _prune: boolean
 
   // CONSTRUCTOR
-  private constructor(schema: GenericSchema<T>, queue: Array<(original: Record<string, T>, output: Record<string, T>) => Record<string, T>>, prune: boolean) {
+  private constructor(schema: GenericSchema<T>, validations: Array<(initial: Record<string, T>, current: Record<string, T>) => undefined>, prune: boolean) {
     this._schema = schema
-    this._queue = queue
+    this._validations = validations
     this._prune = prune
   }
 
@@ -30,19 +30,19 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
   // UPDATER
   private clone(params: {
     schema?: GenericSchema<T>
-    queue?: Array<(original: Record<string, T>, output: Record<string, T>) => Record<string, T>>
+    validations?: Array<(initial: Record<string, T>, current: Record<string, T>) => undefined>
     prune?: boolean
   } = {}): RecordSchema<T> {
     return new RecordSchema<T>(
       params.schema ?? this._schema,
-      params.queue ?? this._queue,
+      params.validations ?? this._validations,
       params.prune ?? this._prune,
     )
   }
 
   // UPDATER
-  private push(fn: (original: Record<string, T>, output: Record<string, T>) => Record<string, T>): RecordSchema<T> {
-    return new RecordSchema<T>(this._schema, [...this._queue, fn], this._prune)
+  private push(fn: (initial: Record<string, T>, current: Record<string, T>) => undefined): RecordSchema<T> {
+    return new RecordSchema<T>(this._schema, [...this._validations, fn], this._prune)
   }
 
   // --------------------------------------------------------------------------
@@ -54,7 +54,7 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
       throw new ValidationError(input, 'The value must be an object.')
     }
 
-    let result: Record<string, T> = {}
+    const result: Record<string, T> = {}
     const errors = ValidationError.prepare()
 
     for (const [key, value] of Object.entries(input)) {
@@ -72,8 +72,8 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
       errors.throw(input, 'At least one entry does not match the given schema.')
     }
 
-    for (const fn of this._queue) {
-      result = fn(input as Record<string, T>, result)
+    for (const fn of this._validations) {
+      fn(input as Record<string, T>, result)
     }
 
     return result
@@ -91,9 +91,8 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
   public length(length: number): RecordSchema<T> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this.push((original, output) => {
-      if (Object.entries(output).length !== length) throw new ValidationError(original, `The value must be ${stringify(length)} entries long.`)
-      return output
+    return this.push((initial, current) => {
+      if (Object.entries(current).length !== length) throw new ValidationError(initial, `The value must be ${stringify(length)} entries long.`)
     })
   }
 
@@ -101,9 +100,8 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
   public min(length: number): RecordSchema<T> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this.push((original, output) => {
-      if (Object.entries(output).length < length) throw new ValidationError(original, `The value must be at least ${stringify(length)} entries long.`)
-      return output
+    return this.push((initial, current) => {
+      if (Object.entries(current).length < length) throw new ValidationError(initial, `The value must be at least ${stringify(length)} entries long.`)
     })
   }
 
@@ -111,47 +109,36 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
   public max(length: number): RecordSchema<T> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this.push((original, output) => {
-      if (Object.entries(output).length > length) throw new ValidationError(original, `The value must be at most ${stringify(length)} entries long.`)
-      return output
+    return this.push((initial, current) => {
+      if (Object.entries(current).length > length) throw new ValidationError(initial, `The value must be at most ${stringify(length)} entries long.`)
     })
   }
 
   // METHOD
-  public filter(callback: (value: T, key: string, array: Record<string, T>) => boolean): RecordSchema<T> {
-    return this.push((_, output) => {
-      const entries = Object.entries(output).filter(([key, value]) => callback(value, key, output))
-      return Object.fromEntries(entries)
-    })
-  }
-
-  // METHOD
-  public some(callback: (value: T, key: string, array: Record<string, T>) => boolean): RecordSchema<T> {
-    return this.push((original, output) => {
-      for (const [key, value] of Object.entries(output)) {
-        if (callback(value, key, output)) return output
+  public some(callback: (value: T, key: string, record: Record<string, T>) => boolean): RecordSchema<T> {
+    return this.push((initial, current) => {
+      for (const [key, value] of Object.entries(current)) {
+        if (callback(value, key, current)) return
       }
-      throw new ValidationError(original, 'No entry satisfies the given validation function.')
+      throw new ValidationError(initial, 'No entry satisfies the given validation function.')
     })
   }
 
   // METHOD
-  public every(callback: (value: T, key: string, array: Record<string, T>) => boolean): RecordSchema<T> {
-    return this.push((original, output) => {
-      for (const [key, value] of Object.entries(output)) {
-        if (!callback(value, key, output)) throw new ValidationError(original, 'At least one entry does not satisfy the given validation function.')
+  public every(callback: (value: T, key: string, record: Record<string, T>) => boolean): RecordSchema<T> {
+    return this.push((initial, current) => {
+      for (const [key, value] of Object.entries(current)) {
+        if (!callback(value, key, current)) throw new ValidationError(initial, 'At least one entry does not satisfy the given validation function.')
       }
-      return output
     })
   }
 
   // METHOD
-  public none(callback: (value: T, key: string, array: Record<string, T>) => boolean): RecordSchema<T> {
-    return this.push((original, output) => {
-      for (const [key, value] of Object.entries(output)) {
-        if (callback(value, key, output)) throw new ValidationError(original, 'At least one entry satisfies the given validation function.')
+  public none(callback: (value: T, key: string, record: Record<string, T>) => boolean): RecordSchema<T> {
+    return this.push((initial, current) => {
+      for (const [key, value] of Object.entries(current)) {
+        if (callback(value, key, current)) throw new ValidationError(initial, 'At least one entry satisfies the given validation function.')
       }
-      return output
     })
   }
 

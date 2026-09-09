@@ -318,36 +318,6 @@ describe('.max(length)', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
-describe('.filter(callback)', () => {
-
-  const base = MapSchema.create(StringSchema.create(), NumberSchema.create())
-  const schema = base.filter((value) => (value % 10 === 0))
-
-  it('returns a new instance of the schema.', () => {
-    expect(schema).toBeInstanceOf(MapSchema)
-    expect(schema).not.toBe(base)
-  })
-
-  it('returns when `callback` returns `true` for all `input` entries.', () => {
-    const input = new Map([['A', 10], ['B', 20], ['C', 30]])
-    const expected = new Map([['A', 10], ['B', 20], ['C', 30]])
-    expectValidation(schema, input).toReturnNew(expected)
-  })
-
-  it('filters when `callback` returns `false` for some `input` entries.', () => {
-    const input = new Map([['A', 10], ['B', 22], ['C', 30]])
-    const expected = new Map([['A', 10], ['C', 30]])
-    expectValidation(schema, input).toReturnNew(expected)
-  })
-
-  it('filters when `callback` returns `false` for all `input` entries.', () => {
-    const input = new Map([['A', 11], ['B', 22], ['C', 33]])
-    const expected: Map<string, number> = new Map([])
-    expectValidation(schema, input).toReturnNew(expected)
-  })
-})
-
-// METHOD ---------------------------------------------------------------------
 describe('.some(callback)', () => {
 
   const base = MapSchema.create(StringSchema.create(), NumberSchema.create())

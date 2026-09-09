@@ -201,350 +201,117 @@ describe('.max(length)', () => {
 
 // METHOD ---------------------------------------------------------------------
 describe('.lowercase({ fix })', () => {
-  describe('when `fix` is `undefined`', () => {
 
-    const base = StringSchema.create()
-    const schema = base.lowercase()
+  const base = StringSchema.create()
+  const schema = base.lowercase()
 
-    it('returns a new instance of the schema.', () => {
-      expect(schema).toBeInstanceOf(StringSchema)
-      expect(schema).not.toBe(base)
-    })
-
-    it('throws when `input` contains uppercase characters.', () => {
-      expectValidation(schema, 'eXaMpLe').toThrow('The value must be lowercase.')
-    })
-
-    it('returns when `input` does not contain uppercase characters.', () => {
-      expectValidation(schema, 'example').toReturn('example')
-    })
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(StringSchema)
+    expect(schema).not.toBe(base)
   })
 
-  describe('when `fix` is `false`', () => {
-
-    const base = StringSchema.create()
-    const schema = base.lowercase({ fix: false })
-
-    it('returns a new instance of the schema.', () => {
-      expect(schema).toBeInstanceOf(StringSchema)
-      expect(schema).not.toBe(base)
-    })
-
-    it('throws when `input` contains uppercase characters.', () => {
-      expectValidation(schema, 'eXaMpLe').toThrow('The value must be lowercase.')
-    })
-
-    it('returns when `input` does not contain uppercase characters.', () => {
-      expectValidation(schema, 'example').toReturn('example')
-    })
+  it('throws when `input` contains uppercase characters.', () => {
+    expectValidation(schema, 'eXaMpLe').toThrow('The value must be lowercase.')
   })
 
-  describe('when `fix` is `true`', () => {
-
-    const base = StringSchema.create()
-    const schema = base.lowercase({ fix: true })
-
-    it('returns a new instance of the schema.', () => {
-      expect(schema).toBeInstanceOf(StringSchema)
-      expect(schema).not.toBe(base)
-    })
-
-    it('fixes when `input` contains uppercase characters.', () => {
-      expectValidation(schema, 'eXaMpLe').toReturn('example')
-    })
-
-    it('returns when `input` does not contain uppercase characters.', () => {
-      expectValidation(schema, 'example').toReturn('example')
-    })
+  it('returns when `input` does not contain uppercase characters.', () => {
+    expectValidation(schema, 'example').toReturn('example')
   })
 })
 
 // METHOD ---------------------------------------------------------------------
 describe('.uppercase({ fix })', () => {
-  describe('when `fix` is `undefined`', () => {
 
-    const base = StringSchema.create()
-    const schema = base.uppercase()
+  const base = StringSchema.create()
+  const schema = base.uppercase()
 
-    it('returns a new instance of the schema.', () => {
-      expect(schema).toBeInstanceOf(StringSchema)
-      expect(schema).not.toBe(base)
-    })
-
-    it('throws when `input` contains lowercase characters.', () => {
-      expectValidation(schema, 'eXaMpLe').toThrow('The value must be uppercase.')
-    })
-
-    it('returns when `input` does not contain lowercase characters.', () => {
-      expectValidation(schema, 'EXAMPLE').toReturn('EXAMPLE')
-    })
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(StringSchema)
+    expect(schema).not.toBe(base)
   })
 
-  describe('when `fix` is `false`', () => {
-
-    const base = StringSchema.create()
-    const schema = base.uppercase({ fix: false })
-
-    it('returns a new instance of the schema.', () => {
-      expect(schema).toBeInstanceOf(StringSchema)
-      expect(schema).not.toBe(base)
-    })
-
-    it('throws when `input` contains lowercase characters.', () => {
-      expectValidation(schema, 'eXaMpLe').toThrow('The value must be uppercase.')
-    })
-
-    it('returns when `input` does not contain lowercase characters.', () => {
-      expectValidation(schema, 'EXAMPLE').toReturn('EXAMPLE')
-    })
+  it('throws when `input` contains lowercase characters.', () => {
+    expectValidation(schema, 'eXaMpLe').toThrow('The value must be uppercase.')
   })
 
-  describe('when `fix` is `true`', () => {
-
-    const base = StringSchema.create()
-    const schema = base.uppercase({ fix: true })
-
-    it('returns a new instance of the schema.', () => {
-      expect(schema).toBeInstanceOf(StringSchema)
-      expect(schema).not.toBe(base)
-    })
-
-    it('fixes when `input` contains lowercase characters.', () => {
-      expectValidation(schema, 'eXaMpLe').toReturn('EXAMPLE')
-    })
-
-    it('returns when `input` does not contain lowercase characters.', () => {
-      expectValidation(schema, 'EXAMPLE').toReturn('EXAMPLE')
-    })
+  it('returns when `input` does not contain lowercase characters.', () => {
+    expectValidation(schema, 'EXAMPLE').toReturn('EXAMPLE')
   })
 })
 
 // METHOD ---------------------------------------------------------------------
 describe('.trim({ fix })', () => {
-  describe('when `fix` is `undefined`', () => {
 
-    const base = StringSchema.create()
-    const schema = base.trim()
+  const base = StringSchema.create()
+  const schema = base.trim()
 
-    it('returns a new instance of the schema.', () => {
-      expect(schema).toBeInstanceOf(StringSchema)
-      expect(schema).not.toBe(base)
-    })
-
-    it('throws when `input` contains whitespaces at the beginning.', () => {
-      expectValidation(schema, '   EXAMPLE').toThrow('The value must be trimmed.')
-    })
-
-    it('throws when `input` contains whitespaces at the end.', () => {
-      expectValidation(schema, 'EXAMPLE   ').toThrow('The value must be trimmed.')
-    })
-
-    it('throws when `input` is surrounded by whitespaces.', () => {
-      expectValidation(schema, '   EXAMPLE   ').toThrow('The value must be trimmed.')
-    })
-
-    it('returns when `input` is not surrounded by whitespaces.', () => {
-      expectValidation(schema, 'EXAMPLE').toReturn('EXAMPLE')
-    })
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(StringSchema)
+    expect(schema).not.toBe(base)
   })
 
-  describe('when `fix` is `false`', () => {
-
-    const base = StringSchema.create()
-    const schema = base.trim({ fix: false })
-
-    it('returns a new instance of the schema.', () => {
-      expect(schema).toBeInstanceOf(StringSchema)
-      expect(schema).not.toBe(base)
-    })
-
-    it('throws when `input` contains whitespaces at the beginning.', () => {
-      expectValidation(schema, '   EXAMPLE').toThrow('The value must be trimmed.')
-    })
-
-    it('throws when `input` contains whitespaces at the end.', () => {
-      expectValidation(schema, 'EXAMPLE   ').toThrow('The value must be trimmed.')
-    })
-
-    it('throws when `input` is surrounded by whitespaces.', () => {
-      expectValidation(schema, '   EXAMPLE   ').toThrow('The value must be trimmed.')
-    })
-
-    it('returns when `input` is not surrounded by whitespaces.', () => {
-      expectValidation(schema, 'EXAMPLE').toReturn('EXAMPLE')
-    })
+  it('throws when `input` contains whitespaces at the beginning.', () => {
+    expectValidation(schema, '   EXAMPLE').toThrow('The value must be trimmed.')
   })
 
-  describe('when `fix` is `true`', () => {
+  it('throws when `input` contains whitespaces at the end.', () => {
+    expectValidation(schema, 'EXAMPLE   ').toThrow('The value must be trimmed.')
+  })
 
-    const base = StringSchema.create()
-    const schema = base.trim({ fix: true })
+  it('throws when `input` is surrounded by whitespaces.', () => {
+    expectValidation(schema, '   EXAMPLE   ').toThrow('The value must be trimmed.')
+  })
 
-    it('returns a new instance of the schema.', () => {
-      expect(schema).toBeInstanceOf(StringSchema)
-      expect(schema).not.toBe(base)
-    })
-
-    it('returns when `input` contains whitespaces at the beginning.', () => {
-      expectValidation(schema, '   EXAMPLE').toReturn('EXAMPLE')
-    })
-
-    it('returns when `input` contains whitespaces at the end.', () => {
-      expectValidation(schema, 'EXAMPLE   ').toReturn('EXAMPLE')
-    })
-
-    it('returns when `input` is surrounded by whitespaces.', () => {
-      expectValidation(schema, '   EXAMPLE   ').toReturn('EXAMPLE')
-    })
-
-    it('returns when `input` is not surrounded by whitespaces.', () => {
-      expectValidation(schema, 'EXAMPLE').toReturn('EXAMPLE')
-    })
+  it('returns when `input` is not surrounded by whitespaces.', () => {
+    expectValidation(schema, 'EXAMPLE').toReturn('EXAMPLE')
   })
 })
 
 // METHOD ---------------------------------------------------------------------
 describe('.startsWith(prefix, { fix })', () => {
 
-  describe('when `fix` is `undefined`', () => {
+  const base = StringSchema.create()
+  const schema = base.startsWith('prefix-')
 
-    const base = StringSchema.create()
-    const schema = base.startsWith('prefix-')
-
-    it('returns a new instance of the schema.', () => {
-      expect(schema).toBeInstanceOf(StringSchema)
-      expect(schema).not.toBe(base)
-    })
-
-    it('throws when `input` does not start with the expected `prefix`.', () => {
-      expectValidation(schema, 'string').toThrow('The value must start with "prefix-".')
-    })
-
-    it('throws when `input` starts with the expected `prefix` (case-sensitive).', () => {
-      expectValidation(schema, 'PREFIX-string').toThrow('The value must start with "prefix-".')
-    })
-
-    it('returns when `input` starts with the expected `prefix`.', () => {
-      expectValidation(schema, 'prefix-string').toReturn('prefix-string')
-    })
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(StringSchema)
+    expect(schema).not.toBe(base)
   })
 
-  describe('when `fix` is `false`', () => {
-
-    const base = StringSchema.create()
-    const schema = base.startsWith('prefix-', { fix: false })
-
-    it('returns a new instance of the schema.', () => {
-      expect(schema).toBeInstanceOf(StringSchema)
-      expect(schema).not.toBe(base)
-    })
-
-    it('throws when `input` does not start with the expected `prefix`.', () => {
-      expectValidation(schema, 'string').toThrow('The value must start with "prefix-".')
-    })
-
-    it('throws when `input` starts with the expected `prefix` (case-sensitive).', () => {
-      expectValidation(schema, 'PREFIX-string').toThrow('The value must start with "prefix-".')
-    })
-
-    it('returns when `input` starts with the expected `prefix`.', () => {
-      expectValidation(schema, 'prefix-string').toReturn('prefix-string')
-    })
+  it('throws when `input` does not start with the expected `prefix`.', () => {
+    expectValidation(schema, 'string').toThrow('The value must start with "prefix-".')
   })
 
-  describe('when `fix` is `true`', () => {
+  it('throws when `input` starts with the expected `prefix` (case-sensitive).', () => {
+    expectValidation(schema, 'PREFIX-string').toThrow('The value must start with "prefix-".')
+  })
 
-    const base = StringSchema.create()
-    const schema = base.startsWith('prefix-', { fix: true })
-
-    it('returns a new instance of the schema.', () => {
-      expect(schema).toBeInstanceOf(StringSchema)
-      expect(schema).not.toBe(base)
-    })
-
-    it('fixes when `input` does not start with the expected `prefix`.', () => {
-      expectValidation(schema, 'string').toReturn('prefix-string')
-    })
-
-    it('fixes when `input` starts with the expected `prefix` (case-sensitive).', () => {
-      expectValidation(schema, 'PREFIX-string').toReturn('prefix-PREFIX-string')
-    })
-
-    it('returns when `input` starts with the expected `prefix`.', () => {
-      expectValidation(schema, 'prefix-string').toReturn('prefix-string')
-    })
+  it('returns when `input` starts with the expected `prefix`.', () => {
+    expectValidation(schema, 'prefix-string').toReturn('prefix-string')
   })
 })
 
 // METHOD ---------------------------------------------------------------------
 describe('.endsWith(suffix, { fix })', () => {
-  describe('when `fix` is `undefined`', () => {
 
-    const base = StringSchema.create()
-    const schema = base.endsWith('-suffix')
+  const base = StringSchema.create()
+  const schema = base.endsWith('-suffix')
 
-    it('returns a new instance of the schema.', () => {
-      expect(schema).toBeInstanceOf(StringSchema)
-      expect(schema).not.toBe(base)
-    })
-
-    it('throws when `input` does not end with the expected `suffix`.', () => {
-      expectValidation(schema, 'string').toThrow('The value must end with "-suffix".')
-    })
-
-    it('throws when `input` ends with the expected `suffix` (case-sensitive).', () => {
-      expectValidation(schema, 'string-SUFFIX').toThrow('The value must end with "-suffix".')
-    })
-
-    it('returns when `input` ends with the expected `suffix`.', () => {
-      expectValidation(schema, 'string-suffix').toReturn('string-suffix')
-    })
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(StringSchema)
+    expect(schema).not.toBe(base)
   })
 
-  describe('when `fix` is `false`', () => {
-
-    const base = StringSchema.create()
-    const schema = base.endsWith('-suffix', { fix: false })
-
-    it('returns a new instance of the schema.', () => {
-      expect(schema).toBeInstanceOf(StringSchema)
-      expect(schema).not.toBe(base)
-    })
-
-    it('throws when `input` does not end with the expected `suffix`.', () => {
-      expectValidation(schema, 'string').toThrow('The value must end with "-suffix".')
-    })
-
-    it('throws when `input` ends with the expected `suffix` (case-sensitive).', () => {
-      expectValidation(schema, 'string-SUFFIX').toThrow('The value must end with "-suffix".')
-    })
-
-    it('returns when `input` ends with the expected `suffix`.', () => {
-      expectValidation(schema, 'string-suffix').toReturn('string-suffix')
-    })
+  it('throws when `input` does not end with the expected `suffix`.', () => {
+    expectValidation(schema, 'string').toThrow('The value must end with "-suffix".')
   })
 
-  describe('when `fix` is `true`', () => {
+  it('throws when `input` ends with the expected `suffix` (case-sensitive).', () => {
+    expectValidation(schema, 'string-SUFFIX').toThrow('The value must end with "-suffix".')
+  })
 
-    const base = StringSchema.create()
-    const schema = base.endsWith('-suffix', { fix: true })
-
-    it('returns a new instance of the schema.', () => {
-      expect(schema).toBeInstanceOf(StringSchema)
-      expect(schema).not.toBe(base)
-    })
-
-    it('fixes when `input` does not end with the expected `suffix`.', () => {
-      expectValidation(schema, 'string').toReturn('string-suffix')
-    })
-
-    it('fixes when `input` ends with the expected `suffix` (case-sensitive).', () => {
-      expectValidation(schema, 'string-SUFFIX').toReturn('string-SUFFIX-suffix')
-    })
-
-    it('returns when `input` ends with the expected `suffix`.', () => {
-      expectValidation(schema, 'string-suffix').toReturn('string-suffix')
-    })
+  it('returns when `input` ends with the expected `suffix`.', () => {
+    expectValidation(schema, 'string-suffix').toReturn('string-suffix')
   })
 })
 
@@ -605,25 +372,5 @@ describe('.match(pattern)', () => {
 
   it('returns when `input` matches the `pattern`.', () => {
     expectValidation(schema, 'abcde').toReturn('abcde')
-  })
-})
-
-// METHOD ---------------------------------------------------------------------
-describe('.default(default)', () => {
-
-  const base = StringSchema.create()
-  const schema = base.default('DEFAULT')
-
-  it('returns a new instance of the schema.', () => {
-    expect(schema).toBeInstanceOf(StringSchema)
-    expect(schema).not.toBe(base)
-  })
-
-  it('returns `default` value when `input` is an empty string.', () => {
-    expectValidation(schema, '').toReturn('DEFAULT')
-  })
-
-  it('returns when `input` is not an empty string.', () => {
-    expectValidation(schema, 'string').toReturn('string')
   })
 })

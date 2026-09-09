@@ -297,36 +297,6 @@ describe('.max(length)', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
-describe('.filter(callback)', () => {
-
-  const base = ArraySchema.create(StringSchema.create())
-  const schema = base.filter((value) => (value !== ''))
-
-  it('returns a new instance of the schema.', () => {
-    expect(schema).toBeInstanceOf(ArraySchema)
-    expect(schema).not.toBe(base)
-  })
-
-  it('returns when `callback` returns `true` for all `input` elements.', () => {
-    const input = ['A', 'B', 'C']
-    const expected = ['A', 'B', 'C']
-    expectValidation(schema, input).toReturnNew(expected)
-  })
-
-  it('filters when `callback` returns `false` for some `input` elements.', () => {
-    const input = ['A', '', 'C']
-    const expected = ['A', 'C']
-    expectValidation(schema, input).toReturnNew(expected)
-  })
-
-  it('filters when `callback` returns `false` for all `input` elements.', () => {
-    const input = ['', '', '']
-    const expected: Array<string> = []
-    expectValidation(schema, input).toReturnNew(expected)
-  })
-})
-
-// METHOD ---------------------------------------------------------------------
 describe('.some(callback)', () => {
 
   const base = ArraySchema.create(StringSchema.create())

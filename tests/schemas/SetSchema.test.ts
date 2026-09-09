@@ -298,36 +298,6 @@ describe('.max(length)', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
-describe('.filter(callback)', () => {
-
-  const base = SetSchema.create(StringSchema.create())
-  const schema = base.filter((value) => (value !== ''))
-
-  it('returns a new instance of the schema.', () => {
-    expect(schema).toBeInstanceOf(SetSchema)
-    expect(schema).not.toBe(base)
-  })
-
-  it('returns when `callback` returns `true` for all `input` elements.', () => {
-    const input = new Set(['A', 'B', 'C'])
-    const expected = new Set(['A', 'B', 'C'])
-    expectValidation(schema, input).toReturnNew(expected)
-  })
-
-  it('filters when `callback` returns `false` for some `input` elements.', () => {
-    const input = new Set(['A', '', 'C'])
-    const expected = new Set(['A', 'C'])
-    expectValidation(schema, input).toReturnNew(expected)
-  })
-
-  it('filters when `callback` returns `false` for all `input` elements.', () => {
-    const input = new Set(['', '', ''])
-    const expected: Set<string> = new Set([])
-    expectValidation(schema, input).toReturnNew(expected)
-  })
-})
-
-// METHOD ---------------------------------------------------------------------
 describe('.some(callback)', () => {
 
   const base = SetSchema.create(NumberSchema.create())
