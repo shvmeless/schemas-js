@@ -2,7 +2,6 @@
 import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/schemas/GenericSchema'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
-import { NullableSchema } from '@/schemas/NullableSchema'
 import { TransformSchema } from '@/schemas/TransformSchema'
 import { UnionSchema } from '@/schemas/UnionSchema'
 
@@ -71,11 +70,6 @@ export class ObjectSchema<T> implements GenericSchema<T> {
   // METHOD
   public strip(): ObjectSchema<T> {
     return new ObjectSchema(this._schema, true)
-  }
-
-  // METHOD
-  public nullable(): NullableSchema<T, null> {
-    return NullableSchema.create(this)
   }
 
   // METHOD

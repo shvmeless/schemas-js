@@ -1,7 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/schemas/GenericSchema'
-import { NullableSchema } from '@/schemas/NullableSchema'
 import { UnionSchema } from '@/schemas/UnionSchema'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { TransformSchema } from '@/schemas/TransformSchema'
@@ -41,11 +40,6 @@ export class NumberSchema implements GenericSchema<number> {
 
     return output
 
-  }
-
-  // METHOD
-  public nullable(): NullableSchema<number, null> {
-    return NullableSchema.create(this)
   }
 
   // METHOD

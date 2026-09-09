@@ -1,7 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/schemas/GenericSchema'
-import { NullableSchema } from '@/schemas/NullableSchema'
 import { UnionSchema } from '@/schemas/UnionSchema'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { TransformSchema } from '@/schemas/TransformSchema'
@@ -35,11 +34,6 @@ export class EnumSchema<T extends string | number = never> implements GenericSch
 
     return input as T
 
-  }
-
-  // METHOD
-  public nullable(): NullableSchema<T, null> {
-    return NullableSchema.create(this)
   }
 
   // METHOD

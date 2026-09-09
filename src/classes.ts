@@ -22,7 +22,6 @@ export { SetSchema } from '@/schemas/SetSchema'
 export { MapSchema } from '@/schemas/MapSchema'
 
 // SPECIAL
-export { NullableSchema } from '@/schemas/NullableSchema'
 export { UnionSchema } from '@/schemas/UnionSchema'
 export { FallbackSchema } from '@/schemas/FallbackSchema'
 export { TransformSchema } from '@/schemas/TransformSchema'

@@ -2,7 +2,6 @@
 import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/schemas/GenericSchema'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
-import { NullableSchema } from '@/schemas/NullableSchema'
 import { TransformSchema } from '@/schemas/TransformSchema'
 import { UnionSchema } from '@/schemas/UnionSchema'
 import { stringify } from '@/utils/stringify'
@@ -77,11 +76,6 @@ export class SetSchema<T> implements GenericSchema<Set<T>> {
 
     return result
 
-  }
-
-  // METHOD
-  public nullable(): NullableSchema<Set<T>, null> {
-    return NullableSchema.create(this)
   }
 
   // METHOD

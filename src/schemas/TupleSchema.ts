@@ -1,7 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/schemas/GenericSchema'
-import { NullableSchema } from '@/schemas/NullableSchema'
 import { UnionSchema } from '@/schemas/UnionSchema'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { TransformSchema } from '@/schemas/TransformSchema'
@@ -70,11 +69,6 @@ export class TupleSchema<T extends ReadonlyArray<unknown>> implements GenericSch
   // METHOD
   public strip(): TupleSchema<T> {
     return new TupleSchema(this._shape, true)
-  }
-
-  // METHOD
-  public nullable(): NullableSchema<T, null> {
-    return NullableSchema.create(this)
   }
 
   // METHOD

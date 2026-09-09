@@ -1,7 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/schemas/GenericSchema'
-import { NullableSchema } from '@/schemas/NullableSchema'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
 
 // TYPES
@@ -39,11 +38,6 @@ export class UnionSchema<T> implements GenericSchema<T> {
 
     throw new ValidationError(input, 'The value does not match any of the given schemas.')
 
-  }
-
-  // METHOD
-  public nullable(): NullableSchema<T, null> {
-    return NullableSchema.create(this)
   }
 
   // METHOD

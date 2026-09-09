@@ -1,7 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/schemas/GenericSchema'
-import { NullableSchema } from '@/schemas/NullableSchema'
 import { UnionSchema } from '@/schemas/UnionSchema'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
 import { TransformSchema } from '@/schemas/TransformSchema'
@@ -25,11 +24,6 @@ export class UndefinedSchema implements GenericSchema<undefined> {
     }
 
     return input
-  }
-
-  // METHOD
-  public nullable(): NullableSchema<undefined, null> {
-    return NullableSchema.create(this)
   }
 
   // METHOD
