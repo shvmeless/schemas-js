@@ -1,11 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import { GenericSchema } from '@/schemas/GenericSchema'
-import { FallbackSchema } from '@/schemas/FallbackSchema'
-import { NullableSchema } from '@/schemas/NullableSchema'
-import { OptionalSchema } from '@/schemas/OptionalSchema'
-import { TransformSchema } from '@/schemas/TransformSchema'
-import { UnionSchema } from '@/schemas/UnionSchema'
+import type { GenericSchema } from '@/lib/GenericSchema'
 import { stringify } from '@/utils/stringify'
 
 // CLASS
@@ -25,17 +20,16 @@ export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
     this._prune = prune
   }
 
-  // CONSTRUCTOR
+  // --------------------------------------------------------------------------
+
+  // FACTORY
   public static create<K, T>(keySchema: GenericSchema<K>, valueSchema: GenericSchema<T>): MapSchema<K, T> {
     return new MapSchema(keySchema, valueSchema, [], false)
   }
 
-  // CONSTRUCTOR
-  private push(fn: (original: Map<K, T>, output: Map<K, T>) => Map<K, T>): MapSchema<K, T> {
-    return new MapSchema(this._keySchema, this._valueSchema, [...this._queue, fn], false)
-  }
+  // --------------------------------------------------------------------------
 
-  // CONSTRUCTOR
+  // UPDATER
   private clone(params: {
     keySchema?: GenericSchema<K>
     valueSchema?: GenericSchema<T>
@@ -50,7 +44,14 @@ export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
     )
   }
 
-  // METHOD
+  // UPDATER
+  private push(fn: (original: Map<K, T>, output: Map<K, T>) => Map<K, T>): MapSchema<K, T> {
+    return new MapSchema(this._keySchema, this._valueSchema, [...this._queue, fn], false)
+  }
+
+  // --------------------------------------------------------------------------
+
+  // VALIDATOR
   public validate(input: unknown): Map<K, T> {
 
     if (!(input instanceof Map)) {
@@ -85,35 +86,7 @@ export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
 
   }
 
-  // METHOD
-  public isValid(input: unknown): boolean {
-    return GenericSchema.isValid(this, input)
-  }
-
-  // METHOD
-  public optional(): OptionalSchema<Map<K, T>, undefined> {
-    return OptionalSchema.create(this)
-  }
-
-  // METHOD
-  public nullable(): NullableSchema<Map<K, T>, null> {
-    return NullableSchema.create(this)
-  }
-
-  // METHOD
-  public or<NT>(schema: GenericSchema<NT>): UnionSchema<Map<K, T> | NT> {
-    return UnionSchema.create(this as GenericSchema<Map<K, T>>, schema)
-  }
-
-  // METHOD
-  public fallback(value: Map<K, T>): FallbackSchema<Map<K, T>> {
-    return FallbackSchema.create(this, value)
-  }
-
-  // METHOD
-  public transform<V>(fn: (value: Map<K, T>) => V): TransformSchema<Map<K, T>, V> {
-    return TransformSchema.create(this, fn)
-  }
+  // --------------------------------------------------------------------------
 
   // METHOD
   public prune(): MapSchema<K, T> {

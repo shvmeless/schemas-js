@@ -1,11 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import { GenericSchema } from '@/schemas/GenericSchema'
-import { FallbackSchema } from '@/schemas/FallbackSchema'
-import { NullableSchema } from '@/schemas/NullableSchema'
-import { OptionalSchema } from '@/schemas/OptionalSchema'
-import { TransformSchema } from '@/schemas/TransformSchema'
-import { UnionSchema } from '@/schemas/UnionSchema'
+import type { GenericSchema } from '@/lib/GenericSchema'
 
 // CLASS
 export class ObjectSchema<T> implements GenericSchema<T> {
@@ -20,12 +15,16 @@ export class ObjectSchema<T> implements GenericSchema<T> {
     this._strip = strip
   }
 
+  // --------------------------------------------------------------------------
+
   // FACTORY
   public static create<T>(schema: { [K in keyof T]: GenericSchema<T[K]> }): ObjectSchema<T> {
     return new ObjectSchema(schema, false)
   }
 
-  // METHOD
+  // --------------------------------------------------------------------------
+
+  // VALIDATOR
   public validate(input: unknown): T {
 
     if (typeof input !== 'object' || input === null || Array.isArray(input) || (Object.getPrototypeOf(input) !== Object.prototype && Object.getPrototypeOf(input) !== null)) {
@@ -69,39 +68,11 @@ export class ObjectSchema<T> implements GenericSchema<T> {
 
   }
 
-  // METHOD
-  public isValid(input: unknown): boolean {
-    return GenericSchema.isValid(this, input)
-  }
+  // --------------------------------------------------------------------------
 
   // METHOD
   public strip(): ObjectSchema<T> {
     return new ObjectSchema(this._schema, true)
-  }
-
-  // METHOD
-  public optional(): OptionalSchema<T, undefined> {
-    return OptionalSchema.create(this)
-  }
-
-  // METHOD
-  public nullable(): NullableSchema<T, null> {
-    return NullableSchema.create(this)
-  }
-
-  // METHOD
-  public or<NT>(schema: GenericSchema<NT>): UnionSchema<T | NT> {
-    return UnionSchema.create(this as GenericSchema<T>, schema)
-  }
-
-  // METHOD
-  public fallback(value: T): FallbackSchema<T> {
-    return FallbackSchema.create(this, value)
-  }
-
-  // METHOD
-  public transform<V>(fn: (value: T) => V): TransformSchema<T, V> {
-    return TransformSchema.create(this, fn)
   }
 
 }

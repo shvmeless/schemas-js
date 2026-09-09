@@ -1,11 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import { GenericSchema } from '@/schemas/GenericSchema'
-import { FallbackSchema } from '@/schemas/FallbackSchema'
-import { NullableSchema } from '@/schemas/NullableSchema'
-import { OptionalSchema } from '@/schemas/OptionalSchema'
-import { TransformSchema } from '@/schemas/TransformSchema'
-import { UnionSchema } from '@/schemas/UnionSchema'
+import type { GenericSchema } from '@/lib/GenericSchema'
 import { stringify } from '@/utils/stringify'
 
 // CLASS
@@ -23,12 +18,16 @@ export class ArraySchema<T> implements GenericSchema<Array<T>> {
     this._prune = prune
   }
 
-  // CONSTRUCTOR
+  // --------------------------------------------------------------------------
+
+  // FACTORY
   public static create<T>(schema: GenericSchema<T>): ArraySchema<T> {
     return new ArraySchema<T>(schema, [], false)
   }
 
-  // CONSTRUCTOR
+  // --------------------------------------------------------------------------
+
+  // UPDATER
   private clone(params: {
     schema?: GenericSchema<T>
     queue?: Array<(original: Array<T>, output: Array<T>) => Array<T>>
@@ -41,12 +40,14 @@ export class ArraySchema<T> implements GenericSchema<Array<T>> {
     )
   }
 
-  // CONSTRUCTOR
+  // UPDATER
   private push(fn: (original: Array<T>, output: Array<T>) => Array<T>): ArraySchema<T> {
     return new ArraySchema<T>(this._schema, [...this._queue, fn], this._prune)
   }
 
-  // METHOD
+  // --------------------------------------------------------------------------
+
+  // VALIDATOR
   public validate(input: unknown): Array<T> {
 
     if (!Array.isArray(input)) {
@@ -80,35 +81,7 @@ export class ArraySchema<T> implements GenericSchema<Array<T>> {
 
   }
 
-  // METHOD
-  public isValid(input: unknown): boolean {
-    return GenericSchema.isValid(this, input)
-  }
-
-  // METHOD
-  public optional(): OptionalSchema<Array<T>, undefined> {
-    return OptionalSchema.create(this)
-  }
-
-  // METHOD
-  public nullable(): NullableSchema<Array<T>, null> {
-    return NullableSchema.create(this)
-  }
-
-  // METHOD
-  public or<NT>(schema: GenericSchema<NT>): UnionSchema<Array<T> | NT> {
-    return UnionSchema.create(this as GenericSchema<Array<T>>, schema)
-  }
-
-  // METHOD
-  public fallback(value: Array<T>): FallbackSchema<Array<T>> {
-    return FallbackSchema.create(this, value)
-  }
-
-  // METHOD
-  public transform<V>(fn: (value: Array<T>) => V): TransformSchema<Array<T>, V> {
-    return TransformSchema.create(this, fn)
-  }
+  // --------------------------------------------------------------------------
 
   // METHOD
   public prune(): ArraySchema<T> {

@@ -1,11 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import { GenericSchema } from '@/schemas/GenericSchema'
-import { OptionalSchema } from '@/schemas/OptionalSchema'
-import { NullableSchema } from '@/schemas/NullableSchema'
-import { UnionSchema } from '@/schemas/UnionSchema'
-import { FallbackSchema } from '@/schemas/FallbackSchema'
-import { TransformSchema } from '@/schemas/TransformSchema'
+import type { GenericSchema } from '@/lib/GenericSchema'
 
 // CLASS
 export class EnumSchema<T extends string | number = never> implements GenericSchema<T> {
@@ -21,12 +16,16 @@ export class EnumSchema<T extends string | number = never> implements GenericSch
     }
   }
 
-  // CONSTRUCTOR
+  // --------------------------------------------------------------------------
+
+  // FACTORY
   public static create<T extends string | number = never>(...values: ReadonlyArray<T>): EnumSchema<T> {
     return new EnumSchema(...values)
   }
 
-  // METHOD
+  // --------------------------------------------------------------------------
+
+  // VALIDATOR
   public validate(input: unknown): T {
 
     if (!this._values.includes(input as T)) {
@@ -36,36 +35,6 @@ export class EnumSchema<T extends string | number = never> implements GenericSch
 
     return input as T
 
-  }
-
-  // METHOD
-  public isValid(input: unknown): boolean {
-    return GenericSchema.isValid(this, input)
-  }
-
-  // METHOD
-  public optional(): OptionalSchema<T, undefined> {
-    return OptionalSchema.create(this)
-  }
-
-  // METHOD
-  public nullable(): NullableSchema<T, null> {
-    return NullableSchema.create(this)
-  }
-
-  // METHOD
-  public or<NT>(schema: GenericSchema<NT>): UnionSchema<T | NT> {
-    return UnionSchema.create(this as GenericSchema<T>, schema)
-  }
-
-  // METHOD
-  public fallback(value: T): FallbackSchema<T> {
-    return FallbackSchema.create(this, value)
-  }
-
-  // METHOD
-  public transform<V>(fn: (value: T) => V): TransformSchema<T, V> {
-    return TransformSchema.create(this, fn)
   }
 
 }

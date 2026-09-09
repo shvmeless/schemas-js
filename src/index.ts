@@ -18,6 +18,7 @@ import {
   TupleSchema,
   UndefinedSchema,
   UnknownSchema,
+  UnionSchema,
 } from '@/classes'
 
 // ERRORS
@@ -39,6 +40,7 @@ export const schemas = {
   record: RecordSchema.create,
   tuple: TupleSchema.create,
   object: ObjectSchema.create,
+  union: UnionSchema.create,
   set: SetSchema.create,
   map: MapSchema.create,
 }

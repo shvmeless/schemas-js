@@ -1,11 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import { GenericSchema } from '@/schemas/GenericSchema'
-import { FallbackSchema } from '@/schemas/FallbackSchema'
-import { NullableSchema } from '@/schemas/NullableSchema'
-import { OptionalSchema } from '@/schemas/OptionalSchema'
-import { TransformSchema } from '@/schemas/TransformSchema'
-import { UnionSchema } from '@/schemas/UnionSchema'
+import type { GenericSchema } from '@/lib/GenericSchema'
 import { stringify } from '@/utils/stringify'
 
 // CLASS
@@ -23,17 +18,16 @@ export class SetSchema<T> implements GenericSchema<Set<T>> {
     this._prune = prune
   }
 
-  // CONSTRUCTOR
+  // --------------------------------------------------------------------------
+
+  // FACTORY
   public static create<T>(schema: GenericSchema<T>): SetSchema<T> {
     return new SetSchema<T>(schema, [], false)
   }
 
-  // CONSTRUCTOR
-  private push(fn: (original: Set<T>, output: Set<T>) => Set<T>): SetSchema<T> {
-    return new SetSchema<T>(this._schema, [...this._queue, fn], false)
-  }
+  // --------------------------------------------------------------------------
 
-  // CONSTRUCTOR
+  // UPDATER
   private clone(params: {
     schema?: GenericSchema<T>
     queue?: Array<(original: Set<T>, output: Set<T>) => Set<T>>
@@ -46,7 +40,14 @@ export class SetSchema<T> implements GenericSchema<Set<T>> {
     )
   }
 
-  // METHOD
+  // UPDATER
+  private push(fn: (original: Set<T>, output: Set<T>) => Set<T>): SetSchema<T> {
+    return new SetSchema<T>(this._schema, [...this._queue, fn], false)
+  }
+
+  // --------------------------------------------------------------------------
+
+  // VALIDATOR
   public validate(input: unknown): Set<T> {
 
     if (!(input instanceof Set)) {
@@ -80,35 +81,7 @@ export class SetSchema<T> implements GenericSchema<Set<T>> {
 
   }
 
-  // METHOD
-  public isValid(input: unknown): boolean {
-    return GenericSchema.isValid(this, input)
-  }
-
-  // METHOD
-  public optional(): OptionalSchema<Set<T>, undefined> {
-    return OptionalSchema.create(this)
-  }
-
-  // METHOD
-  public nullable(): NullableSchema<Set<T>, null> {
-    return NullableSchema.create(this)
-  }
-
-  // METHOD
-  public or<NT>(schema: GenericSchema<NT>): UnionSchema<Set<T> | NT> {
-    return UnionSchema.create(this as GenericSchema<Set<T>>, schema)
-  }
-
-  // METHOD
-  public fallback(value: Set<T>): FallbackSchema<Set<T>> {
-    return FallbackSchema.create(this, value)
-  }
-
-  // METHOD
-  public transform<V>(fn: (value: Set<T>) => V): TransformSchema<Set<T>, V> {
-    return TransformSchema.create(this, fn)
-  }
+  // --------------------------------------------------------------------------
 
   // METHOD
   public prune(): SetSchema<T> {

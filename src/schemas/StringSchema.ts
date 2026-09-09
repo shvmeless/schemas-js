@@ -1,11 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import { GenericSchema } from '@/schemas/GenericSchema'
-import { OptionalSchema } from '@/schemas/OptionalSchema'
-import { NullableSchema } from '@/schemas/NullableSchema'
-import { UnionSchema } from '@/schemas/UnionSchema'
-import { FallbackSchema } from '@/schemas/FallbackSchema'
-import { TransformSchema } from '@/schemas/TransformSchema'
+import type { GenericSchema } from '@/lib/GenericSchema'
 import { stringify } from '@/utils/stringify'
 
 // CLASS
@@ -19,17 +14,23 @@ export class StringSchema implements GenericSchema<string> {
     this._queue = queue
   }
 
-  // CONSTRUCTOR
+  // --------------------------------------------------------------------------
+
+  // FACTORY
   public static create(): StringSchema {
     return new StringSchema([])
   }
 
-  // CONSTRUCTOR
+  // --------------------------------------------------------------------------
+
+  // UPDATER
   private push(fn: (original: string, output: string) => string): StringSchema {
     return new StringSchema([...this._queue, fn])
   }
 
-  // METHOD
+  // --------------------------------------------------------------------------
+
+  // VALIDATOR
   public validate(input: unknown): string {
 
     if (typeof input !== 'string') {
@@ -45,35 +46,7 @@ export class StringSchema implements GenericSchema<string> {
 
   }
 
-  // METHOD
-  public isValid(input: unknown): boolean {
-    return GenericSchema.isValid(this, input)
-  }
-
-  // METHOD
-  public optional(): OptionalSchema<string, undefined> {
-    return OptionalSchema.create(this)
-  }
-
-  // METHOD
-  public nullable(): NullableSchema<string, null> {
-    return NullableSchema.create(this)
-  }
-
-  // METHOD
-  public or<NT>(schema: GenericSchema<NT>): UnionSchema<string | NT> {
-    return UnionSchema.create(this as GenericSchema<string>, schema)
-  }
-
-  // METHOD
-  public fallback(value: string): FallbackSchema<string> {
-    return FallbackSchema.create(this, value)
-  }
-
-  // METHOD
-  public transform<V>(fn: (value: string) => V): TransformSchema<string, V> {
-    return TransformSchema.create(this, fn)
-  }
+  // --------------------------------------------------------------------------
 
   // METHOD
   public length(length: number): StringSchema {

@@ -1,35 +1,36 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import { GenericSchema } from '@/schemas/GenericSchema'
-import { OptionalSchema } from '@/schemas/OptionalSchema'
-import { NullableSchema } from '@/schemas/NullableSchema'
-import { UnionSchema } from '@/schemas/UnionSchema'
-import { FallbackSchema } from '@/schemas/FallbackSchema'
-import { TransformSchema } from '@/schemas/TransformSchema'
+import type { GenericSchema } from '@/lib/GenericSchema'
 import { stringify } from '@/utils/stringify'
 
 // CLASS
 export class NumberSchema implements GenericSchema<number> {
 
   // PROPERTIES
-  public readonly _queue: Array<(original: number, output: number) => number>
+  private readonly _queue: Array<(original: number, output: number) => number>
 
   // CONSTRUCTOR
   private constructor(queue: Array<(original: number, output: number) => number>) {
     this._queue = queue
   }
 
-  // CONSTRUCTOR
-  private push(fn: (original: number, output: number) => number): NumberSchema {
-    return new NumberSchema([...this._queue, fn])
-  }
+  // --------------------------------------------------------------------------
 
-  // CONSTRUCTOR
+  // FACTORY
   public static create(): NumberSchema {
     return new NumberSchema([])
   }
 
-  // METHOD
+  // --------------------------------------------------------------------------
+
+  // UPDATER
+  private push(fn: (original: number, output: number) => number): NumberSchema {
+    return new NumberSchema([...this._queue, fn])
+  }
+
+  // --------------------------------------------------------------------------
+
+  // VALIDATOR
   public validate(input: unknown): number {
 
     if (typeof input !== 'number') {
@@ -44,35 +45,7 @@ export class NumberSchema implements GenericSchema<number> {
 
   }
 
-  // METHOD
-  public isValid(input: unknown): boolean {
-    return GenericSchema.isValid(this, input)
-  }
-
-  // METHOD
-  public optional(): OptionalSchema<number, undefined> {
-    return OptionalSchema.create(this)
-  }
-
-  // METHOD
-  public nullable(): NullableSchema<number, null> {
-    return NullableSchema.create(this)
-  }
-
-  // METHOD
-  public or<NT>(schema: GenericSchema<NT>): UnionSchema<number | NT> {
-    return UnionSchema.create(this as GenericSchema<number>, schema)
-  }
-
-  // METHOD
-  public fallback(value: number): FallbackSchema<number> {
-    return FallbackSchema.create(this, value)
-  }
-
-  // METHOD
-  public transform<V>(fn: (value: number) => V): TransformSchema<number, V> {
-    return TransformSchema.create(this, fn)
-  }
+  // --------------------------------------------------------------------------
 
   // METHOD
   public lessThan(target: number, options: { clamp?: boolean } = {}): NumberSchema {

@@ -1,11 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import { GenericSchema } from '@/schemas/GenericSchema'
-import { OptionalSchema } from '@/schemas/OptionalSchema'
-import { NullableSchema } from '@/schemas/NullableSchema'
-import { UnionSchema } from '@/schemas/UnionSchema'
-import { FallbackSchema } from '@/schemas/FallbackSchema'
-import { TransformSchema } from '@/schemas/TransformSchema'
+import type { GenericSchema } from '@/lib/GenericSchema'
 import { stringify } from '@/utils/stringify'
 
 // CLASS
@@ -23,17 +18,16 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
     this._prune = prune
   }
 
-  // CONSTRUCTOR
+  // --------------------------------------------------------------------------
+
+  // FACTORY
   public static create<T>(schema: GenericSchema<T>): RecordSchema<T> {
     return new RecordSchema<T>(schema, [], false)
   }
 
-  // CONSTRUCTOR
-  private push(fn: (original: Record<string, T>, output: Record<string, T>) => Record<string, T>): RecordSchema<T> {
-    return new RecordSchema<T>(this._schema, [...this._queue, fn], this._prune)
-  }
+  // --------------------------------------------------------------------------
 
-  // CONSTRUCTOR
+  // UPDATER
   private clone(params: {
     schema?: GenericSchema<T>
     queue?: Array<(original: Record<string, T>, output: Record<string, T>) => Record<string, T>>
@@ -46,7 +40,14 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
     )
   }
 
-  // METHOD
+  // UPDATER
+  private push(fn: (original: Record<string, T>, output: Record<string, T>) => Record<string, T>): RecordSchema<T> {
+    return new RecordSchema<T>(this._schema, [...this._queue, fn], this._prune)
+  }
+
+  // --------------------------------------------------------------------------
+
+  // VALIDATOR
   public validate(input: unknown): Record<string, T> {
 
     if (typeof input !== 'object' || input === null || Array.isArray(input) || (Object.getPrototypeOf(input) !== Object.prototype && Object.getPrototypeOf(input) !== null)) {
@@ -79,35 +80,7 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
 
   }
 
-  // METHOD
-  public isValid(input: unknown): boolean {
-    return GenericSchema.isValid(this, input)
-  }
-
-  // METHOD
-  public optional(): OptionalSchema<Record<string, T>, undefined> {
-    return OptionalSchema.create(this)
-  }
-
-  // METHOD
-  public nullable(): NullableSchema<Record<string, T>, null> {
-    return NullableSchema.create(this)
-  }
-
-  // METHOD
-  public or<NT>(schema: GenericSchema<NT>): UnionSchema<Record<string, T> | NT> {
-    return UnionSchema.create(this as GenericSchema<Record<string, T>>, schema)
-  }
-
-  // METHOD
-  public fallback(value: Record<string, T>): FallbackSchema<Record<string, T>> {
-    return FallbackSchema.create(this, value)
-  }
-
-  // METHOD
-  public transform<V>(fn: (value: Record<string, T>) => V): TransformSchema<Record<string, T>, V> {
-    return TransformSchema.create(this, fn)
-  }
+  // --------------------------------------------------------------------------
 
   // METHOD
   public prune(): RecordSchema<T> {
