@@ -1,7 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/schemas/GenericSchema'
-import { TransformSchema } from '@/schemas/TransformSchema'
 
 // CLASS
 export class LiteralSchema<T extends string | number | boolean> implements GenericSchema<T> {
@@ -28,11 +27,6 @@ export class LiteralSchema<T extends string | number | boolean> implements Gener
 
     return this._literal
 
-  }
-
-  // METHOD
-  public transform<V>(fn: (value: T) => V): TransformSchema<T, V> {
-    return TransformSchema.create(this, fn)
   }
 
 }

@@ -23,4 +23,3 @@ export { MapSchema } from '@/schemas/MapSchema'
 
 // SPECIAL
 export { UnionSchema } from '@/schemas/UnionSchema'
-export { TransformSchema } from '@/schemas/TransformSchema'

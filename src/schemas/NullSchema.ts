@@ -1,7 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/schemas/GenericSchema'
-import { TransformSchema } from '@/schemas/TransformSchema'
 
 // CLASS
 export class NullSchema implements GenericSchema<null> {
@@ -22,11 +21,6 @@ export class NullSchema implements GenericSchema<null> {
     }
 
     return input
-  }
-
-  // METHOD
-  public transform<V>(fn: (value: null) => V): TransformSchema<null, V> {
-    return TransformSchema.create(this, fn)
   }
 
 }

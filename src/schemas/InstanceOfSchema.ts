@@ -1,7 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/schemas/GenericSchema'
-import { TransformSchema } from '@/schemas/TransformSchema'
 
 // TYPE
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -32,11 +31,6 @@ export class InstanceOfSchema<T extends AnyConstructor> implements GenericSchema
 
     return input as InstanceType<T>
 
-  }
-
-  // METHOD
-  public transform<V>(fn: (value: InstanceType<T>) => V): TransformSchema<InstanceType<T>, V> {
-    return TransformSchema.create(this, fn)
   }
 
 }

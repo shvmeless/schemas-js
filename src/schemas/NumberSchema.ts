@@ -1,7 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/schemas/GenericSchema'
-import { TransformSchema } from '@/schemas/TransformSchema'
 import { stringify } from '@/utils/stringify'
 
 // CLASS
@@ -38,11 +37,6 @@ export class NumberSchema implements GenericSchema<number> {
 
     return output
 
-  }
-
-  // METHOD
-  public transform<V>(fn: (value: number) => V): TransformSchema<number, V> {
-    return TransformSchema.create(this, fn)
   }
 
   // METHOD
