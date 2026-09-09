@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import { GenericSchema } from '@/schemas/GenericSchema'
+import type { GenericSchema } from '@/schemas/GenericSchema'
 import { NullableSchema } from '@/schemas/NullableSchema'
 import { UnionSchema } from '@/schemas/UnionSchema'
 import { FallbackSchema } from '@/schemas/FallbackSchema'
@@ -25,11 +25,6 @@ export class UndefinedSchema implements GenericSchema<undefined> {
     }
 
     return input
-  }
-
-  // METHOD
-  public isValid(input: unknown): boolean {
-    return GenericSchema.isValid(this, input)
   }
 
   // METHOD

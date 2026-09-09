@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import { GenericSchema } from '@/schemas/GenericSchema'
+import type { GenericSchema } from '@/schemas/GenericSchema'
 import { OptionalSchema } from '@/schemas/OptionalSchema'
 import { NullableSchema } from '@/schemas/NullableSchema'
 import { UnionSchema } from '@/schemas/UnionSchema'
@@ -77,11 +77,6 @@ export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
 
     return result
 
-  }
-
-  // METHOD
-  public isValid(input: unknown): boolean {
-    return GenericSchema.isValid(this, input)
   }
 
   // METHOD

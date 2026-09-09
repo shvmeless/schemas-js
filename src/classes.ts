@@ -1,5 +1,5 @@
 // GENEIRIC
-export { GenericSchema } from '@/schemas/GenericSchema'
+export type { GenericSchema } from '@/schemas/GenericSchema'
 
 // BASIC
 export { UnknownSchema } from '@/schemas/UnknownSchema'
