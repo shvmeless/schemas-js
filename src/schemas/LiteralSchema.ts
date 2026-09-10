@@ -26,7 +26,7 @@ export class LiteralSchema<T extends string | number | boolean> implements Gener
   public validate(input: unknown): T {
 
     if (input !== this._literal) {
-      throw new ValidationError(input, `The value must be the literal ${JSON.stringify(this._literal)}.`)
+      throw new ValidationError(input, 'The value must match the literal value.')
     }
 
     return this._literal
