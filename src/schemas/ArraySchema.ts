@@ -7,46 +7,51 @@ import { stringify } from '@/utils/stringify'
 // TYPE
 type ArrayValidations<TItem> = GenericValidations<'length' | 'min' | 'max' | 'some' | 'every' | 'none', Array<TItem>>
 
+// INTERFACE
+interface ArrayConfig<TItem> {
+  schema: GenericSchema<TItem>
+  prune: boolean
+}
+
 // CLASS
 export class ArraySchema<TItem> implements GenericSchema<Array<TItem>> {
 
   // PROPERTIES
-  private readonly _schema: GenericSchema<TItem>
+  private readonly _config: ArrayConfig<TItem>
   private readonly _validations: ArrayValidations<TItem>
-  private readonly _prune: boolean
 
   // CONSTRUCTOR
-  private constructor(schema: GenericSchema<TItem>, validations: ArrayValidations<TItem>, prune: boolean) {
-    this._schema = schema
+  private constructor(config: ArrayConfig<TItem>, validations: ArrayValidations<TItem>) {
+    this._config = config
     this._validations = validations
-    this._prune = prune
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
   public static create<TItem>(schema: GenericSchema<TItem>): ArraySchema<TItem> {
-    return new ArraySchema<TItem>(schema, {}, false)
+    return new ArraySchema<TItem>({
+      schema: schema,
+      prune: false,
+    }, {})
   }
 
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private clone(params: {
-    schema?: GenericSchema<TItem>
-    validations?: ArrayValidations<TItem>
-    prune?: boolean
-  } = {}): ArraySchema<TItem> {
+  private updateConfig(config: Partial<ArrayConfig<TItem>> = {}): ArraySchema<TItem> {
     return new ArraySchema<TItem>(
-      params.schema ?? this._schema,
-      params.validations ?? this._validations,
-      params.prune ?? this._prune,
+      { ...this._config, ...config },
+      this._validations,
     )
   }
 
   // UPDATER
   private updateValidation(validations: ArrayValidations<TItem>): ArraySchema<TItem> {
-    return new ArraySchema<TItem>(this._schema, { ...this._validations, ...validations }, this._prune)
+    return new ArraySchema<TItem>(
+      this._config,
+      { ...this._validations, ...validations },
+    )
   }
 
   // --------------------------------------------------------------------------
@@ -63,11 +68,11 @@ export class ArraySchema<TItem> implements GenericSchema<Array<TItem>> {
 
     input.forEach((element, index) => {
       try {
-        const value = this._schema.validate(element)
+        const value = this._config.schema.validate(element)
         result.push(value)
       } catch (error) {
         if (error instanceof ValidationError) {
-          if (this._prune) return
+          if (this._config.prune) return
           errors.add(index, error)
         } else throw error
       }
@@ -87,8 +92,10 @@ export class ArraySchema<TItem> implements GenericSchema<Array<TItem>> {
 
   // METHOD
   public prune(): ArraySchema<TItem> {
-    return this.clone({ prune: true })
+    return this.updateConfig({ prune: true })
   }
+
+  // --------------------------------------------------------------------------
 
   // METHOD
   public length(length: number): ArraySchema<TItem> {

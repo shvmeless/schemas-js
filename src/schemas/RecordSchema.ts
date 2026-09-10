@@ -7,46 +7,51 @@ import { stringify } from '@/utils/stringify'
 // TYPE
 type RecordValidations<TValue> = GenericValidations<'length' | 'min' | 'max' | 'some' | 'every' | 'none', Record<string, TValue>>
 
+// INTERFACE
+interface RecordConfig<TValue> {
+  schema: GenericSchema<TValue>
+  prune: boolean
+}
+
 // CLASS
 export class RecordSchema<TValue> implements GenericSchema<Record<string, TValue>> {
 
   // PROPERTIES
-  private readonly _schema: GenericSchema<TValue>
+  private readonly _config: RecordConfig<TValue>
   private readonly _validations: RecordValidations<TValue>
-  private readonly _prune: boolean
 
   // CONSTRUCTOR
-  private constructor(schema: GenericSchema<TValue>, validations: RecordValidations<TValue>, prune: boolean) {
-    this._schema = schema
+  private constructor(config: RecordConfig<TValue>, validations: RecordValidations<TValue>) {
+    this._config = config
     this._validations = validations
-    this._prune = prune
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
   public static create<TValue>(schema: GenericSchema<TValue>): RecordSchema<TValue> {
-    return new RecordSchema<TValue>(schema, {}, false)
+    return new RecordSchema<TValue>({
+      schema: schema,
+      prune: false,
+    }, {})
   }
 
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private clone(params: {
-    schema?: GenericSchema<TValue>
-    validations?: RecordValidations<TValue>
-    prune?: boolean
-  } = {}): RecordSchema<TValue> {
+  private updateConfig(config: Partial<RecordConfig<TValue>> = {}): RecordSchema<TValue> {
     return new RecordSchema<TValue>(
-      params.schema ?? this._schema,
-      params.validations ?? this._validations,
-      params.prune ?? this._prune,
+      { ...this._config, ...config },
+      this._validations,
     )
   }
 
   // UPDATER
   private updateValidation(validations: RecordValidations<TValue>): RecordSchema<TValue> {
-    return new RecordSchema<TValue>(this._schema, { ...this._validations, ...validations }, this._prune)
+    return new RecordSchema<TValue>(
+      this._config,
+      { ...this._validations, ...validations },
+    )
   }
 
   // --------------------------------------------------------------------------
@@ -63,10 +68,10 @@ export class RecordSchema<TValue> implements GenericSchema<Record<string, TValue
 
     for (const [key, value] of Object.entries(input)) {
       try {
-        result[key] = this._schema.validate(value)
+        result[key] = this._config.schema.validate(value)
       } catch (error) {
         if (error instanceof ValidationError) {
-          if (this._prune) continue
+          if (this._config.prune) continue
           errors.add(key, error)
         } else throw error
       }
@@ -86,7 +91,7 @@ export class RecordSchema<TValue> implements GenericSchema<Record<string, TValue
 
   // METHOD
   public prune(): RecordSchema<TValue> {
-    return this.clone({ prune: true })
+    return this.updateConfig({ prune: true })
   }
 
   // METHOD

@@ -2,24 +2,43 @@
 import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/lib/GenericSchema'
 
+// INTERFACE
+interface TupleConfig<TShape extends ReadonlyArray<unknown>> {
+  shape: { [K in keyof TShape]: GenericSchema<TShape[K]> }
+  strip: boolean
+}
+
 // CLASS
 export class TupleSchema<TShape extends ReadonlyArray<unknown>> implements GenericSchema<TShape> {
 
   // PROPERTIES
-  private readonly _shape: { [K in keyof TShape]: GenericSchema<TShape[K]> }
-  private readonly _strip: boolean
+  private readonly _config: TupleConfig<TShape>
 
   // CONSTRUCTOR
-  private constructor(shape: { [K in keyof TShape]: GenericSchema<TShape[K]> }, strip: boolean) {
-    this._shape = [...shape] as unknown as { [K in keyof TShape]: GenericSchema<TShape[K]> }
-    this._strip = strip
+  private constructor(config: TupleConfig<TShape>) {
+    this._config = {
+      ...config,
+      shape: [...config.shape] as unknown as { [K in keyof TShape]: GenericSchema<TShape[K]> },
+    }
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
   public static create<TShape extends ReadonlyArray<unknown>>(shape: { [K in keyof TShape]: GenericSchema<TShape[K]> }): TupleSchema<TShape> {
-    return new TupleSchema(shape, false)
+    return new TupleSchema<TShape>({
+      shape: shape,
+      strip: false,
+    })
+  }
+
+  // --------------------------------------------------------------------------
+
+  // UPDATER
+  private updateConfig(config: Partial<TupleConfig<TShape>> = {}): TupleSchema<TShape> {
+    return new TupleSchema<TShape>(
+      { ...this._config, ...config },
+    )
   }
 
   // --------------------------------------------------------------------------
@@ -34,15 +53,15 @@ export class TupleSchema<TShape extends ReadonlyArray<unknown>> implements Gener
     const result: Array<unknown> = []
     const errors = ValidationError.prepare()
 
-    const longest = Math.max(this._shape.length, input.length)
+    const longest = Math.max(this._config.shape.length, input.length)
     for (let index = 0; index < longest; index++) {
       try {
 
         const value = input[index] as unknown
-        const shape = this._shape[index]
+        const shape = this._config.shape[index]
 
         if (shape === undefined) {
-          if (this._strip) continue
+          if (this._config.strip) continue
           throw new ValidationError(value, 'Unexpected element.')
         }
 
@@ -55,8 +74,8 @@ export class TupleSchema<TShape extends ReadonlyArray<unknown>> implements Gener
     }
 
     if (errors.size > 0) {
-      const message = (input.length !== this._shape.length)
-        ? (input.length < this._shape.length)
+      const message = (input.length !== this._config.shape.length)
+        ? (input.length < this._config.shape.length)
             ? 'The tuple is missing one or more required elements.'
             : 'The tuple contains one or more unexpected elements.'
         : 'At least one element does not match the given schema.'
@@ -71,7 +90,7 @@ export class TupleSchema<TShape extends ReadonlyArray<unknown>> implements Gener
 
   // METHOD
   public strip(): TupleSchema<TShape> {
-    return new TupleSchema(this._shape, true)
+    return this.updateConfig({ strip: true })
   }
 
 }

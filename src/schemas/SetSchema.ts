@@ -7,46 +7,51 @@ import { stringify } from '@/utils/stringify'
 // TYPE
 type SetValidations<TValue> = GenericValidations<'size' | 'min' | 'max' | 'some' | 'every' | 'none', Set<TValue>>
 
+// INTERFACE
+interface SetConfig<TValue> {
+  schema: GenericSchema<TValue>
+  prune: boolean
+}
+
 // CLASS
 export class SetSchema<TValue> implements GenericSchema<Set<TValue>> {
 
   // PROPERTIES
-  private readonly _schema: GenericSchema<TValue>
+  private readonly _config: SetConfig<TValue>
   private readonly _validations: SetValidations<TValue>
-  private readonly _prune: boolean
 
   // CONSTRUCTOR
-  private constructor(schema: GenericSchema<TValue>, validations: SetValidations<TValue>, prune: boolean) {
-    this._schema = schema
+  private constructor(config: SetConfig<TValue>, validations: SetValidations<TValue>) {
+    this._config = config
     this._validations = validations
-    this._prune = prune
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
   public static create<TValue>(schema: GenericSchema<TValue>): SetSchema<TValue> {
-    return new SetSchema<TValue>(schema, {}, false)
+    return new SetSchema<TValue>({
+      schema: schema,
+      prune: false,
+    }, {})
   }
 
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private clone(params: {
-    schema?: GenericSchema<TValue>
-    validations?: SetValidations<TValue>
-    prune?: boolean
-  } = {}): SetSchema<TValue> {
+  private updateConfig(config: Partial<SetConfig<TValue>> = {}): SetSchema<TValue> {
     return new SetSchema<TValue>(
-      params.schema ?? this._schema,
-      params.validations ?? this._validations,
-      params.prune ?? this._prune,
+      { ...this._config, ...config },
+      this._validations,
     )
   }
 
   // UPDATER
   private updateValidation(validations: SetValidations<TValue>): SetSchema<TValue> {
-    return new SetSchema<TValue>(this._schema, { ...this._validations, ...validations }, this._prune)
+    return new SetSchema<TValue>(
+      this._config,
+      { ...this._validations, ...validations },
+    )
   }
 
   // --------------------------------------------------------------------------
@@ -63,11 +68,11 @@ export class SetSchema<TValue> implements GenericSchema<Set<TValue>> {
 
     for (const element of input) {
       try {
-        const value = this._schema.validate(element)
+        const value = this._config.schema.validate(element)
         result.add(value)
       } catch (error) {
         if (error instanceof ValidationError) {
-          if (this._prune) continue
+          if (this._config.prune) continue
           errors.add(element, error)
         } else throw error
       }
@@ -87,7 +92,7 @@ export class SetSchema<TValue> implements GenericSchema<Set<TValue>> {
 
   // METHOD
   public prune(): SetSchema<TValue> {
-    return this.clone({ prune: true })
+    return this.updateConfig({ prune: true })
   }
 
   // METHOD

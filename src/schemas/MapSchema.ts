@@ -7,50 +7,53 @@ import { stringify } from '@/utils/stringify'
 // TYPE
 type MapValidations<TKey, TValue> = GenericValidations<'size' | 'min' | 'max' | 'some' | 'every' | 'none', Map<TKey, TValue>>
 
+// INTERFACE
+interface MapConfig<TKey, TValue> {
+  keySchema: GenericSchema<TKey>
+  valueSchema: GenericSchema<TValue>
+  prune: boolean
+}
+
 // CLASS
 export class MapSchema<TKey, TValue> implements GenericSchema<Map<TKey, TValue>> {
 
   // PROPERTIES
-  private readonly _keySchema: GenericSchema<TKey>
-  private readonly _valueSchema: GenericSchema<TValue>
+  private readonly _config: MapConfig<TKey, TValue>
   private readonly _validations: MapValidations<TKey, TValue>
-  private readonly _prune: boolean
 
   // CONSTRUCTOR
-  private constructor(keySchema: GenericSchema<TKey>, valueSchema: GenericSchema<TValue>, validations: MapValidations<TKey, TValue>, prune: boolean) {
-    this._keySchema = keySchema
-    this._valueSchema = valueSchema
+  private constructor(config: MapConfig<TKey, TValue>, validations: MapValidations<TKey, TValue>) {
+    this._config = config
     this._validations = validations
-    this._prune = prune
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
   public static create<TKey, TValue>(keySchema: GenericSchema<TKey>, valueSchema: GenericSchema<TValue>): MapSchema<TKey, TValue> {
-    return new MapSchema(keySchema, valueSchema, {}, false)
+    return new MapSchema<TKey, TValue>({
+      keySchema: keySchema,
+      valueSchema: valueSchema,
+      prune: false,
+    }, {})
   }
 
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private clone(params: {
-    keySchema?: GenericSchema<TKey>
-    valueSchema?: GenericSchema<TValue>
-    validations?: MapValidations<TKey, TValue>
-    prune?: boolean
-  } = {}): MapSchema<TKey, TValue> {
-    return new MapSchema(
-      params.keySchema ?? this._keySchema,
-      params.valueSchema ?? this._valueSchema,
-      params.validations ?? this._validations,
-      params.prune ?? this._prune,
+  private updateConfig(config: Partial<MapConfig<TKey, TValue>> = {}): MapSchema<TKey, TValue> {
+    return new MapSchema<TKey, TValue>(
+      { ...this._config, ...config },
+      this._validations,
     )
   }
 
   // UPDATER
   private updateValidation(validations: MapValidations<TKey, TValue>): MapSchema<TKey, TValue> {
-    return new MapSchema(this._keySchema, this._valueSchema, { ...this._validations, ...validations }, this._prune)
+    return new MapSchema<TKey, TValue>(
+      this._config,
+      { ...this._validations, ...validations },
+    )
   }
 
   // --------------------------------------------------------------------------
@@ -67,12 +70,12 @@ export class MapSchema<TKey, TValue> implements GenericSchema<Map<TKey, TValue>>
 
     input.forEach((value: unknown, key: unknown) => {
       try {
-        const validatedKey = this._keySchema.validate(key)
-        const validatedValue = this._valueSchema.validate(value)
+        const validatedKey = this._config.keySchema.validate(key)
+        const validatedValue = this._config.valueSchema.validate(value)
         result.set(validatedKey, validatedValue)
       } catch (error) {
         if (error instanceof ValidationError) {
-          if (this._prune) return
+          if (this._config.prune) return
           errors.add(key, error)
         } else throw error
       }
@@ -92,7 +95,7 @@ export class MapSchema<TKey, TValue> implements GenericSchema<Map<TKey, TValue>>
 
   // METHOD
   public prune(): MapSchema<TKey, TValue> {
-    return this.clone({ prune: true })
+    return this.updateConfig({ prune: true })
   }
 
   // METHOD

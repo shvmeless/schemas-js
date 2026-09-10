@@ -2,24 +2,40 @@
 import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/lib/GenericSchema'
 
+// INTERFACE
+interface ObjectConfig<TShape> {
+  schema: { [K in keyof TShape]: GenericSchema<TShape[K]> }
+  strip: boolean
+}
+
 // CLASS
 export class ObjectSchema<TShape> implements GenericSchema<TShape> {
 
   // PROPERTIES
-  private readonly _schema: { [K in keyof TShape]: GenericSchema<TShape[K]> }
-  private readonly _strip: boolean
+  private readonly _config: ObjectConfig<TShape>
 
   // CONSTRUCTOR
-  private constructor(schema: { [K in keyof TShape]: GenericSchema<TShape[K]> }, strip: boolean) {
-    this._schema = schema
-    this._strip = strip
+  private constructor(config: ObjectConfig<TShape>) {
+    this._config = config
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
   public static create<TShape>(schema: { [K in keyof TShape]: GenericSchema<TShape[K]> }): ObjectSchema<TShape> {
-    return new ObjectSchema(schema, false)
+    return new ObjectSchema<TShape>({
+      schema: schema,
+      strip: false,
+    })
+  }
+
+  // --------------------------------------------------------------------------
+
+  // UPDATER
+  private updateConfig(config: Partial<ObjectConfig<TShape>> = {}): ObjectSchema<TShape> {
+    return new ObjectSchema<TShape>(
+      { ...this._config, ...config },
+    )
   }
 
   // --------------------------------------------------------------------------
@@ -35,15 +51,15 @@ export class ObjectSchema<TShape> implements GenericSchema<TShape> {
     const result: Record<string, unknown> = {}
     const errors = ValidationError.prepare()
 
-    const keys = new Set([...Object.keys(this._schema), ...Object.keys(input)])
+    const keys = new Set([...Object.keys(this._config.schema), ...Object.keys(input)])
     for (const key of keys) {
       try {
 
         const value = object[key]
-        const schema = this._schema[key as keyof TShape]
+        const schema = this._config.schema[key as keyof TShape]
 
         if (schema === undefined) {
-          if (this._strip) continue
+          if (this._config.strip) continue
           throw new ValidationError(value, 'Unexpected property.')
         }
 
@@ -56,8 +72,8 @@ export class ObjectSchema<TShape> implements GenericSchema<TShape> {
     }
 
     if (errors.size > 0) {
-      const message = (Object.keys(input as object).length !== Object.keys(this._schema).length)
-        ? (Object.keys(input as object).length < Object.keys(this._schema).length)
+      const message = (Object.keys(input as object).length !== Object.keys(this._config.schema).length)
+        ? (Object.keys(input as object).length < Object.keys(this._config.schema).length)
             ? 'The object is missing one or more required properties.'
             : 'The object contains one or more unexpected properties.'
         : 'At least one property does not match the given schema.'
@@ -72,7 +88,7 @@ export class ObjectSchema<TShape> implements GenericSchema<TShape> {
 
   // METHOD
   public strip(): ObjectSchema<TShape> {
-    return new ObjectSchema(this._schema, true)
+    return this.updateConfig({ strip: true })
   }
 
 }
