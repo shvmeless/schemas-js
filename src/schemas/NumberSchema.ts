@@ -1,16 +1,20 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/lib/GenericSchema'
+import { runValidations, type GenericValidations } from '@/utils/validations'
 import { stringify } from '@/utils/stringify'
+
+// TYPE
+type NumberValidations = GenericValidations<'min' | 'max' | 'integer' | 'finite' | 'safe', number>
 
 // CLASS
 export class NumberSchema implements GenericSchema<number> {
 
   // PROPERTIES
-  private readonly _validations: Array<(initial: number, current: number) => undefined>
+  private readonly _validations: NumberValidations
 
   // CONSTRUCTOR
-  private constructor(validations: Array<(initial: number, current: number) => undefined>) {
+  private constructor(validations: NumberValidations) {
     this._validations = validations
   }
 
@@ -18,14 +22,14 @@ export class NumberSchema implements GenericSchema<number> {
 
   // FACTORY
   public static create(): NumberSchema {
-    return new NumberSchema([])
+    return new NumberSchema({})
   }
 
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private push(fn: (initial: number, current: number) => undefined): NumberSchema {
-    return new NumberSchema([...this._validations, fn])
+  private updateValidation(validations: NumberValidations): NumberSchema {
+    return new NumberSchema({ ...this._validations, ...validations })
   }
 
   // --------------------------------------------------------------------------
@@ -37,9 +41,7 @@ export class NumberSchema implements GenericSchema<number> {
       throw new ValidationError(input, 'The value must be a number.')
     }
 
-    for (const fn of this._validations) {
-      fn(input, input)
-    }
+    runValidations(this._validations, input, input)
 
     return input
 
@@ -50,76 +52,94 @@ export class NumberSchema implements GenericSchema<number> {
   // METHOD
   public lessThan(target: number): NumberSchema {
     if (Number.isNaN(target)) throw new Error('The `target` parameter cannot be NaN.')
-    return this.push((initial, current) => {
-      if (current < target) return
-      throw new ValidationError(initial, `The value must be less than ${stringify(target)}.`)
+    return this.updateValidation({
+      max: (current, initial) => {
+        if (current < target) return
+        throw new ValidationError(initial, `The value must be less than ${stringify(target)}.`)
+      },
     })
   }
 
   // METHOD
   public lessThanOrEqual(target: number): NumberSchema {
     if (Number.isNaN(target)) throw new Error('The `target` parameter cannot be NaN.')
-    return this.push((initial, current) => {
-      if (current <= target) return
-      throw new ValidationError(initial, `The value must be less than or equal to ${stringify(target)}.`)
+    return this.updateValidation({
+      max: (current, initial) => {
+        if (current <= target) return
+        throw new ValidationError(initial, `The value must be less than or equal to ${stringify(target)}.`)
+      },
     })
   }
 
   // METHOD
   public greaterThan(target: number): NumberSchema {
     if (Number.isNaN(target)) throw new Error('The `target` parameter cannot be NaN.')
-    return this.push((initial, current) => {
-      if (current > target) return
-      throw new ValidationError(initial, `The value must be greater than ${stringify(target)}.`)
+    return this.updateValidation({
+      min: (current, initial) => {
+        if (current > target) return
+        throw new ValidationError(initial, `The value must be greater than ${stringify(target)}.`)
+      },
     })
   }
 
   // METHOD
   public greaterThanOrEqual(target: number): NumberSchema {
     if (Number.isNaN(target)) throw new Error('The `target` parameter cannot be NaN.')
-    return this.push((initial, current) => {
-      if (current >= target) return
-      throw new ValidationError(initial, `The value must be greater than or equal to ${stringify(target)}.`)
+    return this.updateValidation({
+      min: (current, initial) => {
+        if (current >= target) return
+        throw new ValidationError(initial, `The value must be greater than or equal to ${stringify(target)}.`)
+      },
     })
   }
 
   // METHOD
   public negative(): NumberSchema {
-    return this.push((initial, current) => {
-      if (current < 0) return
-      throw new ValidationError(initial, 'The value must be a negative number.')
+    return this.updateValidation({
+      min: (current, initial) => {
+        if (current < 0) return
+        throw new ValidationError(initial, 'The value must be a negative number.')
+      },
     })
   }
 
   // METHOD
   public positive(): NumberSchema {
-    return this.push((initial, current) => {
-      if (current > 0) return
-      throw new ValidationError(initial, 'The value must be a positive number.')
+    return this.updateValidation({
+      max: (current, initial) => {
+        if (current > 0) return
+        throw new ValidationError(initial, 'The value must be a positive number.')
+      },
     })
   }
 
   // METHOD
   public integer(): NumberSchema {
-    return this.push((initial, current) => {
-      if (Number.isInteger(current)) return
-      throw new ValidationError(initial, 'The value must be an integer.')
+    return this.updateValidation({
+      integer: (current, initial) => {
+        if (Number.isInteger(current)) return
+        throw new ValidationError(initial, 'The value must be an integer.')
+      },
     })
   }
 
   // METHOD
   public finite(): NumberSchema {
-    return this.push((initial, current) => {
-      if (Number.isFinite(current)) return
-      throw new ValidationError(initial, 'The value must be a finite number.')
+    return this.updateValidation({
+      finite: (current, initial) => {
+        if (Number.isFinite(current)) return
+        throw new ValidationError(initial, 'The value must be a finite number.')
+      },
     })
   }
 
   // METHOD
   public safe(): NumberSchema {
-    return this.push((initial, current) => {
-      if (current >= Number.MIN_SAFE_INTEGER && current <= Number.MAX_SAFE_INTEGER) return
-      throw new ValidationError(initial, 'The value must be a safe integer.')
+    return this.updateValidation({
+      safe: (current, initial) => {
+        if (current >= Number.MIN_SAFE_INTEGER && current <= Number.MAX_SAFE_INTEGER) return
+        throw new ValidationError(initial, 'The value must be a safe integer.')
+      },
     })
   }
 
