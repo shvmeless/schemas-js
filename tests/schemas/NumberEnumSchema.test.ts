@@ -13,28 +13,28 @@ describe('.create(...literals)', () => {
     }).toHaveMessage('Must provide at least one literal value.')
   })
 
-  it('initialize with `Infinity` values', () => {
+  it('initializes with `Infinity` values', () => {
     const schema = EnumSchema.create(-Infinity, Infinity)
     expect(schema).toBeInstanceOf(EnumSchema)
     expectValidation(schema, -Infinity).toReturn(-Infinity)
     expectValidation(schema, Infinity).toReturn(Infinity)
   })
 
-  it('initialize with `0` values', () => {
+  it('initializes with `0` values', () => {
     const schema = EnumSchema.create(-0, 0)
     expect(schema).toBeInstanceOf(EnumSchema)
     expectValidation(schema, -0).toReturn(-0)
     expectValidation(schema, 0).toReturn(0)
   })
 
-  it('initialize with decimal number values', () => {
+  it('initializes with decimal number values', () => {
     const schema = EnumSchema.create(-0.1, 0.1)
     expect(schema).toBeInstanceOf(EnumSchema)
     expectValidation(schema, -0.1).toReturn(-0.1)
     expectValidation(schema, 0.1).toReturn(0.1)
   })
 
-  it('initialize with integer number values', () => {
+  it('initializes with integer number values', () => {
     const schema = EnumSchema.create(-100, 100)
     expect(schema).toBeInstanceOf(EnumSchema)
     expectValidation(schema, -100).toReturn(-100)

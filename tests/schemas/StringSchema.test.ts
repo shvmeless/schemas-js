@@ -19,7 +19,7 @@ describe('.validate(input)', () => {
 
   const schema = StringSchema.create()
 
-  it('return when `input` is a string.', () => {
+  it('returns when `input` is a string.', () => {
     expectValidation(schema, 'string').toReturn('string')
     expectValidation(schema, 'text').toReturn('text')
     expectValidation(schema, 'example').toReturn('example')
@@ -46,7 +46,7 @@ describe('.length(length)', () => {
     })
   })
 
-  describe('when `length` is a negative number`', () => {
+  describe('when `length` is a negative number', () => {
     it('throws when the schema is being built.', () => {
       expectError(() => {
         StringSchema.create().length(-8)
@@ -58,6 +58,11 @@ describe('.length(length)', () => {
 
     const base = StringSchema.create()
     const schema = base.length(0)
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(StringSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('returns when `input` length is as expected.', () => {
       expectValidation(schema, '').toReturn('')
@@ -72,6 +77,11 @@ describe('.length(length)', () => {
 
     const base = StringSchema.create()
     const schema = base.length(8)
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(StringSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('throws when `input` length is less than expected.', () => {
       expectValidation(schema, '1234567').toThrow('The value must be 8 characters long.')
@@ -97,7 +107,7 @@ describe('.min(length)', () => {
     })
   })
 
-  describe('when `length` is a negative number`', () => {
+  describe('when `length` is a negative number', () => {
     it('throws when the schema is being built.', () => {
       expectError(() => {
         StringSchema.create().min(-8)
@@ -109,6 +119,11 @@ describe('.min(length)', () => {
 
     const base = StringSchema.create()
     const schema = base.min(0)
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(StringSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('returns when `input` length is as expected.', () => {
       expectValidation(schema, '').toReturn('')
@@ -123,6 +138,11 @@ describe('.min(length)', () => {
 
     const base = StringSchema.create()
     const schema = base.min(8)
+
+    it('returns a new instance of the schema.', () => {
+      expect(schema).toBeInstanceOf(StringSchema)
+      expect(schema).not.toBe(base)
+    })
 
     it('throws when `input` length is less than expected.', () => {
       expectValidation(schema, '1234567').toThrow('The value must be at least 8 characters long.')
@@ -148,7 +168,7 @@ describe('.max(length)', () => {
     })
   })
 
-  describe('when `length` is a negative number`', () => {
+  describe('when `length` is a negative number', () => {
     it('throws when the schema is being built.', () => {
       expectError(() => {
         StringSchema.create().max(-8)

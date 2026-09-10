@@ -7,19 +7,19 @@ import { expectValidation } from '@tests/helpers/expect'
 // METHOD ---------------------------------------------------------------------
 describe('.create(literal)', () => {
 
-  it('initialize with empty string `literal`.', () => {
+  it('initializes with empty string `literal`.', () => {
     const empty = LiteralSchema.create('')
     expect(empty).toBeInstanceOf(LiteralSchema)
     expectValidation(empty, '').toReturn('')
   })
 
-  it('initialize with single character `literal`.', () => {
+  it('initializes with single character `literal`.', () => {
     const a = LiteralSchema.create('A')
     expect(a).toBeInstanceOf(LiteralSchema)
     expectValidation(a, 'A').toReturn('A')
   })
 
-  it('initialize with long string `literal`.', () => {
+  it('initializes with long string `literal`.', () => {
     const schema = LiteralSchema.create('I write these words in steel, for anything not set in metal cannot be trusted.')
     expect(schema).toBeInstanceOf(LiteralSchema)
     expectValidation(schema, 'I write these words in steel, for anything not set in metal cannot be trusted.').toReturn('I write these words in steel, for anything not set in metal cannot be trusted.')

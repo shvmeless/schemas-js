@@ -25,7 +25,7 @@ describe('.validate(input)', () => {
     })
   })
 
-  it('returns when `input` is a instance of the `constructor`.', () => {
+  it('returns when `input` is an instance of the `constructor`.', () => {
     expectValidation(schema, new Date()).toReturnInstanceOf(Date)
     expectValidation(schema, new Date('1993-06-26')).toReturnInstanceOf(Date)
     expectValidation(schema, new Date(741052800000)).toReturnInstanceOf(Date)

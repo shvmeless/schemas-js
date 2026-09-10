@@ -7,7 +7,7 @@ import { expectValidation } from '@tests/helpers/expect'
 // METHOD ---------------------------------------------------------------------
 describe('.create(literal)', () => {
 
-  it('initialize with `Infinity` values', () => {
+  it('initializes with `Infinity` values', () => {
     const negative = LiteralSchema.create(-Infinity)
     expect(negative).toBeInstanceOf(LiteralSchema)
     expectValidation(negative, -Infinity).toReturn(-Infinity)
@@ -17,7 +17,7 @@ describe('.create(literal)', () => {
     expectValidation(positive, Infinity).toReturn(Infinity)
   })
 
-  it('initialize with `0` values', () => {
+  it('initializes with `0` values', () => {
     const negative = LiteralSchema.create(-0)
     expect(negative).toBeInstanceOf(LiteralSchema)
     expectValidation(negative, -0).toReturn(-0)
@@ -27,7 +27,7 @@ describe('.create(literal)', () => {
     expectValidation(positive, 0).toReturn(0)
   })
 
-  it('initialize with decimal number values', () => {
+  it('initializes with decimal number values', () => {
     const negative = LiteralSchema.create(-0.1)
     expect(negative).toBeInstanceOf(LiteralSchema)
     expectValidation(negative, -0.1).toReturn(-0.1)
@@ -37,7 +37,7 @@ describe('.create(literal)', () => {
     expectValidation(positive, 0.1).toReturn(0.1)
   })
 
-  it('initialize with integer number values', () => {
+  it('initializes with integer number values', () => {
     const negative = LiteralSchema.create(-100)
     expect(negative).toBeInstanceOf(LiteralSchema)
     expectValidation(negative, -100).toReturn(-100)

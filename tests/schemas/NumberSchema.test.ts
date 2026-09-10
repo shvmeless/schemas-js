@@ -203,7 +203,7 @@ describe('.greaterThanOrEqual(target, { clamp })', () => {
     expectValidation(schema, -Infinity).toThrow('The value must be greater than or equal to 500.')
   })
 
-  it('throws when `input` is equal to `target`.', () => {
+  it('returns when `input` is equal to `target`.', () => {
     expectValidation(schema, 500).toReturn(500)
   })
 
@@ -227,7 +227,7 @@ describe('.negative()', () => {
     expect(schema).not.toBe(base)
   })
 
-  it('throws when `input` is a negative number.', () => {
+  it('returns when `input` is a negative number.', () => {
     expectValidation(schema, -0.001).toReturn(-0.001)
     expectValidation(schema, -1).toReturn(-1)
     expectValidation(schema, Number.MIN_SAFE_INTEGER).toReturn(Number.MIN_SAFE_INTEGER)
@@ -239,7 +239,7 @@ describe('.negative()', () => {
     expectValidation(schema, 0).toThrow('The value must be a negative number.')
   })
 
-  it('returns when `input` is a negative number.', () => {
+  it('throws when `input` is a positive number.', () => {
     expectValidation(schema, 0.001).toThrow('The value must be a negative number.')
     expectValidation(schema, 1).toThrow('The value must be a negative number.')
     expectValidation(schema, Number.MAX_SAFE_INTEGER).toThrow('The value must be a negative number.')

@@ -13,13 +13,13 @@ describe('.create(...literals)', () => {
     }).toHaveMessage('Must provide at least one literal value.')
   })
 
-  it('initialize with empty string `literal`.', () => {
+  it('initializes with empty string `literal`.', () => {
     const schema = EnumSchema.create('')
     expect(schema).toBeInstanceOf(EnumSchema)
     expectValidation(schema, '').toReturn('')
   })
 
-  it('initialize with single character `literal`.', () => {
+  it('initializes with single character `literal`.', () => {
     const schema = EnumSchema.create('A', 'B', 'C')
     expect(schema).toBeInstanceOf(EnumSchema)
     expectValidation(schema, 'A').toReturn('A')
@@ -27,7 +27,7 @@ describe('.create(...literals)', () => {
     expectValidation(schema, 'C').toReturn('C')
   })
 
-  it('initialize with long string `literal`.', () => {
+  it('initializes with long string `literal`.', () => {
     const schema = EnumSchema.create('I write these words in steel', 'Anything not set in metal cannot be trusted.')
     expect(schema).toBeInstanceOf(EnumSchema)
     expectValidation(schema, 'I write these words in steel').toReturn('I write these words in steel')
