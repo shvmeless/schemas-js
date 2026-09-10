@@ -3,14 +3,14 @@ import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/lib/GenericSchema'
 
 // CLASS
-export class ObjectSchema<T> implements GenericSchema<T> {
+export class ObjectSchema<TShape> implements GenericSchema<TShape> {
 
   // PROPERTIES
-  private readonly _schema: { [K in keyof T]: GenericSchema<T[K]> }
+  private readonly _schema: { [K in keyof TShape]: GenericSchema<TShape[K]> }
   private readonly _strip: boolean
 
   // CONSTRUCTOR
-  private constructor(schema: { [K in keyof T]: GenericSchema<T[K]> }, strip: boolean) {
+  private constructor(schema: { [K in keyof TShape]: GenericSchema<TShape[K]> }, strip: boolean) {
     this._schema = schema
     this._strip = strip
   }
@@ -18,14 +18,14 @@ export class ObjectSchema<T> implements GenericSchema<T> {
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<T>(schema: { [K in keyof T]: GenericSchema<T[K]> }): ObjectSchema<T> {
+  public static create<TShape>(schema: { [K in keyof TShape]: GenericSchema<TShape[K]> }): ObjectSchema<TShape> {
     return new ObjectSchema(schema, false)
   }
 
   // --------------------------------------------------------------------------
 
   // VALIDATOR
-  public validate(input: unknown): T {
+  public validate(input: unknown): TShape {
 
     if (typeof input !== 'object' || input === null || Array.isArray(input) || (Object.getPrototypeOf(input) !== Object.prototype && Object.getPrototypeOf(input) !== null)) {
       throw new ValidationError(input, 'The value must be an object.')
@@ -40,7 +40,7 @@ export class ObjectSchema<T> implements GenericSchema<T> {
       try {
 
         const value = object[key]
-        const schema = this._schema[key as keyof T]
+        const schema = this._schema[key as keyof TShape]
 
         if (schema === undefined) {
           if (this._strip) continue
@@ -64,14 +64,14 @@ export class ObjectSchema<T> implements GenericSchema<T> {
       errors.throw(input, message)
     }
 
-    return result as T
+    return result as TShape
 
   }
 
   // --------------------------------------------------------------------------
 
   // METHOD
-  public strip(): ObjectSchema<T> {
+  public strip(): ObjectSchema<TShape> {
     return new ObjectSchema(this._schema, true)
   }
 

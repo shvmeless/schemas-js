@@ -7,33 +7,33 @@ import type { GenericSchema } from '@/lib/GenericSchema'
 type AnyConstructor<T = unknown> = abstract new (...args: Array<any>) => T
 
 // CLASS
-export class InstanceOfSchema<T extends AnyConstructor> implements GenericSchema<InstanceType<T>> {
+export class InstanceOfSchema<TConstructor extends AnyConstructor> implements GenericSchema<InstanceType<TConstructor>> {
 
   // PROPERTIES
-  private readonly _constructor: T
+  private readonly _constructor: TConstructor
 
   // CONSTRUCTOR
-  private constructor(constructor: T) {
+  private constructor(constructor: TConstructor) {
     this._constructor = constructor
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<T extends AnyConstructor>(constructor: T): InstanceOfSchema<T> {
+  public static create<TConstructor extends AnyConstructor>(constructor: TConstructor): InstanceOfSchema<TConstructor> {
     return new InstanceOfSchema(constructor)
   }
 
   // --------------------------------------------------------------------------
 
   // VALIDATOR
-  public validate(input: unknown): InstanceType<T> {
+  public validate(input: unknown): InstanceType<TConstructor> {
 
     if (!(input instanceof this._constructor)) {
       throw new ValidationError(input, `Expected instance of ${this._constructor.name}.`)
     }
 
-    return input as InstanceType<T>
+    return input as InstanceType<TConstructor>
 
   }
 

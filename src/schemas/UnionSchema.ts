@@ -7,13 +7,13 @@ type InferSchemaType<I> = I extends GenericSchema<infer T> ? T : never
 type SchemaTypeUnion<A extends ReadonlyArray<GenericSchema<unknown>>> = InferSchemaType<A[number]>
 
 // CLASS
-export class UnionSchema<T> implements GenericSchema<T> {
+export class UnionSchema<TSchemas> implements GenericSchema<TSchemas> {
 
   // PROPERTIES
-  private readonly _schemas: ReadonlyArray<GenericSchema<T>>
+  private readonly _schemas: ReadonlyArray<GenericSchema<TSchemas>>
 
   // CONSTRUCTOR
-  private constructor(...schemas: ReadonlyArray<GenericSchema<T>>) {
+  private constructor(...schemas: ReadonlyArray<GenericSchema<TSchemas>>) {
     if (schemas.length < 2) throw new Error('Must provide at least two schemas.')
     this._schemas = schemas
   }
@@ -28,11 +28,11 @@ export class UnionSchema<T> implements GenericSchema<T> {
   // --------------------------------------------------------------------------
 
   // VALIDATOR
-  public validate(input: unknown): T {
+  public validate(input: unknown): TSchemas {
 
     for (const schema of this._schemas) {
       try {
-        return schema.validate(input) as T
+        return schema.validate(input) as TSchemas
       } catch (error) {
         if (error instanceof ValidationError) continue
         else throw error

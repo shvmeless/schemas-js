@@ -3,29 +3,29 @@ import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/lib/GenericSchema'
 
 // CLASS
-export class TupleSchema<T extends ReadonlyArray<unknown>> implements GenericSchema<T> {
+export class TupleSchema<TShape extends ReadonlyArray<unknown>> implements GenericSchema<TShape> {
 
   // PROPERTIES
-  private readonly _shape: { [K in keyof T]: GenericSchema<T[K]> }
+  private readonly _shape: { [K in keyof TShape]: GenericSchema<TShape[K]> }
   private readonly _strip: boolean
 
   // CONSTRUCTOR
-  private constructor(shape: { [K in keyof T]: GenericSchema<T[K]> }, strip: boolean) {
-    this._shape = [...shape] as unknown as { [K in keyof T]: GenericSchema<T[K]> }
+  private constructor(shape: { [K in keyof TShape]: GenericSchema<TShape[K]> }, strip: boolean) {
+    this._shape = [...shape] as unknown as { [K in keyof TShape]: GenericSchema<TShape[K]> }
     this._strip = strip
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<T extends ReadonlyArray<unknown>>(shape: { [K in keyof T]: GenericSchema<T[K]> }): TupleSchema<T> {
+  public static create<TShape extends ReadonlyArray<unknown>>(shape: { [K in keyof TShape]: GenericSchema<TShape[K]> }): TupleSchema<TShape> {
     return new TupleSchema(shape, false)
   }
 
   // --------------------------------------------------------------------------
 
   // VALIDATOR
-  public validate(input: unknown): T {
+  public validate(input: unknown): TShape {
 
     if (!Array.isArray(input)) {
       throw new ValidationError(input, 'The value must be an array.')
@@ -63,14 +63,14 @@ export class TupleSchema<T extends ReadonlyArray<unknown>> implements GenericSch
       errors.throw(input, message)
     }
 
-    return result as unknown as T
+    return result as unknown as TShape
 
   }
 
   // --------------------------------------------------------------------------
 
   // METHOD
-  public strip(): TupleSchema<T> {
+  public strip(): TupleSchema<TShape> {
     return new TupleSchema(this._shape, true)
   }
 

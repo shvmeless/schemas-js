@@ -3,13 +3,13 @@ import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema } from '@/lib/GenericSchema'
 
 // CLASS
-export class EnumSchema<T extends string | number = never> implements GenericSchema<T> {
+export class EnumSchema<TValue extends string | number = never> implements GenericSchema<TValue> {
 
   // PROPERTIES
-  private readonly _values: ReadonlyArray<T>
+  private readonly _values: ReadonlyArray<TValue>
 
   // CONSTRUCTOR
-  private constructor(...values: ReadonlyArray<T>) {
+  private constructor(...values: ReadonlyArray<TValue>) {
     this._values = values
     if (this._values.length === 0) {
       throw new Error('Must provide at least one literal value.')
@@ -19,20 +19,20 @@ export class EnumSchema<T extends string | number = never> implements GenericSch
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<T extends string | number = never>(...values: ReadonlyArray<T>): EnumSchema<T> {
+  public static create<TValue extends string | number = never>(...values: ReadonlyArray<TValue>): EnumSchema<TValue> {
     return new EnumSchema(...values)
   }
 
   // --------------------------------------------------------------------------
 
   // VALIDATOR
-  public validate(input: unknown): T {
+  public validate(input: unknown): TValue {
 
-    if (!this._values.includes(input as T)) {
+    if (!this._values.includes(input as TValue)) {
       throw new ValidationError(input, 'The value must be match one of the allowed literal values.')
     }
 
-    return input as T
+    return input as TValue
 
   }
 
