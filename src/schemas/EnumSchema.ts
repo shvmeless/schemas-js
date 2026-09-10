@@ -29,8 +29,7 @@ export class EnumSchema<T extends string | number = never> implements GenericSch
   public validate(input: unknown): T {
 
     if (!this._values.includes(input as T)) {
-      const valuesStr = this._values.map((v) => JSON.stringify(v)).join(', ')
-      throw new ValidationError(input, `The value must be one of ${valuesStr}.`)
+      throw new ValidationError(input, 'The value must be match one of the allowed literal values.')
     }
 
     return input as T
