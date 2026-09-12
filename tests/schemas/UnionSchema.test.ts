@@ -57,3 +57,35 @@ describe('.validate(input)', () => {
     })
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.optional()', () => {
+
+  const base = UnionSchema.create(
+    StringSchema.create(),
+    NumberSchema.create(),
+    BooleanSchema.create(),
+  )
+  const schema = base.optional()
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(UnionSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` matches any of the `inner` schemas.', () => {
+    expectValidation(schema, 'STRING').toReturn('STRING')
+    expectValidation(schema, 250).toReturn(250)
+    expectValidation(schema, true).toReturn(true)
+  })
+
+  it('returns when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn(undefined)
+  })
+
+  it('throws when `input` does not match any of the `inner` schemas.', () => {
+    DataTypeGenerator.skip('strings', 'numbers', 'booleans', 'undefined').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value does not match any of the given schemas.')
+    })
+  })
+})

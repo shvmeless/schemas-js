@@ -90,6 +90,54 @@ describe('.prune()', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
+describe('.optional()', () => {
+
+  const base = ArraySchema.create(StringSchema.create())
+  const schema = base.optional()
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(ArraySchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` is an array.', () => {
+    const input: Array<string> = []
+    const expected: Array<string> = []
+    expectValidation(schema, input).toReturnNew(expected)
+  })
+
+  it('returns when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn(undefined)
+  })
+
+  it('throws when `input` is not an array.', () => {
+    DataTypeGenerator.skip('arrays', 'undefined').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be an array.')
+    })
+  })
+
+  it('returns when all `input` elements match the `shape` schema.', () => {
+    const input = ['a', 'b', 'c']
+    const expected = ['a', 'b', 'c']
+    expectValidation(schema, input).toReturnNew(expected)
+  })
+
+  it('throws when at least one `input` element does not match the `shape` schema.', () => {
+    const input = [true, 'b', 255]
+    expectValidation(schema, input).toThrow('At least one element does not match the given schema.', [
+      [0, {
+        value: true,
+        message: 'The value must be a string.',
+      }],
+      [2, {
+        value: 255,
+        message: 'The value must be a string.',
+      }],
+    ])
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
 describe('.length(length)', () => {
   describe('when `length` is `NaN`', () => {
     it('throws when the schema is being built.', () => {

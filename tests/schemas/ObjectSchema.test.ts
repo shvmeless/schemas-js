@@ -115,3 +115,49 @@ describe('.strip()', () => {
     expectValidation(schema, input).toReturnNew(expected)
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.optional()', () => {
+
+  const base = ObjectSchema.create({
+    string: StringSchema.create(),
+    number: NumberSchema.create(),
+    boolean: BooleanSchema.create(),
+  })
+  const schema = base.optional()
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(ObjectSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` matches the `shape` schema.', () => {
+    const input = { string: 'STRING', number: 74105280, boolean: true }
+    const expected = { string: 'STRING', number: 74105280, boolean: true }
+    expectValidation(schema, input).toReturnNew(expected)
+  })
+
+  it('returns when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn(undefined)
+  })
+
+  it('throws when `input` is not an object.', () => {
+    DataTypeGenerator.skip('objects', 'undefined').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be an object.')
+    })
+  })
+
+  it('throws when `input` contains fewer properties than expected.', () => {
+    const input = { string: 'STRING' }
+    expectValidation(schema, input).toThrow('The object is missing one or more required properties.', [
+      ['number', {
+        value: undefined,
+        message: 'The value must be a number.',
+      }],
+      ['boolean', {
+        value: undefined,
+        message: 'The value must be a boolean.',
+      }],
+    ])
+  })
+})

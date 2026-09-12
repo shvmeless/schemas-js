@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema } from '@/lib/GenericSchema'
+import type { GenericSchema, Optional } from '@/lib/GenericSchema'
 import { runValidations, type GenericValidations } from '@/utils/validations'
 import { stringify } from '@/utils/stringify'
 
@@ -8,20 +8,22 @@ import { stringify } from '@/utils/stringify'
 type ArrayValidations<TItem> = GenericValidations<'length' | 'min' | 'max' | 'some' | 'every' | 'none', Array<TItem>>
 
 // INTERFACE
-interface ArrayConfig<TItem> {
+interface ArrayConfig<TItem, TOptional extends boolean> {
   schema: GenericSchema<TItem>
   prune: boolean
+  optional: TOptional
 }
 
 // CLASS
-export class ArraySchema<TItem> implements GenericSchema<Array<TItem>> {
+export class ArraySchema<TItem, TOptional extends boolean>
+implements GenericSchema<Optional<Array<TItem>, TOptional>> {
 
   // PROPERTIES
-  private readonly _config: ArrayConfig<TItem>
+  private readonly _config: ArrayConfig<TItem, TOptional>
   private readonly _validations: ArrayValidations<TItem>
 
   // CONSTRUCTOR
-  private constructor(config: ArrayConfig<TItem>, validations: ArrayValidations<TItem>) {
+  private constructor(config: ArrayConfig<TItem, TOptional>, validations: ArrayValidations<TItem>) {
     this._config = config
     this._validations = validations
   }
@@ -29,26 +31,19 @@ export class ArraySchema<TItem> implements GenericSchema<Array<TItem>> {
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TItem>(schema: GenericSchema<TItem>): ArraySchema<TItem> {
-    return new ArraySchema<TItem>({
+  public static create<TItem>(schema: GenericSchema<TItem>): ArraySchema<TItem, false> {
+    return new ArraySchema({
       schema: schema,
       prune: false,
+      optional: false,
     }, {})
   }
 
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private updateConfig(config: Partial<ArrayConfig<TItem>> = {}): ArraySchema<TItem> {
-    return new ArraySchema<TItem>(
-      { ...this._config, ...config },
-      this._validations,
-    )
-  }
-
-  // UPDATER
-  private updateValidation(validations: ArrayValidations<TItem>): ArraySchema<TItem> {
-    return new ArraySchema<TItem>(
+  private updateValidation(validations: ArrayValidations<TItem>): ArraySchema<TItem, TOptional> {
+    return new ArraySchema(
       this._config,
       { ...this._validations, ...validations },
     )
@@ -57,19 +52,21 @@ export class ArraySchema<TItem> implements GenericSchema<Array<TItem>> {
   // --------------------------------------------------------------------------
 
   // VALIDATOR
-  public validate(input: unknown): Array<TItem> {
+  public validate(input: unknown): Optional<Array<TItem>, TOptional> {
+
+    if (input === undefined && this._config.optional) return input as Optional<Array<TItem>, TOptional>
 
     if (!Array.isArray(input)) {
       throw new ValidationError(input, 'The value must be an array.')
     }
 
-    const result: Array<TItem> = []
+    const output: Array<TItem> = []
     const errors = ValidationError.prepare()
 
     input.forEach((element, index) => {
       try {
         const value = this._config.schema.validate(element)
-        result.push(value)
+        output.push(value)
       } catch (error) {
         if (error instanceof ValidationError) {
           if (this._config.prune) return
@@ -82,23 +79,34 @@ export class ArraySchema<TItem> implements GenericSchema<Array<TItem>> {
       errors.throw(input, 'At least one element does not match the given schema.')
     }
 
-    runValidations(this._validations, input, result)
+    runValidations(this._validations, input, output)
 
-    return result
+    return output as Optional<Array<TItem>, TOptional>
 
   }
 
   // --------------------------------------------------------------------------
 
-  // METHOD
-  public prune(): ArraySchema<TItem> {
-    return this.updateConfig({ prune: true })
+  // CONFIG
+  public prune(): ArraySchema<TItem, TOptional> {
+    return new ArraySchema({
+      ...this._config,
+      prune: true,
+    }, this._validations)
+  }
+
+  // CONFIG
+  public optional(): ArraySchema<TItem, true> {
+    return new ArraySchema({
+      ...this._config,
+      optional: true,
+    }, this._validations)
   }
 
   // --------------------------------------------------------------------------
 
   // METHOD
-  public length(length: number): ArraySchema<TItem> {
+  public length(length: number): ArraySchema<TItem, TOptional> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
     return this.updateValidation({
@@ -112,7 +120,7 @@ export class ArraySchema<TItem> implements GenericSchema<Array<TItem>> {
   }
 
   // METHOD
-  public min(length: number): ArraySchema<TItem> {
+  public min(length: number): ArraySchema<TItem, TOptional> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
     return this.updateValidation({
@@ -124,7 +132,7 @@ export class ArraySchema<TItem> implements GenericSchema<Array<TItem>> {
   }
 
   // METHOD
-  public max(length: number): ArraySchema<TItem> {
+  public max(length: number): ArraySchema<TItem, TOptional> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
     return this.updateValidation({
@@ -136,7 +144,7 @@ export class ArraySchema<TItem> implements GenericSchema<Array<TItem>> {
   }
 
   // METHOD
-  public some(callback: (value: TItem, index: number, array: Array<TItem>) => boolean): ArraySchema<TItem> {
+  public some(callback: (value: TItem, index: number, array: Array<TItem>) => boolean): ArraySchema<TItem, TOptional> {
     return this.updateValidation({
       some: (current, initial) => {
         for (let index = 0; index < current.length; index++) {
@@ -149,7 +157,7 @@ export class ArraySchema<TItem> implements GenericSchema<Array<TItem>> {
   }
 
   // METHOD
-  public every(callback: (value: TItem, index: number, array: Array<TItem>) => boolean): ArraySchema<TItem> {
+  public every(callback: (value: TItem, index: number, array: Array<TItem>) => boolean): ArraySchema<TItem, TOptional> {
     return this.updateValidation({
       every: (current, initial) => {
         for (let index = 0; index < current.length; index++) {
@@ -161,7 +169,7 @@ export class ArraySchema<TItem> implements GenericSchema<Array<TItem>> {
   }
 
   // METHOD
-  public none(callback: (value: TItem, index: number, array: Array<TItem>) => boolean): ArraySchema<TItem> {
+  public none(callback: (value: TItem, index: number, array: Array<TItem>) => boolean): ArraySchema<TItem, TOptional> {
     return this.updateValidation({
       none: (current, initial) => {
         for (let index = 0; index < current.length; index++) {

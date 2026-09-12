@@ -30,3 +30,30 @@ describe('.validate(input)', () => {
     })
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.optional()', () => {
+
+  const base = BooleanSchema.create()
+  const schema = base.optional()
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(BooleanSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` is a boolean.', () => {
+    expectValidation(schema, true).toReturn(true)
+    expectValidation(schema, false).toReturn(false)
+  })
+
+  it('returns when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn(undefined)
+  })
+
+  it('throws when `input` is not a boolean.', () => {
+    DataTypeGenerator.skip('booleans', 'undefined').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be a boolean.')
+    })
+  })
+})

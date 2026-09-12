@@ -25,3 +25,25 @@ describe('.validate(input)', () => {
     })
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.optional()', () => {
+
+  const base = AnySchema.create()
+  const schema = base.optional()
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(AnySchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns any `input` as `any`.', () => {
+    DataTypeGenerator.skip('undefined').forEach((value) => {
+      expectValidation(schema, value).toReturn(value)
+    })
+  })
+
+  it('returns when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn(undefined)
+  })
+})

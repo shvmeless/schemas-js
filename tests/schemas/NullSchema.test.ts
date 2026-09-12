@@ -29,3 +29,29 @@ describe('.validate(input)', () => {
     })
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.optional()', () => {
+
+  const base = NullSchema.create()
+  const schema = base.optional()
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(NullSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` is `null`.', () => {
+    expectValidation(schema, null).toReturn(null)
+  })
+
+  it('returns when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn(undefined)
+  })
+
+  it('throws when `input` is not `null`.', () => {
+    DataTypeGenerator.skip('null', 'undefined').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be null.')
+    })
+  })
+})

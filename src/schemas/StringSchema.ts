@@ -1,41 +1,51 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema } from '@/lib/GenericSchema'
+import type { GenericSchema, Optional } from '@/lib/GenericSchema'
 import { runValidations, type GenericValidations } from '@/utils/validations'
 import { stringify } from '@/utils/stringify'
 
 // TYPE
 type StringValidations = GenericValidations<'length' | 'min' | 'max' | 'casing' | 'trim' | 'prefix' | 'suffix' | 'includes' | 'excludes' | 'pattern', string>
 
+// INTERFACE
+interface StringConfig<TOptional extends boolean> {
+  optional: TOptional
+}
+
 // CLASS
-export class StringSchema implements GenericSchema<string> {
+export class StringSchema<TOptional extends boolean>
+implements GenericSchema<Optional<string, TOptional>> {
 
   // PROPERTIES
+  private readonly _config: StringConfig<TOptional>
   private readonly _validations: StringValidations
 
   // CONSTRUCTOR
-  private constructor(validations: StringValidations) {
+  private constructor(config: StringConfig<TOptional>, validations: StringValidations) {
+    this._config = config
     this._validations = validations
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create(): StringSchema {
-    return new StringSchema({})
+  public static create(): StringSchema<false> {
+    return new StringSchema({ optional: false }, {})
   }
 
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private updateValidation(validations: StringValidations): StringSchema {
-    return new StringSchema({ ...this._validations, ...validations })
+  private updateValidation(validations: StringValidations): StringSchema<TOptional> {
+    return new StringSchema(this._config, { ...this._validations, ...validations })
   }
 
   // --------------------------------------------------------------------------
 
   // VALIDATOR
-  public validate(input: unknown): string {
+  public validate(input: unknown): Optional<string, TOptional> {
+
+    if (input === undefined && this._config.optional) return input as Optional<string, TOptional>
 
     if (typeof input !== 'string') {
       throw new ValidationError(input, 'The value must be a string.')
@@ -43,14 +53,19 @@ export class StringSchema implements GenericSchema<string> {
 
     runValidations(this._validations, input, input)
 
-    return input
+    return input as Optional<string, TOptional>
 
   }
 
   // --------------------------------------------------------------------------
 
+  // CONFIG
+  public optional(): StringSchema<true> {
+    return new StringSchema({ ...this._config, optional: true }, this._validations)
+  }
+
   // METHOD
-  public length(length: number): StringSchema {
+  public length(length: number): StringSchema<TOptional> {
     if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
     return this.updateValidation({
       min: undefined,
@@ -63,7 +78,7 @@ export class StringSchema implements GenericSchema<string> {
   }
 
   // METHOD
-  public min(length: number): StringSchema {
+  public min(length: number): StringSchema<TOptional> {
     if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
     return this.updateValidation({
       min: (current, initial) => {
@@ -74,7 +89,7 @@ export class StringSchema implements GenericSchema<string> {
   }
 
   // METHOD
-  public max(length: number): StringSchema {
+  public max(length: number): StringSchema<TOptional> {
     if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
     return this.updateValidation({
       max: (current, initial) => {
@@ -85,7 +100,7 @@ export class StringSchema implements GenericSchema<string> {
   }
 
   // METHOD
-  public lowercase(): StringSchema {
+  public lowercase(): StringSchema<TOptional> {
     return this.updateValidation({
       casing: (current, initial) => {
         if (current.toLowerCase() === current) return
@@ -96,7 +111,7 @@ export class StringSchema implements GenericSchema<string> {
   }
 
   // METHOD
-  public uppercase(): StringSchema {
+  public uppercase(): StringSchema<TOptional> {
     return this.updateValidation({
       casing: (current, initial) => {
         if (current.toUpperCase() === current) return
@@ -107,7 +122,7 @@ export class StringSchema implements GenericSchema<string> {
   }
 
   // METHOD
-  public trim(): StringSchema {
+  public trim(): StringSchema<TOptional> {
     return this.updateValidation({
       trim: (current, initial) => {
         if (current.trim() === current) return
@@ -117,7 +132,7 @@ export class StringSchema implements GenericSchema<string> {
   }
 
   // METHOD
-  public startsWith(prefix: string): StringSchema {
+  public startsWith(prefix: string): StringSchema<TOptional> {
     return this.updateValidation({
       prefix: (current, initial) => {
         if (current.startsWith(prefix)) return
@@ -127,7 +142,7 @@ export class StringSchema implements GenericSchema<string> {
   }
 
   // METHOD
-  public endsWith(suffix: string): StringSchema {
+  public endsWith(suffix: string): StringSchema<TOptional> {
     return this.updateValidation({
       suffix: (current, initial) => {
         if (current.endsWith(suffix)) return
@@ -137,7 +152,7 @@ export class StringSchema implements GenericSchema<string> {
   }
 
   // METHOD
-  public includes(search: string): StringSchema {
+  public includes(search: string): StringSchema<TOptional> {
     return this.updateValidation({
       includes: (current, initial) => {
         if (current.includes(search)) return
@@ -147,7 +162,7 @@ export class StringSchema implements GenericSchema<string> {
   }
 
   // METHOD
-  public excludes(search: string): StringSchema {
+  public excludes(search: string): StringSchema<TOptional> {
     return this.updateValidation({
       excludes: (current, initial) => {
         if (!current.includes(search)) return
@@ -157,7 +172,7 @@ export class StringSchema implements GenericSchema<string> {
   }
 
   // METHOD
-  public match(pattern: RegExp): StringSchema {
+  public match(pattern: RegExp): StringSchema<TOptional> {
     return this.updateValidation({
       pattern: (current, initial) => {
         if (pattern.test(current)) return

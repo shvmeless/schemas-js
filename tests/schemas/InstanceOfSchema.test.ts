@@ -42,3 +42,29 @@ describe('.validate(input)', () => {
     expectValidation(schema, input).toReturnSame(input)
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.optional()', () => {
+
+  const base = InstanceOfSchema.create(Date)
+  const schema = base.optional()
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(InstanceOfSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` is an instance of the `constructor`.', () => {
+    expectValidation(schema, new Date()).toReturnInstanceOf(Date)
+  })
+
+  it('returns when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn(undefined)
+  })
+
+  it('throws when `input` is not an instance of the `constructor`.', () => {
+    DataTypeGenerator.skip('classes', 'undefined').forEach((value) => {
+      expectValidation(schema, value).toThrow('Expected instance of Date.')
+    })
+  })
+})

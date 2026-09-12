@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema } from '@/lib/GenericSchema'
+import type { GenericSchema, Optional } from '@/lib/GenericSchema'
 import { runValidations, type GenericValidations } from '@/utils/validations'
 import { stringify } from '@/utils/stringify'
 
@@ -8,20 +8,22 @@ import { stringify } from '@/utils/stringify'
 type SetValidations<TValue> = GenericValidations<'size' | 'min' | 'max' | 'some' | 'every' | 'none', Set<TValue>>
 
 // INTERFACE
-interface SetConfig<TValue> {
+interface SetConfig<TValue, TOptional extends boolean> {
   schema: GenericSchema<TValue>
   prune: boolean
+  optional: TOptional
 }
 
 // CLASS
-export class SetSchema<TValue> implements GenericSchema<Set<TValue>> {
+export class SetSchema<TValue, TOptional extends boolean>
+implements GenericSchema<Optional<Set<TValue>, TOptional>> {
 
   // PROPERTIES
-  private readonly _config: SetConfig<TValue>
+  private readonly _config: SetConfig<TValue, TOptional>
   private readonly _validations: SetValidations<TValue>
 
   // CONSTRUCTOR
-  private constructor(config: SetConfig<TValue>, validations: SetValidations<TValue>) {
+  private constructor(config: SetConfig<TValue, TOptional>, validations: SetValidations<TValue>) {
     this._config = config
     this._validations = validations
   }
@@ -29,26 +31,27 @@ export class SetSchema<TValue> implements GenericSchema<Set<TValue>> {
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TValue>(schema: GenericSchema<TValue>): SetSchema<TValue> {
-    return new SetSchema<TValue>({
+  public static create<TValue>(schema: GenericSchema<TValue>): SetSchema<TValue, false> {
+    return new SetSchema<TValue, false>({
       schema: schema,
       prune: false,
+      optional: false,
     }, {})
   }
 
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private updateConfig(config: Partial<SetConfig<TValue>> = {}): SetSchema<TValue> {
-    return new SetSchema<TValue>(
+  private updateConfig(config: Partial<SetConfig<TValue, TOptional>> = {}): SetSchema<TValue, TOptional> {
+    return new SetSchema<TValue, TOptional>(
       { ...this._config, ...config },
       this._validations,
     )
   }
 
   // UPDATER
-  private updateValidation(validations: SetValidations<TValue>): SetSchema<TValue> {
-    return new SetSchema<TValue>(
+  private updateValidation(validations: SetValidations<TValue>): SetSchema<TValue, TOptional> {
+    return new SetSchema<TValue, TOptional>(
       this._config,
       { ...this._validations, ...validations },
     )
@@ -57,7 +60,9 @@ export class SetSchema<TValue> implements GenericSchema<Set<TValue>> {
   // --------------------------------------------------------------------------
 
   // VALIDATOR
-  public validate(input: unknown): Set<TValue> {
+  public validate(input: unknown): Optional<Set<TValue>, TOptional> {
+
+    if (input === undefined && this._config.optional) return input as Optional<Set<TValue>, TOptional>
 
     if (!(input instanceof Set)) {
       throw new ValidationError(input, 'The value must be a Set.')
@@ -84,19 +89,27 @@ export class SetSchema<TValue> implements GenericSchema<Set<TValue>> {
 
     runValidations(this._validations, input, result)
 
-    return result
+    return result as Optional<Set<TValue>, TOptional>
 
   }
 
   // --------------------------------------------------------------------------
 
   // METHOD
-  public prune(): SetSchema<TValue> {
+  public prune(): SetSchema<TValue, TOptional> {
     return this.updateConfig({ prune: true })
   }
 
+  // CONFIG
+  public optional(): SetSchema<TValue, true> {
+    return new SetSchema({
+      ...this._config,
+      optional: true,
+    }, this._validations)
+  }
+
   // METHOD
-  public size(length: number): SetSchema<TValue> {
+  public size(length: number): SetSchema<TValue, TOptional> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
     return this.updateValidation({
@@ -110,7 +123,7 @@ export class SetSchema<TValue> implements GenericSchema<Set<TValue>> {
   }
 
   // METHOD
-  public min(length: number): SetSchema<TValue> {
+  public min(length: number): SetSchema<TValue, TOptional> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
     return this.updateValidation({
@@ -122,7 +135,7 @@ export class SetSchema<TValue> implements GenericSchema<Set<TValue>> {
   }
 
   // METHOD
-  public max(length: number): SetSchema<TValue> {
+  public max(length: number): SetSchema<TValue, TOptional> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
     return this.updateValidation({
@@ -134,7 +147,7 @@ export class SetSchema<TValue> implements GenericSchema<Set<TValue>> {
   }
 
   // METHOD
-  public some(callback: (value: TValue, set: Set<TValue>) => boolean): SetSchema<TValue> {
+  public some(callback: (value: TValue, set: Set<TValue>) => boolean): SetSchema<TValue, TOptional> {
     return this.updateValidation({
       some: (current, initial) => {
         for (const value of current) {
@@ -146,7 +159,7 @@ export class SetSchema<TValue> implements GenericSchema<Set<TValue>> {
   }
 
   // METHOD
-  public every(callback: (value: TValue, set: Set<TValue>) => boolean): SetSchema<TValue> {
+  public every(callback: (value: TValue, set: Set<TValue>) => boolean): SetSchema<TValue, TOptional> {
     return this.updateValidation({
       every: (current, initial) => {
         for (const value of current) {
@@ -157,7 +170,7 @@ export class SetSchema<TValue> implements GenericSchema<Set<TValue>> {
   }
 
   // METHOD
-  public none(callback: (value: TValue, set: Set<TValue>) => boolean): SetSchema<TValue> {
+  public none(callback: (value: TValue, set: Set<TValue>) => boolean): SetSchema<TValue, TOptional> {
     return this.updateValidation({
       none: (current, initial) => {
         for (const value of current) {

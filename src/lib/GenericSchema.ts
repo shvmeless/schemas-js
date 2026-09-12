@@ -5,3 +5,9 @@ export interface GenericSchema<T> {
   validate(input: unknown): T
 
 }
+
+// TYPE
+export type Optional<TType, TOptional extends boolean>
+  = TOptional extends true
+    ? undefined
+    : TType

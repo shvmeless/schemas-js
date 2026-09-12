@@ -1,40 +1,56 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema } from '@/lib/GenericSchema'
+import type { GenericSchema, Optional } from '@/lib/GenericSchema'
 
 // TYPE
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyConstructor<T = unknown> = abstract new (...args: Array<any>) => T
 
+// INTERFACE
+interface InstanceOfConfig<TConstructor extends AnyConstructor, TOptional extends boolean> {
+  constructor: TConstructor
+  optional: TOptional
+}
+
 // CLASS
-export class InstanceOfSchema<TConstructor extends AnyConstructor> implements GenericSchema<InstanceType<TConstructor>> {
+export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional extends boolean>
+implements GenericSchema<Optional<InstanceType<TConstructor>, TOptional>> {
 
   // PROPERTIES
-  private readonly _constructor: TConstructor
+  private readonly _config: InstanceOfConfig<TConstructor, TOptional>
 
   // CONSTRUCTOR
-  private constructor(constructor: TConstructor) {
-    this._constructor = constructor
+  private constructor(config: InstanceOfConfig<TConstructor, TOptional>) {
+    this._config = config
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TConstructor extends AnyConstructor>(constructor: TConstructor): InstanceOfSchema<TConstructor> {
-    return new InstanceOfSchema(constructor)
+  public static create<TConstructor extends AnyConstructor>(constructor: TConstructor): InstanceOfSchema<TConstructor, false> {
+    return new InstanceOfSchema({ constructor, optional: false })
   }
 
   // --------------------------------------------------------------------------
 
   // VALIDATOR
-  public validate(input: unknown): InstanceType<TConstructor> {
+  public validate(input: unknown): Optional<InstanceType<TConstructor>, TOptional> {
 
-    if (!(input instanceof this._constructor)) {
-      throw new ValidationError(input, `Expected instance of ${this._constructor.name}.`)
+    if (input === undefined && this._config.optional) return input as Optional<InstanceType<TConstructor>, TOptional>
+
+    if (!(input instanceof this._config.constructor)) {
+      throw new ValidationError(input, `Expected instance of ${this._config.constructor.name}.`)
     }
 
-    return input as InstanceType<TConstructor>
+    return input as Optional<InstanceType<TConstructor>, TOptional>
 
+  }
+
+  // --------------------------------------------------------------------------
+
+  // CONFIG
+  public optional(): InstanceOfSchema<TConstructor, true> {
+    return new InstanceOfSchema({ ...this._config, optional: true })
   }
 
 }

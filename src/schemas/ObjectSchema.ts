@@ -1,39 +1,42 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema } from '@/lib/GenericSchema'
+import type { GenericSchema, Optional } from '@/lib/GenericSchema'
 
 // INTERFACE
-interface ObjectConfig<TShape> {
+interface ObjectConfig<TShape, TOptional extends boolean> {
   schema: { [K in keyof TShape]: GenericSchema<TShape[K]> }
   strip: boolean
+  optional: TOptional
 }
 
 // CLASS
-export class ObjectSchema<TShape> implements GenericSchema<TShape> {
+export class ObjectSchema<TShape, TOptional extends boolean>
+implements GenericSchema<Optional<TShape, TOptional>> {
 
   // PROPERTIES
-  private readonly _config: ObjectConfig<TShape>
+  private readonly _config: ObjectConfig<TShape, TOptional>
 
   // CONSTRUCTOR
-  private constructor(config: ObjectConfig<TShape>) {
+  private constructor(config: ObjectConfig<TShape, TOptional>) {
     this._config = config
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TShape>(schema: { [K in keyof TShape]: GenericSchema<TShape[K]> }): ObjectSchema<TShape> {
-    return new ObjectSchema<TShape>({
+  public static create<TShape>(schema: { [K in keyof TShape]: GenericSchema<TShape[K]> }): ObjectSchema<TShape, false> {
+    return new ObjectSchema<TShape, false>({
       schema: schema,
       strip: false,
+      optional: false,
     })
   }
 
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private updateConfig(config: Partial<ObjectConfig<TShape>> = {}): ObjectSchema<TShape> {
-    return new ObjectSchema<TShape>(
+  private updateConfig(config: Partial<ObjectConfig<TShape, TOptional>> = {}): ObjectSchema<TShape, TOptional> {
+    return new ObjectSchema<TShape, TOptional>(
       { ...this._config, ...config },
     )
   }
@@ -41,7 +44,9 @@ export class ObjectSchema<TShape> implements GenericSchema<TShape> {
   // --------------------------------------------------------------------------
 
   // VALIDATOR
-  public validate(input: unknown): TShape {
+  public validate(input: unknown): Optional<TShape, TOptional> {
+
+    if (input === undefined && this._config.optional) return input as Optional<TShape, TOptional>
 
     if (typeof input !== 'object' || input === null || Array.isArray(input) || (Object.getPrototypeOf(input) !== Object.prototype && Object.getPrototypeOf(input) !== null)) {
       throw new ValidationError(input, 'The value must be an object.')
@@ -80,15 +85,23 @@ export class ObjectSchema<TShape> implements GenericSchema<TShape> {
       errors.throw(input, message)
     }
 
-    return result as TShape
+    return result as Optional<TShape, TOptional>
 
   }
 
   // --------------------------------------------------------------------------
 
-  // METHOD
-  public strip(): ObjectSchema<TShape> {
+  // CONFIG
+  public strip(): ObjectSchema<TShape, TOptional> {
     return this.updateConfig({ strip: true })
+  }
+
+  // CONFIG
+  public optional(): ObjectSchema<TShape, true> {
+    return new ObjectSchema({
+      ...this._config,
+      optional: true,
+    })
   }
 
 }

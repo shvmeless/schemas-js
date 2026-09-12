@@ -53,3 +53,29 @@ describe('.validate(input)', () => {
     expectValidation(schema, 'LiTeRaL').toThrow('The value must match the literal value.')
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.optional()', () => {
+
+  const base = LiteralSchema.create('LITERAL')
+  const schema = base.optional()
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(LiteralSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` matches the `literal`.', () => {
+    expectValidation(schema, 'LITERAL').toReturn('LITERAL')
+  })
+
+  it('returns when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn(undefined)
+  })
+
+  it('throws when `input` does not match the `literal`.', () => {
+    DataTypeGenerator.skip('strings', 'undefined').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must match the literal value.')
+    })
+  })
+})

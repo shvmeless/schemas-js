@@ -1,21 +1,23 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema } from '@/lib/GenericSchema'
+import type { GenericSchema, Optional } from '@/lib/GenericSchema'
 
 // INTERFACE
-interface TupleConfig<TShape extends ReadonlyArray<unknown>> {
+interface TupleConfig<TShape extends ReadonlyArray<unknown>, TOptional extends boolean> {
   shape: { [K in keyof TShape]: GenericSchema<TShape[K]> }
   strip: boolean
+  optional: TOptional
 }
 
 // CLASS
-export class TupleSchema<TShape extends ReadonlyArray<unknown>> implements GenericSchema<TShape> {
+export class TupleSchema<TShape extends ReadonlyArray<unknown>, TOptional extends boolean>
+implements GenericSchema<Optional<TShape, TOptional>> {
 
   // PROPERTIES
-  private readonly _config: TupleConfig<TShape>
+  private readonly _config: TupleConfig<TShape, TOptional>
 
   // CONSTRUCTOR
-  private constructor(config: TupleConfig<TShape>) {
+  private constructor(config: TupleConfig<TShape, TOptional>) {
     this._config = {
       ...config,
       shape: [...config.shape] as unknown as { [K in keyof TShape]: GenericSchema<TShape[K]> },
@@ -25,18 +27,19 @@ export class TupleSchema<TShape extends ReadonlyArray<unknown>> implements Gener
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TShape extends ReadonlyArray<unknown>>(shape: { [K in keyof TShape]: GenericSchema<TShape[K]> }): TupleSchema<TShape> {
-    return new TupleSchema<TShape>({
+  public static create<TShape extends ReadonlyArray<unknown>>(shape: { [K in keyof TShape]: GenericSchema<TShape[K]> }): TupleSchema<TShape, false> {
+    return new TupleSchema<TShape, false>({
       shape: shape,
       strip: false,
+      optional: false,
     })
   }
 
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private updateConfig(config: Partial<TupleConfig<TShape>> = {}): TupleSchema<TShape> {
-    return new TupleSchema<TShape>(
+  private updateConfig(config: Partial<TupleConfig<TShape, TOptional>> = {}): TupleSchema<TShape, TOptional> {
+    return new TupleSchema<TShape, TOptional>(
       { ...this._config, ...config },
     )
   }
@@ -44,7 +47,9 @@ export class TupleSchema<TShape extends ReadonlyArray<unknown>> implements Gener
   // --------------------------------------------------------------------------
 
   // VALIDATOR
-  public validate(input: unknown): TShape {
+  public validate(input: unknown): Optional<TShape, TOptional> {
+
+    if (input === undefined && this._config.optional) return input as Optional<TShape, TOptional>
 
     if (!Array.isArray(input)) {
       throw new ValidationError(input, 'The value must be an array.')
@@ -82,15 +87,23 @@ export class TupleSchema<TShape extends ReadonlyArray<unknown>> implements Gener
       errors.throw(input, message)
     }
 
-    return result as unknown as TShape
+    return result as unknown as Optional<TShape, TOptional>
 
   }
 
   // --------------------------------------------------------------------------
 
   // METHOD
-  public strip(): TupleSchema<TShape> {
+  public strip(): TupleSchema<TShape, TOptional> {
     return this.updateConfig({ strip: true })
+  }
+
+  // CONFIG
+  public optional(): TupleSchema<TShape, true> {
+    return new TupleSchema({
+      ...this._config,
+      optional: true,
+    })
   }
 
 }

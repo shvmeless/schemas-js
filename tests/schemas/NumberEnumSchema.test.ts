@@ -70,3 +70,31 @@ describe('.validate(input)', () => {
     expectValidation(schema, Infinity).toThrow('The value must be match one of the allowed literal values.')
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.optional()', () => {
+
+  const base = EnumSchema.create(-1000, 0, 1000)
+  const schema = base.optional()
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(EnumSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` matches one of the `literals`.', () => {
+    expectValidation(schema, -1000).toReturn(-1000)
+    expectValidation(schema, 0).toReturn(0)
+    expectValidation(schema, 1000).toReturn(1000)
+  })
+
+  it('returns when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn(undefined)
+  })
+
+  it('throws when `input` does not match any of the `literals`.', () => {
+    DataTypeGenerator.skip('numbers', 'undefined').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be match one of the allowed literal values.')
+    })
+  })
+})

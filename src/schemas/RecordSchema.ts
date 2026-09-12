@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema } from '@/lib/GenericSchema'
+import type { GenericSchema, Optional } from '@/lib/GenericSchema'
 import { runValidations, type GenericValidations } from '@/utils/validations'
 import { stringify } from '@/utils/stringify'
 
@@ -8,20 +8,22 @@ import { stringify } from '@/utils/stringify'
 type RecordValidations<TValue> = GenericValidations<'length' | 'min' | 'max' | 'some' | 'every' | 'none', Record<string, TValue>>
 
 // INTERFACE
-interface RecordConfig<TValue> {
+interface RecordConfig<TValue, TOptional extends boolean> {
   schema: GenericSchema<TValue>
   prune: boolean
+  optional: TOptional
 }
 
 // CLASS
-export class RecordSchema<TValue> implements GenericSchema<Record<string, TValue>> {
+export class RecordSchema<TValue, TOptional extends boolean>
+implements GenericSchema<Optional<Record<string, TValue>, TOptional>> {
 
   // PROPERTIES
-  private readonly _config: RecordConfig<TValue>
+  private readonly _config: RecordConfig<TValue, TOptional>
   private readonly _validations: RecordValidations<TValue>
 
   // CONSTRUCTOR
-  private constructor(config: RecordConfig<TValue>, validations: RecordValidations<TValue>) {
+  private constructor(config: RecordConfig<TValue, TOptional>, validations: RecordValidations<TValue>) {
     this._config = config
     this._validations = validations
   }
@@ -29,26 +31,27 @@ export class RecordSchema<TValue> implements GenericSchema<Record<string, TValue
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TValue>(schema: GenericSchema<TValue>): RecordSchema<TValue> {
-    return new RecordSchema<TValue>({
+  public static create<TValue>(schema: GenericSchema<TValue>): RecordSchema<TValue, false> {
+    return new RecordSchema<TValue, false>({
       schema: schema,
       prune: false,
+      optional: false,
     }, {})
   }
 
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private updateConfig(config: Partial<RecordConfig<TValue>> = {}): RecordSchema<TValue> {
-    return new RecordSchema<TValue>(
+  private updateConfig(config: Partial<RecordConfig<TValue, TOptional>> = {}): RecordSchema<TValue, TOptional> {
+    return new RecordSchema<TValue, TOptional>(
       { ...this._config, ...config },
       this._validations,
     )
   }
 
   // UPDATER
-  private updateValidation(validations: RecordValidations<TValue>): RecordSchema<TValue> {
-    return new RecordSchema<TValue>(
+  private updateValidation(validations: RecordValidations<TValue>): RecordSchema<TValue, TOptional> {
+    return new RecordSchema<TValue, TOptional>(
       this._config,
       { ...this._validations, ...validations },
     )
@@ -57,7 +60,9 @@ export class RecordSchema<TValue> implements GenericSchema<Record<string, TValue
   // --------------------------------------------------------------------------
 
   // VALIDATOR
-  public validate(input: unknown): Record<string, TValue> {
+  public validate(input: unknown): Optional<Record<string, TValue>, TOptional> {
+
+    if (input === undefined && this._config.optional) return input as Optional<Record<string, TValue>, TOptional>
 
     if (typeof input !== 'object' || input === null || Array.isArray(input) || (Object.getPrototypeOf(input) !== Object.prototype && Object.getPrototypeOf(input) !== null)) {
       throw new ValidationError(input, 'The value must be an object.')
@@ -83,19 +88,27 @@ export class RecordSchema<TValue> implements GenericSchema<Record<string, TValue
 
     runValidations(this._validations, input, result)
 
-    return result
+    return result as Optional<Record<string, TValue>, TOptional>
 
   }
 
   // --------------------------------------------------------------------------
 
   // METHOD
-  public prune(): RecordSchema<TValue> {
+  public prune(): RecordSchema<TValue, TOptional> {
     return this.updateConfig({ prune: true })
   }
 
+  // CONFIG
+  public optional(): RecordSchema<TValue, true> {
+    return new RecordSchema({
+      ...this._config,
+      optional: true,
+    }, this._validations)
+  }
+
   // METHOD
-  public length(length: number): RecordSchema<TValue> {
+  public length(length: number): RecordSchema<TValue, TOptional> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
     return this.updateValidation({
@@ -109,7 +122,7 @@ export class RecordSchema<TValue> implements GenericSchema<Record<string, TValue
   }
 
   // METHOD
-  public min(length: number): RecordSchema<TValue> {
+  public min(length: number): RecordSchema<TValue, TOptional> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
     return this.updateValidation({
@@ -121,7 +134,7 @@ export class RecordSchema<TValue> implements GenericSchema<Record<string, TValue
   }
 
   // METHOD
-  public max(length: number): RecordSchema<TValue> {
+  public max(length: number): RecordSchema<TValue, TOptional> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
     return this.updateValidation({
@@ -133,7 +146,7 @@ export class RecordSchema<TValue> implements GenericSchema<Record<string, TValue
   }
 
   // METHOD
-  public some(callback: (value: TValue, key: string, record: Record<string, TValue>) => boolean): RecordSchema<TValue> {
+  public some(callback: (value: TValue, key: string, record: Record<string, TValue>) => boolean): RecordSchema<TValue, TOptional> {
     return this.updateValidation({
       some: (current, initial) => {
         for (const [key, value] of Object.entries(current)) {
@@ -145,7 +158,7 @@ export class RecordSchema<TValue> implements GenericSchema<Record<string, TValue
   }
 
   // METHOD
-  public every(callback: (value: TValue, key: string, record: Record<string, TValue>) => boolean): RecordSchema<TValue> {
+  public every(callback: (value: TValue, key: string, record: Record<string, TValue>) => boolean): RecordSchema<TValue, TOptional> {
     return this.updateValidation({
       every: (current, initial) => {
         for (const [key, value] of Object.entries(current)) {
@@ -156,7 +169,7 @@ export class RecordSchema<TValue> implements GenericSchema<Record<string, TValue
   }
 
   // METHOD
-  public none(callback: (value: TValue, key: string, record: Record<string, TValue>) => boolean): RecordSchema<TValue> {
+  public none(callback: (value: TValue, key: string, record: Record<string, TValue>) => boolean): RecordSchema<TValue, TOptional> {
     return this.updateValidation({
       none: (current, initial) => {
         for (const [key, value] of Object.entries(current)) {
