@@ -207,3 +207,40 @@ describe('.nullable()', () => {
     ])
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.default(value)', () => {
+
+  const base = ObjectSchema.create({
+    string: StringSchema.create(),
+    number: NumberSchema.create(),
+    boolean: BooleanSchema.create(),
+  }).optional()
+  const defaultInput = { string: 'STRING', number: 74105280, boolean: true }
+  const schema = base.default(defaultInput)
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(ObjectSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` matches the `shape` schema.', () => {
+    const input = { string: 'STRING', number: 74105280, boolean: true }
+    const expected = { string: 'STRING', number: 74105280, boolean: true }
+    expectValidation(schema, input).toReturnNew(expected)
+  })
+
+  it('returns the `default` value when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn(defaultInput)
+  })
+
+  it('returns the `default` value when `input` is `null` and the schema is nullable.', () => {
+    expectValidation(schema.nullable(), null).toReturn(defaultInput)
+  })
+
+  it('throws when `input` is not an object.', () => {
+    DataTypeGenerator.skip('objects', 'undefined').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be an object.')
+    })
+  })
+})

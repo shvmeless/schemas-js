@@ -3,67 +3,85 @@ import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema, Maybe } from '@/lib/GenericSchema'
 
 // INTERFACE
-interface ObjectConfig<TShape, TOptional extends boolean, TNullable extends boolean> {
+interface ObjectConfig<TShape, TOptional extends boolean, TNullable extends boolean, TDefault extends TShape | null> {
   schema: { [K in keyof TShape]: GenericSchema<TShape[K]> }
   strip: boolean
   optional: TOptional
   nullable: TNullable
+  default: TDefault
 }
 
 // CLASS
-export class ObjectSchema<TShape, TOptional extends boolean, TNullable extends boolean>
-implements GenericSchema<Maybe<TShape, TOptional, TNullable>> {
+export class ObjectSchema<TShape, TOptional extends boolean, TNullable extends boolean, TDefault extends TShape | null>
+implements GenericSchema<Maybe<TShape, TOptional, TNullable, TDefault>> {
 
   // PROPERTIES
-  private readonly _config: ObjectConfig<TShape, TOptional, TNullable>
+  private readonly _config: ObjectConfig<TShape, TOptional, TNullable, TDefault>
 
   // CONSTRUCTOR
-  private constructor(config: ObjectConfig<TShape, TOptional, TNullable>) {
+  private constructor(config: ObjectConfig<TShape, TOptional, TNullable, TDefault>) {
     this._config = config
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TShape>(schema: { [K in keyof TShape]: GenericSchema<TShape[K]> }): ObjectSchema<TShape, false, false> {
-    return new ObjectSchema<TShape, false, false>({
+  public static create<TShape>(schema: { [K in keyof TShape]: GenericSchema<TShape[K]> }): ObjectSchema<TShape, false, false, null> {
+    return new ObjectSchema<TShape, false, false, null>({
       schema: schema,
       strip: false,
       optional: false,
       nullable: false,
+      default: null,
     })
   }
 
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private updateConfig(config: Partial<ObjectConfig<TShape, TOptional, TNullable>> = {}): ObjectSchema<TShape, TOptional, TNullable> {
-    return new ObjectSchema<TShape, TOptional, TNullable>(
+  private updateConfig(config: Partial<ObjectConfig<TShape, TOptional, TNullable, TDefault>> = {}): ObjectSchema<TShape, TOptional, TNullable, TDefault> {
+    return new ObjectSchema<TShape, TOptional, TNullable, TDefault>(
       { ...this._config, ...config },
     )
   }
 
   // --------------------------------------------------------------------------
 
-  // VALIDATOR
-  public validate(input: unknown): Maybe<TShape, TOptional, TNullable> {
+  // UPDATER
+  private _resolveInput(input: unknown): Record<string, unknown> | null | undefined {
 
-    if (input === undefined && this._config.optional) return input as Maybe<TShape, TOptional, TNullable>
-    if (input === null && this._config.nullable) return input as Maybe<TShape, TOptional, TNullable>
+    if (input === undefined && this._config.optional) {
+      return (this._config.default !== null) ? this._config.default as unknown as Record<string, unknown> : undefined
+    }
+
+    if (input === null && this._config.nullable) {
+      return (this._config.default !== null) ? this._config.default as unknown as Record<string, unknown> : null
+    }
 
     if (typeof input !== 'object' || input === null || Array.isArray(input) || (Object.getPrototypeOf(input) !== Object.prototype && Object.getPrototypeOf(input) !== null)) {
       throw new ValidationError(input, 'The value must be an object.')
     }
 
-    const object = input as Record<string, unknown>
+    return input as Record<string, unknown>
+
+  }
+
+  // VALIDATOR
+  public validate(input: unknown): Maybe<TShape, TOptional, TNullable, TDefault> {
+
+    const resolved = this._resolveInput(input)
+
+    if (resolved === undefined) return undefined as Maybe<TShape, TOptional, TNullable, TDefault>
+    if (resolved === null) return null as Maybe<TShape, TOptional, TNullable, TDefault>
+
     const result: Record<string, unknown> = {}
     const errors = ValidationError.prepare()
 
-    const keys = new Set([...Object.keys(this._config.schema), ...Object.keys(input)])
+    const keys = new Set([...Object.keys(this._config.schema), ...Object.keys(resolved)])
     for (const key of keys) {
       try {
 
-        const value = object[key]
+        const value = resolved[key]
         const schema = this._config.schema[key as keyof TShape]
 
         if (schema === undefined) {
@@ -80,27 +98,27 @@ implements GenericSchema<Maybe<TShape, TOptional, TNullable>> {
     }
 
     if (errors.size > 0) {
-      const message = (Object.keys(input as object).length !== Object.keys(this._config.schema).length)
-        ? (Object.keys(input as object).length < Object.keys(this._config.schema).length)
+      const message = (Object.keys(resolved as object).length !== Object.keys(this._config.schema).length)
+        ? (Object.keys(resolved as object).length < Object.keys(this._config.schema).length)
             ? 'The object is missing one or more required properties.'
             : 'The object contains one or more unexpected properties.'
         : 'At least one property does not match the given schema.'
       errors.throw(input, message)
     }
 
-    return result as Maybe<TShape, TOptional, TNullable>
+    return result as Maybe<TShape, TOptional, TNullable, TDefault>
 
   }
 
   // --------------------------------------------------------------------------
 
   // CONFIG
-  public strip(): ObjectSchema<TShape, TOptional, TNullable> {
+  public strip(): ObjectSchema<TShape, TOptional, TNullable, TDefault> {
     return this.updateConfig({ strip: true })
   }
 
   // CONFIG
-  public optional(): ObjectSchema<TShape, true, TNullable> {
+  public optional(): ObjectSchema<TShape, true, TNullable, TDefault> {
     return new ObjectSchema({
       ...this._config,
       optional: true,
@@ -108,10 +126,18 @@ implements GenericSchema<Maybe<TShape, TOptional, TNullable>> {
   }
 
   // CONFIG
-  public nullable(): ObjectSchema<TShape, TOptional, true> {
+  public nullable(): ObjectSchema<TShape, TOptional, true, TDefault> {
     return new ObjectSchema({
       ...this._config,
       nullable: true,
+    })
+  }
+
+  // CONFIG
+  public default(value: TShape): ObjectSchema<TShape, TOptional, TNullable, TShape> {
+    return new ObjectSchema({
+      ...this._config,
+      default: value,
     })
   }
 

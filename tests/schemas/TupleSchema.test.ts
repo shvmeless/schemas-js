@@ -186,3 +186,35 @@ describe('.nullable()', () => {
     ])
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.default(value)', () => {
+
+  const base = TupleSchema.create([StringSchema.create(), NumberSchema.create(), BooleanSchema.create()]).optional()
+  const schema = base.default(['STRING', 74105280, true])
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(TupleSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when all `input` elements match the `shapes` schemas.', () => {
+    const input = ['STRING', 74105280, true]
+    const expected = ['STRING', 74105280, true]
+    expectValidation(schema, input).toReturnNew(expected)
+  })
+
+  it('returns the `default` value when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn(['STRING', 74105280, true])
+  })
+
+  it('returns the `default` value when `input` is `null` and the schema is nullable.', () => {
+    expectValidation(schema.nullable(), null).toReturn(['STRING', 74105280, true])
+  })
+
+  it('throws when `input` is not an array.', () => {
+    DataTypeGenerator.skip('arrays', 'undefined').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be an array.')
+    })
+  })
+})

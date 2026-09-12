@@ -126,3 +126,33 @@ describe('.nullable()', () => {
     })
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.default(value)', () => {
+
+  const base = LiteralSchema.create(1000).optional()
+  const schema = base.default(1000)
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(LiteralSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` matches the `literal`.', () => {
+    expectValidation(schema, 1000).toReturn(1000)
+  })
+
+  it('returns the `default` value when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn(1000)
+  })
+
+  it('returns the `default` value when `input` is `null` and the schema is nullable.', () => {
+    expectValidation(schema.nullable(), null).toReturn(1000)
+  })
+
+  it('throws when `input` does not match the `literal`.', () => {
+    DataTypeGenerator.skip('numbers', 'undefined').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must match the literal value.')
+    })
+  })
+})

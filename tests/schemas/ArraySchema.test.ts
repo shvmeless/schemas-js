@@ -186,6 +186,38 @@ describe('.nullable()', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
+describe('.default(value)', () => {
+
+  const base = ArraySchema.create(StringSchema.create()).optional()
+  const schema = base.default(['default'])
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(ArraySchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` is an array.', () => {
+    const input = ['a', 'b', 'c']
+    const expected = ['a', 'b', 'c']
+    expectValidation(schema, input).toReturnNew(expected)
+  })
+
+  it('returns the `default` value when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn(['default'])
+  })
+
+  it('returns the `default` value when `input` is `null` and the schema is nullable.', () => {
+    expectValidation(schema.nullable(), null).toReturn(['default'])
+  })
+
+  it('throws when `input` is not an array.', () => {
+    DataTypeGenerator.skip('arrays', 'undefined').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be an array.')
+    })
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
 describe('.length(length)', () => {
   describe('when `length` is `NaN`', () => {
     it('throws when the schema is being built.', () => {

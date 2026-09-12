@@ -7,17 +7,21 @@ export interface GenericSchema<T> {
 }
 
 // TYPE
-export type Optional<TType, TOptional extends boolean>
+export type Optional<TType, TOptional extends boolean, TDefault extends TType | null | undefined>
   = TOptional extends true
-    ? undefined
+    ? TDefault extends TType
+      ? TType
+      : TType | undefined
     : TType
 
 // TYPE
-export type Nullable<TType, TNullable extends boolean>
+export type Nullable<TType, TNullable extends boolean, TDefault extends TType | null | undefined>
   = TNullable extends true
-    ? null
+    ? TDefault extends TType
+      ? TType
+      : TType | null
     : TType
 
 // TYPE
-export type Maybe<TType, TOptional extends boolean, TNullable extends boolean>
-  = Optional<Nullable<TType, TNullable>, TOptional>
+export type Maybe<TType, TOptional extends boolean, TNullable extends boolean, TDefault extends TType | null | undefined>
+  = Optional<Nullable<TType, TNullable, TDefault>, TOptional, TDefault>

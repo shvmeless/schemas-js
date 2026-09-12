@@ -55,3 +55,29 @@ describe('.nullable()', () => {
     })
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.default(value)', () => {
+
+  const base = UndefinedSchema.create().nullable()
+  const schema = base.default(undefined)
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(UndefinedSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn(undefined)
+  })
+
+  it('returns the `default` value when `input` is `null`.', () => {
+    expectValidation(schema, null).toReturn(undefined)
+  })
+
+  it('throws when `input` is not `undefined`.', () => {
+    DataTypeGenerator.skip('undefined', 'null').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be undefined.')
+    })
+  })
+})

@@ -121,3 +121,39 @@ describe('.nullable()', () => {
     })
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.default(value)', () => {
+
+  const base = UnionSchema.create(
+    StringSchema.create(),
+    NumberSchema.create(),
+    BooleanSchema.create(),
+  ).optional()
+  const schema = base.default('STRING')
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(UnionSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` matches any of the `inner` schemas.', () => {
+    expectValidation(schema, 'STRING').toReturn('STRING')
+    expectValidation(schema, 250).toReturn(250)
+    expectValidation(schema, true).toReturn(true)
+  })
+
+  it('returns the `default` value when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn('STRING')
+  })
+
+  it('returns the `default` value when `input` is `null` and the schema is nullable.', () => {
+    expectValidation(schema.nullable(), null).toReturn('STRING')
+  })
+
+  it('throws when `input` does not match any of the `inner` schemas.', () => {
+    DataTypeGenerator.skip('strings', 'numbers', 'booleans', 'undefined').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value does not match any of the given schemas.')
+    })
+  })
+})

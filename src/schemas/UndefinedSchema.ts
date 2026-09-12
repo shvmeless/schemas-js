@@ -3,48 +3,72 @@ import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema, Nullable } from '@/lib/GenericSchema'
 
 // INTERFACE
-interface UndefinedConfig<TNullable extends boolean> {
+interface UndefinedConfig<TNullable extends boolean, TDefault extends undefined | null> {
   nullable: TNullable
+  default: TDefault
 }
 
 // CLASS
-export class UndefinedSchema<TNullable extends boolean>
-implements GenericSchema<Nullable<undefined, TNullable>> {
+export class UndefinedSchema<TNullable extends boolean, TDefault extends undefined | null>
+implements GenericSchema<Nullable<undefined, TNullable, TDefault>> {
 
   // PROPERTIES
-  private readonly _config: UndefinedConfig<TNullable>
+  private readonly _config: UndefinedConfig<TNullable, TDefault>
 
   // CONSTRUCTOR
-  private constructor(config: UndefinedConfig<TNullable>) {
+  private constructor(config: UndefinedConfig<TNullable, TDefault>) {
     this._config = config
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create(): UndefinedSchema<false> {
-    return new UndefinedSchema({ nullable: false })
+  public static create(): UndefinedSchema<false, null> {
+    return new UndefinedSchema({ nullable: false, default: null })
   }
 
   // --------------------------------------------------------------------------
 
-  // VALIDATOR
-  public validate(input: unknown): Nullable<undefined, TNullable> {
+  // UPDATER
+  private _resolveInput(input: unknown): undefined | null {
 
-    if (input === null && this._config.nullable) return input as Nullable<undefined, TNullable>
+    if (input === null && this._config.nullable) {
+      return (this._config.default !== null) ? this._config.default : null
+    }
 
     if (input !== undefined) {
       throw new ValidationError(input, 'The value must be undefined.')
     }
 
-    return input as Nullable<undefined, TNullable>
+    return (this._config.default !== null) ? this._config.default : undefined
+
+  }
+
+  // VALIDATOR
+  public validate(input: unknown): Nullable<undefined, TNullable, TDefault> {
+
+    const resolved = this._resolveInput(input)
+
+    if (resolved === undefined) return undefined as Nullable<undefined, TNullable, TDefault>
+    if (resolved === null) return null as Nullable<undefined, TNullable, TDefault>
+
+    return resolved as Nullable<undefined, TNullable, TDefault>
+
   }
 
   // --------------------------------------------------------------------------
 
   // CONFIG
-  public nullable(): UndefinedSchema<true> {
+  public nullable(): UndefinedSchema<true, TDefault> {
     return new UndefinedSchema({ ...this._config, nullable: true })
+  }
+
+  // CONFIG
+  public default(value: undefined): UndefinedSchema<TNullable, undefined> {
+    return new UndefinedSchema({
+      ...this._config,
+      default: value,
+    })
   }
 
 }

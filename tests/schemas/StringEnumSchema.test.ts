@@ -120,3 +120,35 @@ describe('.nullable()', () => {
     })
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.default(value)', () => {
+
+  const base = EnumSchema.create('ALLOWED', 'LITERAL', 'EXAMPLE').optional()
+  const schema = base.default('LITERAL')
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(EnumSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` matches one of the `literals`.', () => {
+    expectValidation(schema, 'ALLOWED').toReturn('ALLOWED')
+    expectValidation(schema, 'LITERAL').toReturn('LITERAL')
+    expectValidation(schema, 'EXAMPLE').toReturn('EXAMPLE')
+  })
+
+  it('returns the `default` value when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn('LITERAL')
+  })
+
+  it('returns the `default` value when `input` is `null` and the schema is nullable.', () => {
+    expectValidation(schema.nullable(), null).toReturn('LITERAL')
+  })
+
+  it('throws when `input` does not match any of the `literals`.', () => {
+    DataTypeGenerator.skip('strings', 'undefined').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be match one of the allowed literal values.')
+    })
+  })
+})

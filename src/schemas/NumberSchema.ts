@@ -8,21 +8,22 @@ import { stringify } from '@/utils/stringify'
 type NumberValidations = GenericValidations<'min' | 'max' | 'integer' | 'finite' | 'safe', number>
 
 // INTERFACE
-interface NumberConfig<TOptional extends boolean, TNullable extends boolean> {
+interface NumberConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends number | null> {
   optional: TOptional
   nullable: TNullable
+  default: TDefault
 }
 
 // CLASS
-export class NumberSchema<TOptional extends boolean, TNullable extends boolean>
-implements GenericSchema<Maybe<number, TOptional, TNullable>> {
+export class NumberSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends number | null>
+implements GenericSchema<Maybe<number, TOptional, TNullable, TDefault>> {
 
   // PROPERTIES
-  private readonly _config: NumberConfig<TOptional, TNullable>
+  private readonly _config: NumberConfig<TOptional, TNullable, TDefault>
   private readonly _validations: NumberValidations
 
   // CONSTRUCTOR
-  private constructor(config: NumberConfig<TOptional, TNullable>, validations: NumberValidations) {
+  private constructor(config: NumberConfig<TOptional, TNullable, TDefault>, validations: NumberValidations) {
     this._config = config
     this._validations = validations
   }
@@ -30,49 +31,76 @@ implements GenericSchema<Maybe<number, TOptional, TNullable>> {
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create(): NumberSchema<false, false> {
-    return new NumberSchema({ optional: false, nullable: false }, {})
+  public static create(): NumberSchema<false, false, null> {
+    return new NumberSchema({ optional: false, nullable: false, default: null }, {})
   }
 
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private updateValidation(validations: NumberValidations): NumberSchema<TOptional, TNullable> {
+  private updateValidation(validations: NumberValidations): NumberSchema<TOptional, TNullable, TDefault> {
     return new NumberSchema(this._config, { ...this._validations, ...validations })
   }
 
   // --------------------------------------------------------------------------
 
-  // VALIDATOR
-  public validate(input: unknown): Maybe<number, TOptional, TNullable> {
+  // UPDATER
+  private _resolveInput(input: unknown): number | null | undefined {
 
-    if (input === undefined && this._config.optional) return input as Maybe<number, TOptional, TNullable>
-    if (input === null && this._config.nullable) return input as Maybe<number, TOptional, TNullable>
+    if (input === undefined && this._config.optional) {
+      return (this._config.default !== null) ? this._config.default : undefined
+    }
+
+    if (input === null && this._config.nullable) {
+      return (this._config.default !== null) ? this._config.default : null
+    }
 
     if (typeof input !== 'number') {
       throw new ValidationError(input, 'The value must be a number.')
     }
 
-    runValidations(this._validations, input, input)
+    return input
 
-    return input as Maybe<number, TOptional, TNullable>
+  }
+
+  // VALIDATOR
+  public validate(input: unknown): Maybe<number, TOptional, TNullable, TDefault> {
+
+    const resolved = this._resolveInput(input)
+
+    if (resolved === undefined) return undefined as Maybe<number, TOptional, TNullable, TDefault>
+    if (resolved === null) return null as Maybe<number, TOptional, TNullable, TDefault>
+
+    runValidations(this._validations, input, resolved)
+
+    return resolved as Maybe<number, TOptional, TNullable, TDefault>
 
   }
 
   // --------------------------------------------------------------------------
 
   // CONFIG
-  public optional(): NumberSchema<true, TNullable> {
+  public optional(): NumberSchema<true, TNullable, TDefault> {
     return new NumberSchema({ ...this._config, optional: true }, this._validations)
   }
 
   // CONFIG
-  public nullable(): NumberSchema<TOptional, true> {
+  public nullable(): NumberSchema<TOptional, true, TDefault> {
     return new NumberSchema({ ...this._config, nullable: true }, this._validations)
   }
 
+  // CONFIG
+  public default(value: number): NumberSchema<TOptional, TNullable, number> {
+    return new NumberSchema({
+      ...this._config,
+      default: value,
+    }, this._validations)
+  }
+
+  // --------------------------------------------------------------------------
+
   // METHOD
-  public lessThan(target: number): NumberSchema<TOptional, TNullable> {
+  public lessThan(target: number): NumberSchema<TOptional, TNullable, TDefault> {
     if (Number.isNaN(target)) throw new Error('The `target` parameter cannot be NaN.')
     return this.updateValidation({
       max: (current, initial) => {
@@ -83,7 +111,7 @@ implements GenericSchema<Maybe<number, TOptional, TNullable>> {
   }
 
   // METHOD
-  public lessThanOrEqual(target: number): NumberSchema<TOptional, TNullable> {
+  public lessThanOrEqual(target: number): NumberSchema<TOptional, TNullable, TDefault> {
     if (Number.isNaN(target)) throw new Error('The `target` parameter cannot be NaN.')
     return this.updateValidation({
       max: (current, initial) => {
@@ -94,7 +122,7 @@ implements GenericSchema<Maybe<number, TOptional, TNullable>> {
   }
 
   // METHOD
-  public greaterThan(target: number): NumberSchema<TOptional, TNullable> {
+  public greaterThan(target: number): NumberSchema<TOptional, TNullable, TDefault> {
     if (Number.isNaN(target)) throw new Error('The `target` parameter cannot be NaN.')
     return this.updateValidation({
       min: (current, initial) => {
@@ -105,7 +133,7 @@ implements GenericSchema<Maybe<number, TOptional, TNullable>> {
   }
 
   // METHOD
-  public greaterThanOrEqual(target: number): NumberSchema<TOptional, TNullable> {
+  public greaterThanOrEqual(target: number): NumberSchema<TOptional, TNullable, TDefault> {
     if (Number.isNaN(target)) throw new Error('The `target` parameter cannot be NaN.')
     return this.updateValidation({
       min: (current, initial) => {
@@ -116,7 +144,7 @@ implements GenericSchema<Maybe<number, TOptional, TNullable>> {
   }
 
   // METHOD
-  public negative(): NumberSchema<TOptional, TNullable> {
+  public negative(): NumberSchema<TOptional, TNullable, TDefault> {
     return this.updateValidation({
       min: (current, initial) => {
         if (current < 0) return
@@ -126,7 +154,7 @@ implements GenericSchema<Maybe<number, TOptional, TNullable>> {
   }
 
   // METHOD
-  public positive(): NumberSchema<TOptional, TNullable> {
+  public positive(): NumberSchema<TOptional, TNullable, TDefault> {
     return this.updateValidation({
       max: (current, initial) => {
         if (current > 0) return
@@ -136,7 +164,7 @@ implements GenericSchema<Maybe<number, TOptional, TNullable>> {
   }
 
   // METHOD
-  public integer(): NumberSchema<TOptional, TNullable> {
+  public integer(): NumberSchema<TOptional, TNullable, TDefault> {
     return this.updateValidation({
       integer: (current, initial) => {
         if (Number.isInteger(current)) return
@@ -146,7 +174,7 @@ implements GenericSchema<Maybe<number, TOptional, TNullable>> {
   }
 
   // METHOD
-  public finite(): NumberSchema<TOptional, TNullable> {
+  public finite(): NumberSchema<TOptional, TNullable, TDefault> {
     return this.updateValidation({
       finite: (current, initial) => {
         if (Number.isFinite(current)) return
@@ -156,7 +184,7 @@ implements GenericSchema<Maybe<number, TOptional, TNullable>> {
   }
 
   // METHOD
-  public safe(): NumberSchema<TOptional, TNullable> {
+  public safe(): NumberSchema<TOptional, TNullable, TDefault> {
     return this.updateValidation({
       safe: (current, initial) => {
         if (current >= Number.MIN_SAFE_INTEGER && current <= Number.MAX_SAFE_INTEGER) return

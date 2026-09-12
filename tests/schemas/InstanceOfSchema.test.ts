@@ -94,3 +94,33 @@ describe('.nullable()', () => {
     })
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.default(value)', () => {
+
+  const base = InstanceOfSchema.create(Date).optional()
+  const schema = base.default(new Date('1993-06-26'))
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(InstanceOfSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` is an instance of the `constructor`.', () => {
+    expectValidation(schema, new Date()).toReturnInstanceOf(Date)
+  })
+
+  it('returns the `default` value when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn(new Date('1993-06-26'))
+  })
+
+  it('returns the `default` value when `input` is `null` and the schema is nullable.', () => {
+    expectValidation(schema.nullable(), null).toReturn(new Date('1993-06-26'))
+  })
+
+  it('throws when `input` is not an instance of the `constructor`.', () => {
+    DataTypeGenerator.skip('classes', 'undefined').forEach((value) => {
+      expectValidation(schema, value).toThrow('Expected instance of Date.')
+    })
+  })
+})

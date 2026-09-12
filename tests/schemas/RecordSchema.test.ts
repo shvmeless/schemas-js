@@ -186,6 +186,38 @@ describe('.nullable()', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
+describe('.default(value)', () => {
+
+  const base = RecordSchema.create(NumberSchema.create()).optional()
+  const schema = base.default({ default: 0 })
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(RecordSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` is an object.', () => {
+    const input = { a: 1, b: 2 }
+    const expected = { a: 1, b: 2 }
+    expectValidation(schema, input).toReturnNew(expected)
+  })
+
+  it('returns the `default` value when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn({ default: 0 })
+  })
+
+  it('returns the `default` value when `input` is `null` and the schema is nullable.', () => {
+    expectValidation(schema.nullable(), null).toReturn({ default: 0 })
+  })
+
+  it('throws when `input` is not an object.', () => {
+    DataTypeGenerator.skip('objects', 'undefined').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be an object.')
+    })
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
 describe('.length(length)', () => {
   describe('when `length` is `NaN`', () => {
     it('throws when the schema is being built.', () => {

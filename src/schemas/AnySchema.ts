@@ -5,52 +5,78 @@
 import type { GenericSchema, Maybe } from '@/lib/GenericSchema'
 
 // INTERFACE
-interface AnyConfig<TOptional extends boolean, TNullable extends boolean> {
+interface AnyConfig<TOptional extends boolean, TNullable extends boolean, TDefault> {
   optional: TOptional
   nullable: TNullable
+  default: TDefault
 }
 
 // CLASS
-export class AnySchema<TOptional extends boolean, TNullable extends boolean>
-implements GenericSchema<Maybe<any, TOptional, TNullable>> {
+export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDefault>
+implements GenericSchema<Maybe<any, TOptional, TNullable, TDefault>> {
 
   // PROPERTIES
-  private readonly _config: AnyConfig<TOptional, TNullable>
+  private readonly _config: AnyConfig<TOptional, TNullable, TDefault>
 
   // CONSTRUCTOR
-  private constructor(config: AnyConfig<TOptional, TNullable>) {
+  private constructor(config: AnyConfig<TOptional, TNullable, TDefault>) {
     this._config = config
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create(): AnySchema<false, false> {
-    return new AnySchema({ optional: false, nullable: false })
+  public static create(): AnySchema<false, false, null> {
+    return new AnySchema({ optional: false, nullable: false, default: null })
   }
 
   // --------------------------------------------------------------------------
 
+  // UPDATER
+  private _resolveInput(input: unknown): unknown {
+
+    if (input === undefined && this._config.optional) {
+      return (this._config.default !== null) ? this._config.default : undefined
+    }
+
+    if (input === null && this._config.nullable) {
+      return (this._config.default !== null) ? this._config.default : null
+    }
+
+    return input
+
+  }
+
   // VALIDATOR
-  public validate(input: any): Maybe<any, TOptional, TNullable> {
+  public validate(input: any): Maybe<any, TOptional, TNullable, TDefault> {
 
-    if (input === undefined && this._config.optional) return input as Maybe<any, TOptional, TNullable>
-    if (input === null && this._config.nullable) return input as Maybe<any, TOptional, TNullable>
+    const resolved = this._resolveInput(input)
 
-    return input as Maybe<any, TOptional, TNullable>
+    if (resolved === undefined) return undefined as Maybe<any, TOptional, TNullable, TDefault>
+    if (resolved === null) return null as Maybe<any, TOptional, TNullable, TDefault>
+
+    return resolved as Maybe<any, TOptional, TNullable, TDefault>
 
   }
 
   // --------------------------------------------------------------------------
 
   // CONFIG
-  public optional(): AnySchema<true, TNullable> {
+  public optional(): AnySchema<true, TNullable, TDefault> {
     return new AnySchema({ ...this._config, optional: true })
   }
 
   // CONFIG
-  public nullable(): AnySchema<TOptional, true> {
+  public nullable(): AnySchema<TOptional, true, TDefault> {
     return new AnySchema({ ...this._config, nullable: true })
+  }
+
+  // CONFIG
+  public default(value: unknown): AnySchema<TOptional, TNullable, unknown> {
+    return new AnySchema({
+      ...this._config,
+      default: value,
+    })
   }
 
 }

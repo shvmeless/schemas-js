@@ -69,3 +69,29 @@ describe('.nullable()', () => {
     expectValidation(schema, null).toReturn(null)
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.default(value)', () => {
+
+  const base = AnySchema.create().optional()
+  const schema = base.default('default-any')
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(AnySchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns any `input` as `any`.', () => {
+    DataTypeGenerator.skip('undefined').forEach((value) => {
+      expectValidation(schema, value).toReturn(value)
+    })
+  })
+
+  it('returns the `default` value when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn('default-any')
+  })
+
+  it('returns the `default` value when `input` is `null` and the schema is nullable.', () => {
+    expectValidation(schema.nullable(), null).toReturn('default-any')
+  })
+})

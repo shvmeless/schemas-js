@@ -187,6 +187,38 @@ describe('.nullable()', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
+describe('.default(value)', () => {
+
+  const base = SetSchema.create(StringSchema.create()).optional()
+  const schema = base.default(new Set(['default']))
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(SetSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` is a `Set` instance.', () => {
+    const input = new Set(['a', 'b', 'c'])
+    const expected = new Set(['a', 'b', 'c'])
+    expectValidation(schema, input).toReturnNew(expected)
+  })
+
+  it('returns the `default` value when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn(new Set(['default']))
+  })
+
+  it('returns the `default` value when `input` is `null` and the schema is nullable.', () => {
+    expectValidation(schema.nullable(), null).toReturn(new Set(['default']))
+  })
+
+  it('throws when `input` is not a `Set` instance.', () => {
+    DataTypeGenerator.skip('sets', 'undefined').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be a Set.')
+    })
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
 describe('.size(length)', () => {
   describe('when `length` is `NaN`', () => {
     it('throws when the schema is being built.', () => {

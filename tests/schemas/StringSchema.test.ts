@@ -89,6 +89,36 @@ describe('.nullable()', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
+describe('.default(value)', () => {
+
+  const base = StringSchema.create().optional()
+  const schema = base.default('default-string')
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(StringSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` is a string.', () => {
+    expectValidation(schema, 'string').toReturn('string')
+  })
+
+  it('returns the `default` value when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn('default-string')
+  })
+
+  it('returns the `default` value when `input` is `null` and the schema is nullable.', () => {
+    expectValidation(schema.nullable(), null).toReturn('default-string')
+  })
+
+  it('throws when `input` is not a string.', () => {
+    DataTypeGenerator.skip('strings', 'undefined').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be a string.')
+    })
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
 describe('.length(length)', () => {
   describe('when `length` is `NaN`', () => {
     it('throws when the schema is being built.', () => {

@@ -55,3 +55,29 @@ describe('.optional()', () => {
     })
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.default(value)', () => {
+
+  const base = NullSchema.create().optional()
+  const schema = base.default(null)
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(NullSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` is `null`.', () => {
+    expectValidation(schema, null).toReturn(null)
+  })
+
+  it('returns the `default` value when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn(null)
+  })
+
+  it('throws when `input` is not `null`.', () => {
+    DataTypeGenerator.skip('null', 'undefined').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be null.')
+    })
+  })
+})

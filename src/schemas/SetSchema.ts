@@ -8,23 +8,24 @@ import { stringify } from '@/utils/stringify'
 type SetValidations<TValue> = GenericValidations<'size' | 'min' | 'max' | 'some' | 'every' | 'none', Set<TValue>>
 
 // INTERFACE
-interface SetConfig<TValue, TOptional extends boolean, TNullable extends boolean> {
+interface SetConfig<TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends Set<TValue> | null> {
   schema: GenericSchema<TValue>
   prune: boolean
   optional: TOptional
   nullable: TNullable
+  default: TDefault
 }
 
 // CLASS
-export class SetSchema<TValue, TOptional extends boolean, TNullable extends boolean>
-implements GenericSchema<Maybe<Set<TValue>, TOptional, TNullable>> {
+export class SetSchema<TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends Set<TValue> | null>
+implements GenericSchema<Maybe<Set<TValue>, TOptional, TNullable, TDefault>> {
 
   // PROPERTIES
-  private readonly _config: SetConfig<TValue, TOptional, TNullable>
+  private readonly _config: SetConfig<TValue, TOptional, TNullable, TDefault>
   private readonly _validations: SetValidations<TValue>
 
   // CONSTRUCTOR
-  private constructor(config: SetConfig<TValue, TOptional, TNullable>, validations: SetValidations<TValue>) {
+  private constructor(config: SetConfig<TValue, TOptional, TNullable, TDefault>, validations: SetValidations<TValue>) {
     this._config = config
     this._validations = validations
   }
@@ -32,28 +33,29 @@ implements GenericSchema<Maybe<Set<TValue>, TOptional, TNullable>> {
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TValue>(schema: GenericSchema<TValue>): SetSchema<TValue, false, false> {
-    return new SetSchema<TValue, false, false>({
+  public static create<TValue>(schema: GenericSchema<TValue>): SetSchema<TValue, false, false, null> {
+    return new SetSchema<TValue, false, false, null>({
       schema: schema,
       prune: false,
       optional: false,
       nullable: false,
+      default: null,
     }, {})
   }
 
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private updateConfig(config: Partial<SetConfig<TValue, TOptional, TNullable>> = {}): SetSchema<TValue, TOptional, TNullable> {
-    return new SetSchema<TValue, TOptional, TNullable>(
+  private updateConfig(config: Partial<SetConfig<TValue, TOptional, TNullable, TDefault>> = {}): SetSchema<TValue, TOptional, TNullable, TDefault> {
+    return new SetSchema<TValue, TOptional, TNullable, TDefault>(
       { ...this._config, ...config },
       this._validations,
     )
   }
 
   // UPDATER
-  private updateValidation(validations: SetValidations<TValue>): SetSchema<TValue, TOptional, TNullable> {
-    return new SetSchema<TValue, TOptional, TNullable>(
+  private updateValidation(validations: SetValidations<TValue>): SetSchema<TValue, TOptional, TNullable, TDefault> {
+    return new SetSchema<TValue, TOptional, TNullable, TDefault>(
       this._config,
       { ...this._validations, ...validations },
     )
@@ -61,20 +63,37 @@ implements GenericSchema<Maybe<Set<TValue>, TOptional, TNullable>> {
 
   // --------------------------------------------------------------------------
 
-  // VALIDATOR
-  public validate(input: unknown): Maybe<Set<TValue>, TOptional, TNullable> {
+  // UPDATER
+  private _resolveInput(input: unknown): Set<unknown> | null | undefined {
 
-    if (input === undefined && this._config.optional) return input as Maybe<Set<TValue>, TOptional, TNullable>
-    if (input === null && this._config.nullable) return input as Maybe<Set<TValue>, TOptional, TNullable>
+    if (input === undefined && this._config.optional) {
+      return (this._config.default !== null) ? this._config.default : undefined
+    }
+
+    if (input === null && this._config.nullable) {
+      return (this._config.default !== null) ? this._config.default : null
+    }
 
     if (!(input instanceof Set)) {
       throw new ValidationError(input, 'The value must be a Set.')
     }
 
+    return input
+
+  }
+
+  // VALIDATOR
+  public validate(input: unknown): Maybe<Set<TValue>, TOptional, TNullable, TDefault> {
+
+    const resolved = this._resolveInput(input)
+
+    if (resolved === undefined) return undefined as Maybe<Set<TValue>, TOptional, TNullable, TDefault>
+    if (resolved === null) return null as Maybe<Set<TValue>, TOptional, TNullable, TDefault>
+
     const result = new Set<TValue>()
     const errors = ValidationError.prepare()
 
-    for (const element of input) {
+    for (const element of resolved) {
       try {
         const value = this._config.schema.validate(element)
         result.add(value)
@@ -92,19 +111,19 @@ implements GenericSchema<Maybe<Set<TValue>, TOptional, TNullable>> {
 
     runValidations(this._validations, input, result)
 
-    return result as Maybe<Set<TValue>, TOptional, TNullable>
+    return result as Maybe<Set<TValue>, TOptional, TNullable, TDefault>
 
   }
 
   // --------------------------------------------------------------------------
 
-  // METHOD
-  public prune(): SetSchema<TValue, TOptional, TNullable> {
+  // CONFIG
+  public prune(): SetSchema<TValue, TOptional, TNullable, TDefault> {
     return this.updateConfig({ prune: true })
   }
 
   // CONFIG
-  public optional(): SetSchema<TValue, true, TNullable> {
+  public optional(): SetSchema<TValue, true, TNullable, TDefault> {
     return new SetSchema({
       ...this._config,
       optional: true,
@@ -112,15 +131,25 @@ implements GenericSchema<Maybe<Set<TValue>, TOptional, TNullable>> {
   }
 
   // CONFIG
-  public nullable(): SetSchema<TValue, TOptional, true> {
+  public nullable(): SetSchema<TValue, TOptional, true, TDefault> {
     return new SetSchema({
       ...this._config,
       nullable: true,
     }, this._validations)
   }
 
+  // CONFIG
+  public default(value: Set<TValue>): SetSchema<TValue, TOptional, TNullable, Set<TValue>> {
+    return new SetSchema({
+      ...this._config,
+      default: value,
+    }, this._validations)
+  }
+
+  // --------------------------------------------------------------------------
+
   // METHOD
-  public size(length: number): SetSchema<TValue, TOptional, TNullable> {
+  public size(length: number): SetSchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
     return this.updateValidation({
@@ -134,7 +163,7 @@ implements GenericSchema<Maybe<Set<TValue>, TOptional, TNullable>> {
   }
 
   // METHOD
-  public min(length: number): SetSchema<TValue, TOptional, TNullable> {
+  public min(length: number): SetSchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
     return this.updateValidation({
@@ -146,7 +175,7 @@ implements GenericSchema<Maybe<Set<TValue>, TOptional, TNullable>> {
   }
 
   // METHOD
-  public max(length: number): SetSchema<TValue, TOptional, TNullable> {
+  public max(length: number): SetSchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
     return this.updateValidation({
@@ -158,7 +187,7 @@ implements GenericSchema<Maybe<Set<TValue>, TOptional, TNullable>> {
   }
 
   // METHOD
-  public some(callback: (value: TValue, set: Set<TValue>) => boolean): SetSchema<TValue, TOptional, TNullable> {
+  public some(callback: (value: TValue, set: Set<TValue>) => boolean): SetSchema<TValue, TOptional, TNullable, TDefault> {
     return this.updateValidation({
       some: (current, initial) => {
         for (const value of current) {
@@ -170,7 +199,7 @@ implements GenericSchema<Maybe<Set<TValue>, TOptional, TNullable>> {
   }
 
   // METHOD
-  public every(callback: (value: TValue, set: Set<TValue>) => boolean): SetSchema<TValue, TOptional, TNullable> {
+  public every(callback: (value: TValue, set: Set<TValue>) => boolean): SetSchema<TValue, TOptional, TNullable, TDefault> {
     return this.updateValidation({
       every: (current, initial) => {
         for (const value of current) {
@@ -181,7 +210,7 @@ implements GenericSchema<Maybe<Set<TValue>, TOptional, TNullable>> {
   }
 
   // METHOD
-  public none(callback: (value: TValue, set: Set<TValue>) => boolean): SetSchema<TValue, TOptional, TNullable> {
+  public none(callback: (value: TValue, set: Set<TValue>) => boolean): SetSchema<TValue, TOptional, TNullable, TDefault> {
     return this.updateValidation({
       none: (current, initial) => {
         for (const value of current) {

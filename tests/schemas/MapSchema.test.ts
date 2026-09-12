@@ -207,6 +207,38 @@ describe('.nullable()', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
+describe('.default(value)', () => {
+
+  const base = MapSchema.create(StringSchema.create(), NumberSchema.create()).optional()
+  const schema = base.default(new Map([['default', 0]]))
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(MapSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` is a `Map` instance.', () => {
+    const input = new Map([['a', 1], ['b', 2]])
+    const expected = new Map([['a', 1], ['b', 2]])
+    expectValidation(schema, input).toReturnNew(expected)
+  })
+
+  it('returns the `default` value when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn(new Map([['default', 0]]))
+  })
+
+  it('returns the `default` value when `input` is `null` and the schema is nullable.', () => {
+    expectValidation(schema.nullable(), null).toReturn(new Map([['default', 0]]))
+  })
+
+  it('throws when `input` is not a `Map` instance.', () => {
+    DataTypeGenerator.skip('maps', 'undefined').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be a Map.')
+    })
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
 describe('.size(length)', () => {
   describe('when `length` is `NaN`', () => {
     it('throws when the schema is being built.', () => {
