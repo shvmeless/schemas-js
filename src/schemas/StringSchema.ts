@@ -8,23 +8,23 @@ import { stringify } from '@/utils/stringify'
 type StringValidations = GenericValidations<'length' | 'min' | 'max' | 'casing' | 'trim' | 'prefix' | 'suffix' | 'includes' | 'excludes' | 'pattern', string>
 
 // INTERFACE
-interface StringConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends string | null> {
-  optional: TOptional
-  nullable: TNullable
-  default: TDefault
+interface StringConfig {
+  optional: boolean
+  nullable: boolean
+  default: string | null
   fallback: string | null
 }
 
 // CLASS
-export class StringSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends string | null>
+export class StringSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
 implements GenericSchema<Maybe<string, TOptional, TNullable, TDefault>> {
 
   // PROPERTIES
-  private readonly _config: StringConfig<TOptional, TNullable, TDefault>
+  private readonly _config: StringConfig
   private readonly _validations: StringValidations
 
   // CONSTRUCTOR
-  private constructor(config: StringConfig<TOptional, TNullable, TDefault>, validations: StringValidations) {
+  private constructor(config: StringConfig, validations: StringValidations) {
     this._config = config
     this._validations = validations
   }
@@ -32,7 +32,7 @@ implements GenericSchema<Maybe<string, TOptional, TNullable, TDefault>> {
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create(): StringSchema<false, false, null> {
+  public static create(): StringSchema<false, false, false> {
     return new StringSchema({ optional: false, nullable: false, default: null, fallback: null }, {})
   }
 
@@ -96,7 +96,7 @@ implements GenericSchema<Maybe<string, TOptional, TNullable, TDefault>> {
   }
 
   // CONFIG
-  public default(value: string): StringSchema<TOptional, TNullable, string> {
+  public default(value: string): StringSchema<TOptional, TNullable, true> {
     return new StringSchema({
       ...this._config,
       default: value,

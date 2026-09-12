@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
@@ -5,29 +6,29 @@
 import type { GenericSchema, Maybe } from '@/lib/GenericSchema'
 
 // INTERFACE
-interface AnyConfig<TOptional extends boolean, TNullable extends boolean, TDefault> {
-  optional: TOptional
-  nullable: TNullable
-  default: TDefault
+interface AnyConfig {
+  optional: boolean
+  nullable: boolean
+  default: any
   fallback: any
 }
 
 // CLASS
-export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDefault>
+export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
 implements GenericSchema<Maybe<any, TOptional, TNullable, TDefault>> {
 
   // PROPERTIES
-  private readonly _config: AnyConfig<TOptional, TNullable, TDefault>
+  private readonly _config: AnyConfig
 
   // CONSTRUCTOR
-  private constructor(config: AnyConfig<TOptional, TNullable, TDefault>) {
+  private constructor(config: AnyConfig) {
     this._config = config
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create(): AnySchema<false, false, null> {
+  public static create(): AnySchema<false, false, false> {
     return new AnySchema({ optional: false, nullable: false, default: null, fallback: null })
   }
 
@@ -78,7 +79,7 @@ implements GenericSchema<Maybe<any, TOptional, TNullable, TDefault>> {
   }
 
   // CONFIG
-  public default(value: unknown): AnySchema<TOptional, TNullable, unknown> {
+  public default(value: unknown): AnySchema<TOptional, TNullable, true> {
     return new AnySchema({
       ...this._config,
       default: value,

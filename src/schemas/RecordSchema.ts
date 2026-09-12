@@ -8,25 +8,25 @@ import { stringify } from '@/utils/stringify'
 type RecordValidations<TValue> = GenericValidations<'length' | 'min' | 'max' | 'some' | 'every' | 'none', Record<string, TValue>>
 
 // INTERFACE
-interface RecordConfig<TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends Record<string, TValue> | null> {
+interface RecordConfig<TValue> {
   schema: GenericSchema<TValue>
   prune: boolean
-  optional: TOptional
-  nullable: TNullable
-  default: TDefault
+  optional: boolean
+  nullable: boolean
+  default: Record<string, TValue> | null
   fallback: Record<string, TValue> | null
 }
 
 // CLASS
-export class RecordSchema<TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends Record<string, TValue> | null>
+export class RecordSchema<TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
 implements GenericSchema<Maybe<Record<string, TValue>, TOptional, TNullable, TDefault>> {
 
   // PROPERTIES
-  private readonly _config: RecordConfig<TValue, TOptional, TNullable, TDefault>
+  private readonly _config: RecordConfig<TValue>
   private readonly _validations: RecordValidations<TValue>
 
   // CONSTRUCTOR
-  private constructor(config: RecordConfig<TValue, TOptional, TNullable, TDefault>, validations: RecordValidations<TValue>) {
+  private constructor(config: RecordConfig<TValue>, validations: RecordValidations<TValue>) {
     this._config = config
     this._validations = validations
   }
@@ -34,8 +34,8 @@ implements GenericSchema<Maybe<Record<string, TValue>, TOptional, TNullable, TDe
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TValue>(schema: GenericSchema<TValue>): RecordSchema<TValue, false, false, null> {
-    return new RecordSchema<TValue, false, false, null>({
+  public static create<TValue>(schema: GenericSchema<TValue>): RecordSchema<TValue, false, false, false> {
+    return new RecordSchema<TValue, false, false, false>({
       schema: schema,
       prune: false,
       optional: false,
@@ -48,7 +48,7 @@ implements GenericSchema<Maybe<Record<string, TValue>, TOptional, TNullable, TDe
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private updateConfig(config: Partial<RecordConfig<TValue, TOptional, TNullable, TDefault>> = {}): RecordSchema<TValue, TOptional, TNullable, TDefault> {
+  private updateConfig(config: Partial<RecordConfig<TValue>> = {}): RecordSchema<TValue, TOptional, TNullable, TDefault> {
     return new RecordSchema<TValue, TOptional, TNullable, TDefault>(
       { ...this._config, ...config },
       this._validations,
@@ -145,7 +145,7 @@ implements GenericSchema<Maybe<Record<string, TValue>, TOptional, TNullable, TDe
   }
 
   // CONFIG
-  public default(value: Record<string, TValue>): RecordSchema<TValue, TOptional, TNullable, Record<string, TValue>> {
+  public default(value: Record<string, TValue>): RecordSchema<TValue, TOptional, TNullable, true> {
     return new RecordSchema({
       ...this._config,
       default: value,

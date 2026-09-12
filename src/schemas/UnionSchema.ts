@@ -7,23 +7,23 @@ type InferSchemaType<I> = I extends GenericSchema<infer T> ? T : never
 type SchemaTypeUnion<A extends ReadonlyArray<GenericSchema<unknown>>> = InferSchemaType<A[number]>
 
 // INTERFACE
-interface UnionConfig<TSchemas, TOptional extends boolean, TNullable extends boolean, TDefault extends TSchemas | null> {
-  optional: TOptional
-  nullable: TNullable
-  default: TDefault
+interface UnionConfig<TSchemas> {
+  optional: boolean
+  nullable: boolean
+  default: TSchemas | null
   fallback: TSchemas | null
   schemas: ReadonlyArray<GenericSchema<TSchemas>>
 }
 
 // CLASS
-export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends boolean, TDefault extends TSchemas | null>
+export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
 implements GenericSchema<Maybe<TSchemas, TOptional, TNullable, TDefault>> {
 
   // PROPERTIES
-  private readonly _config: UnionConfig<TSchemas, TOptional, TNullable, TDefault>
+  private readonly _config: UnionConfig<TSchemas>
 
   // CONSTRUCTOR
-  private constructor(config: UnionConfig<TSchemas, TOptional, TNullable, TDefault>) {
+  private constructor(config: UnionConfig<TSchemas>) {
     if (config.schemas.length < 2) throw new Error('Must provide at least two schemas.')
     this._config = config
   }
@@ -31,8 +31,8 @@ implements GenericSchema<Maybe<TSchemas, TOptional, TNullable, TDefault>> {
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<A extends ReadonlyArray<GenericSchema<unknown>>>(...schemas: A): UnionSchema<SchemaTypeUnion<A>, false, false, null> {
-    return new UnionSchema<SchemaTypeUnion<A>, false, false, null>({
+  public static create<A extends ReadonlyArray<GenericSchema<unknown>>>(...schemas: A): UnionSchema<SchemaTypeUnion<A>, false, false, false> {
+    return new UnionSchema<SchemaTypeUnion<A>, false, false, false>({
       schemas: schemas as ReadonlyArray<GenericSchema<SchemaTypeUnion<A>>>,
       optional: false,
       nullable: false,
@@ -85,8 +85,8 @@ implements GenericSchema<Maybe<TSchemas, TOptional, TNullable, TDefault>> {
   }
 
   // CONFIG
-  public default(value: TSchemas): UnionSchema<TSchemas, TOptional, TNullable, TSchemas> {
-    return new UnionSchema<TSchemas, TOptional, TNullable, TSchemas>({
+  public default(value: TSchemas): UnionSchema<TSchemas, TOptional, TNullable, true> {
+    return new UnionSchema<TSchemas, TOptional, TNullable, true>({
       ...this._config,
       default: value,
     })

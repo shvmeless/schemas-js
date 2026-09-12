@@ -8,23 +8,23 @@ import { stringify } from '@/utils/stringify'
 type NumberValidations = GenericValidations<'min' | 'max' | 'integer' | 'finite' | 'safe', number>
 
 // INTERFACE
-interface NumberConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends number | null> {
-  optional: TOptional
-  nullable: TNullable
-  default: TDefault
+interface NumberConfig {
+  optional: boolean
+  nullable: boolean
+  default: number | null
   fallback: number | null
 }
 
 // CLASS
-export class NumberSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends number | null>
+export class NumberSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
 implements GenericSchema<Maybe<number, TOptional, TNullable, TDefault>> {
 
   // PROPERTIES
-  private readonly _config: NumberConfig<TOptional, TNullable, TDefault>
+  private readonly _config: NumberConfig
   private readonly _validations: NumberValidations
 
   // CONSTRUCTOR
-  private constructor(config: NumberConfig<TOptional, TNullable, TDefault>, validations: NumberValidations) {
+  private constructor(config: NumberConfig, validations: NumberValidations) {
     this._config = config
     this._validations = validations
   }
@@ -32,7 +32,7 @@ implements GenericSchema<Maybe<number, TOptional, TNullable, TDefault>> {
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create(): NumberSchema<false, false, null> {
+  public static create(): NumberSchema<false, false, false> {
     return new NumberSchema({ optional: false, nullable: false, default: null, fallback: null }, {})
   }
 
@@ -96,7 +96,7 @@ implements GenericSchema<Maybe<number, TOptional, TNullable, TDefault>> {
   }
 
   // CONFIG
-  public default(value: number): NumberSchema<TOptional, TNullable, number> {
+  public default(value: number): NumberSchema<TOptional, TNullable, true> {
     return new NumberSchema({
       ...this._config,
       default: value,

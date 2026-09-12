@@ -3,23 +3,23 @@ import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema, Maybe } from '@/lib/GenericSchema'
 
 // INTERFACE
-interface EnumConfig<TValue extends string | number, TOptional extends boolean, TNullable extends boolean, TDefault extends TValue | null> {
+interface EnumConfig<TValue extends string | number> {
   values: ReadonlyArray<TValue>
-  optional: TOptional
-  nullable: TNullable
-  default: TDefault
+  optional: boolean
+  nullable: boolean
+  default: TValue | null
   fallback: TValue | null
 }
 
 // CLASS
-export class EnumSchema<TValue extends string | number, TOptional extends boolean, TNullable extends boolean, TDefault extends TValue | null>
+export class EnumSchema<TValue extends string | number, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
 implements GenericSchema<Maybe<TValue, TOptional, TNullable, TDefault>> {
 
   // PROPERTIES
-  private readonly _config: EnumConfig<TValue, TOptional, TNullable, TDefault>
+  private readonly _config: EnumConfig<TValue>
 
   // CONSTRUCTOR
-  private constructor(config: EnumConfig<TValue, TOptional, TNullable, TDefault>) {
+  private constructor(config: EnumConfig<TValue>) {
     this._config = config
     if (this._config.values.length === 0) {
       throw new Error('Must provide at least one literal value.')
@@ -29,7 +29,7 @@ implements GenericSchema<Maybe<TValue, TOptional, TNullable, TDefault>> {
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TValue extends string | number>(...values: ReadonlyArray<TValue>): EnumSchema<TValue, false, false, null> {
+  public static create<TValue extends string | number>(...values: ReadonlyArray<TValue>): EnumSchema<TValue, false, false, false> {
     return new EnumSchema({ values, optional: false, nullable: false, default: null, fallback: null })
   }
 
@@ -84,7 +84,7 @@ implements GenericSchema<Maybe<TValue, TOptional, TNullable, TDefault>> {
   }
 
   // CONFIG
-  public default(value: TValue): EnumSchema<TValue, TOptional, TNullable, TValue> {
+  public default(value: TValue): EnumSchema<TValue, TOptional, TNullable, true> {
     return new EnumSchema({
       ...this._config,
       default: value,

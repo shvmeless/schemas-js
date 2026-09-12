@@ -8,25 +8,25 @@ import { stringify } from '@/utils/stringify'
 type SetValidations<TValue> = GenericValidations<'size' | 'min' | 'max' | 'some' | 'every' | 'none', Set<TValue>>
 
 // INTERFACE
-interface SetConfig<TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends Set<TValue> | null> {
+interface SetConfig<TValue> {
   schema: GenericSchema<TValue>
   prune: boolean
-  optional: TOptional
-  nullable: TNullable
-  default: TDefault
+  optional: boolean
+  nullable: boolean
+  default: Set<TValue> | null
   fallback: Set<TValue> | null
 }
 
 // CLASS
-export class SetSchema<TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends Set<TValue> | null>
+export class SetSchema<TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
 implements GenericSchema<Maybe<Set<TValue>, TOptional, TNullable, TDefault>> {
 
   // PROPERTIES
-  private readonly _config: SetConfig<TValue, TOptional, TNullable, TDefault>
+  private readonly _config: SetConfig<TValue>
   private readonly _validations: SetValidations<TValue>
 
   // CONSTRUCTOR
-  private constructor(config: SetConfig<TValue, TOptional, TNullable, TDefault>, validations: SetValidations<TValue>) {
+  private constructor(config: SetConfig<TValue>, validations: SetValidations<TValue>) {
     this._config = config
     this._validations = validations
   }
@@ -34,8 +34,8 @@ implements GenericSchema<Maybe<Set<TValue>, TOptional, TNullable, TDefault>> {
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TValue>(schema: GenericSchema<TValue>): SetSchema<TValue, false, false, null> {
-    return new SetSchema<TValue, false, false, null>({
+  public static create<TValue>(schema: GenericSchema<TValue>): SetSchema<TValue, false, false, false> {
+    return new SetSchema<TValue, false, false, false>({
       schema: schema,
       prune: false,
       optional: false,
@@ -48,7 +48,7 @@ implements GenericSchema<Maybe<Set<TValue>, TOptional, TNullable, TDefault>> {
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private updateConfig(config: Partial<SetConfig<TValue, TOptional, TNullable, TDefault>> = {}): SetSchema<TValue, TOptional, TNullable, TDefault> {
+  private updateConfig(config: Partial<SetConfig<TValue>> = {}): SetSchema<TValue, TOptional, TNullable, TDefault> {
     return new SetSchema<TValue, TOptional, TNullable, TDefault>(
       { ...this._config, ...config },
       this._validations,
@@ -146,7 +146,7 @@ implements GenericSchema<Maybe<Set<TValue>, TOptional, TNullable, TDefault>> {
   }
 
   // CONFIG
-  public default(value: Set<TValue>): SetSchema<TValue, TOptional, TNullable, Set<TValue>> {
+  public default(value: Set<TValue>): SetSchema<TValue, TOptional, TNullable, true> {
     return new SetSchema({
       ...this._config,
       default: value,

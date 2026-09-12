@@ -8,25 +8,25 @@ import { stringify } from '@/utils/stringify'
 type ArrayValidations<TItem> = GenericValidations<'length' | 'min' | 'max' | 'some' | 'every' | 'none', Array<TItem>>
 
 // INTERFACE
-interface ArrayConfig<TItem, TOptional extends boolean, TNullable extends boolean, TDefault extends Array<TItem> | null> {
+interface ArrayConfig<TItem> {
   schema: GenericSchema<TItem>
   prune: boolean
-  optional: TOptional
-  nullable: TNullable
-  default: TDefault
+  optional: boolean
+  nullable: boolean
+  default: Array<TItem> | null
   fallback: Array<TItem> | null
 }
 
 // CLASS
-export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boolean, TDefault extends Array<TItem> | null>
+export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
 implements GenericSchema<Maybe<Array<TItem>, TOptional, TNullable, TDefault>> {
 
   // PROPERTIES
-  private readonly _config: ArrayConfig<TItem, TOptional, TNullable, TDefault>
+  private readonly _config: ArrayConfig<TItem>
   private readonly _validations: ArrayValidations<TItem>
 
   // CONSTRUCTOR
-  private constructor(config: ArrayConfig<TItem, TOptional, TNullable, TDefault>, validations: ArrayValidations<TItem>) {
+  private constructor(config: ArrayConfig<TItem>, validations: ArrayValidations<TItem>) {
     this._config = config
     this._validations = validations
   }
@@ -34,7 +34,7 @@ implements GenericSchema<Maybe<Array<TItem>, TOptional, TNullable, TDefault>> {
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TItem>(schema: GenericSchema<TItem>): ArraySchema<TItem, false, false, null> {
+  public static create<TItem>(schema: GenericSchema<TItem>): ArraySchema<TItem, false, false, false> {
     return new ArraySchema({
       schema: schema,
       prune: false,
@@ -141,7 +141,7 @@ implements GenericSchema<Maybe<Array<TItem>, TOptional, TNullable, TDefault>> {
   }
 
   // CONFIG
-  public default(value: Array<TItem>): ArraySchema<TItem, TOptional, TNullable, Array<TItem>> {
+  public default(value: Array<TItem>): ArraySchema<TItem, TOptional, TNullable, true> {
     return new ArraySchema({
       ...this._config,
       default: value,

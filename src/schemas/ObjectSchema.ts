@@ -3,32 +3,32 @@ import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema, Maybe } from '@/lib/GenericSchema'
 
 // INTERFACE
-interface ObjectConfig<TShape, TOptional extends boolean, TNullable extends boolean, TDefault extends TShape | null> {
+interface ObjectConfig<TShape> {
   schema: { [K in keyof TShape]: GenericSchema<TShape[K]> }
   strip: boolean
-  optional: TOptional
-  nullable: TNullable
-  default: TDefault
+  optional: boolean
+  nullable: boolean
+  default: TShape | null
   fallback: TShape | null
 }
 
 // CLASS
-export class ObjectSchema<TShape, TOptional extends boolean, TNullable extends boolean, TDefault extends TShape | null>
+export class ObjectSchema<TShape, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
 implements GenericSchema<Maybe<TShape, TOptional, TNullable, TDefault>> {
 
   // PROPERTIES
-  private readonly _config: ObjectConfig<TShape, TOptional, TNullable, TDefault>
+  private readonly _config: ObjectConfig<TShape>
 
   // CONSTRUCTOR
-  private constructor(config: ObjectConfig<TShape, TOptional, TNullable, TDefault>) {
+  private constructor(config: ObjectConfig<TShape>) {
     this._config = config
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TShape>(schema: { [K in keyof TShape]: GenericSchema<TShape[K]> }): ObjectSchema<TShape, false, false, null> {
-    return new ObjectSchema<TShape, false, false, null>({
+  public static create<TShape>(schema: { [K in keyof TShape]: GenericSchema<TShape[K]> }): ObjectSchema<TShape, false, false, false> {
+    return new ObjectSchema<TShape, false, false, false>({
       schema: schema,
       strip: false,
       optional: false,
@@ -41,7 +41,7 @@ implements GenericSchema<Maybe<TShape, TOptional, TNullable, TDefault>> {
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private updateConfig(config: Partial<ObjectConfig<TShape, TOptional, TNullable, TDefault>> = {}): ObjectSchema<TShape, TOptional, TNullable, TDefault> {
+  private updateConfig(config: Partial<ObjectConfig<TShape>> = {}): ObjectSchema<TShape, TOptional, TNullable, TDefault> {
     return new ObjectSchema<TShape, TOptional, TNullable, TDefault>(
       { ...this._config, ...config },
     )
@@ -141,7 +141,7 @@ implements GenericSchema<Maybe<TShape, TOptional, TNullable, TDefault>> {
   }
 
   // CONFIG
-  public default(value: TShape): ObjectSchema<TShape, TOptional, TNullable, TShape> {
+  public default(value: TShape): ObjectSchema<TShape, TOptional, TNullable, true> {
     return new ObjectSchema({
       ...this._config,
       default: value,

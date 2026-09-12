@@ -3,24 +3,24 @@ import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema, Maybe } from '@/lib/GenericSchema'
 
 // INTERFACE
-interface TupleConfig<TShape extends ReadonlyArray<unknown>, TOptional extends boolean, TNullable extends boolean, TDefault extends TShape | null> {
+interface TupleConfig<TShape extends ReadonlyArray<unknown>> {
   shape: { [K in keyof TShape]: GenericSchema<TShape[K]> }
   strip: boolean
-  optional: TOptional
-  nullable: TNullable
-  default: TDefault
+  optional: boolean
+  nullable: boolean
+  default: TShape | null
   fallback: TShape | null
 }
 
 // CLASS
-export class TupleSchema<TShape extends ReadonlyArray<unknown>, TOptional extends boolean, TNullable extends boolean, TDefault extends TShape | null>
+export class TupleSchema<TShape extends ReadonlyArray<unknown>, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
 implements GenericSchema<Maybe<TShape, TOptional, TNullable, TDefault>> {
 
   // PROPERTIES
-  private readonly _config: TupleConfig<TShape, TOptional, TNullable, TDefault>
+  private readonly _config: TupleConfig<TShape>
 
   // CONSTRUCTOR
-  private constructor(config: TupleConfig<TShape, TOptional, TNullable, TDefault>) {
+  private constructor(config: TupleConfig<TShape>) {
     this._config = {
       ...config,
       shape: [...config.shape] as unknown as { [K in keyof TShape]: GenericSchema<TShape[K]> },
@@ -30,8 +30,8 @@ implements GenericSchema<Maybe<TShape, TOptional, TNullable, TDefault>> {
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TShape extends ReadonlyArray<unknown>>(shape: { [K in keyof TShape]: GenericSchema<TShape[K]> }): TupleSchema<TShape, false, false, null> {
-    return new TupleSchema<TShape, false, false, null>({
+  public static create<TShape extends ReadonlyArray<unknown>>(shape: { [K in keyof TShape]: GenericSchema<TShape[K]> }): TupleSchema<TShape, false, false, false> {
+    return new TupleSchema<TShape, false, false, false>({
       shape: shape,
       strip: false,
       optional: false,
@@ -44,7 +44,7 @@ implements GenericSchema<Maybe<TShape, TOptional, TNullable, TDefault>> {
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private updateConfig(config: Partial<TupleConfig<TShape, TOptional, TNullable, TDefault>> = {}): TupleSchema<TShape, TOptional, TNullable, TDefault> {
+  private updateConfig(config: Partial<TupleConfig<TShape>> = {}): TupleSchema<TShape, TOptional, TNullable, TDefault> {
     return new TupleSchema<TShape, TOptional, TNullable, TDefault>(
       { ...this._config, ...config },
     )
@@ -144,7 +144,7 @@ implements GenericSchema<Maybe<TShape, TOptional, TNullable, TDefault>> {
   }
 
   // CONFIG
-  public default(value: TShape): TupleSchema<TShape, TOptional, TNullable, TShape> {
+  public default(value: TShape): TupleSchema<TShape, TOptional, TNullable, true> {
     return new TupleSchema({
       ...this._config,
       default: value,

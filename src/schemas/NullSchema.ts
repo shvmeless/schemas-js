@@ -3,28 +3,28 @@ import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema, Optional } from '@/lib/GenericSchema'
 
 // INTERFACE
-interface NullConfig<TOptional extends boolean, TDefault extends null | undefined> {
-  optional: TOptional
-  default: TDefault
+interface NullConfig {
+  optional: boolean
+  default: null | undefined
   fallback: null | undefined
 }
 
 // CLASS
-export class NullSchema<TOptional extends boolean, TDefault extends null | undefined>
+export class NullSchema<TOptional extends boolean, TDefault extends boolean>
 implements GenericSchema<Optional<null, TOptional, TDefault>> {
 
   // PROPERTIES
-  private readonly _config: NullConfig<TOptional, TDefault>
+  private readonly _config: NullConfig
 
   // CONSTRUCTOR
-  private constructor(config: NullConfig<TOptional, TDefault>) {
+  private constructor(config: NullConfig) {
     this._config = config
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create(): NullSchema<false, undefined> {
+  public static create(): NullSchema<false, false> {
     return new NullSchema({ optional: false, default: undefined, fallback: undefined })
   }
 
@@ -70,7 +70,7 @@ implements GenericSchema<Optional<null, TOptional, TDefault>> {
   }
 
   // CONFIG
-  public default(value: null): NullSchema<TOptional, null> {
+  public default(value: null): NullSchema<TOptional, true> {
     return new NullSchema({
       ...this._config,
       default: value,

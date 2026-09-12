@@ -7,30 +7,30 @@ import type { GenericSchema, Maybe } from '@/lib/GenericSchema'
 type AnyConstructor<T = unknown> = abstract new (...args: Array<any>) => T
 
 // INTERFACE
-interface InstanceOfConfig<TConstructor extends AnyConstructor, TOptional extends boolean, TNullable extends boolean, TDefault extends InstanceType<TConstructor> | null> {
+interface InstanceOfConfig<TConstructor extends AnyConstructor> {
   constructor: TConstructor
-  optional: TOptional
-  nullable: TNullable
-  default: TDefault
+  optional: boolean
+  nullable: boolean
+  default: InstanceType<TConstructor> | null
   fallback: InstanceType<TConstructor> | null
 }
 
 // CLASS
-export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional extends boolean, TNullable extends boolean, TDefault extends InstanceType<TConstructor> | null>
+export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
 implements GenericSchema<Maybe<InstanceType<TConstructor>, TOptional, TNullable, TDefault>> {
 
   // PROPERTIES
-  private readonly _config: InstanceOfConfig<TConstructor, TOptional, TNullable, TDefault>
+  private readonly _config: InstanceOfConfig<TConstructor>
 
   // CONSTRUCTOR
-  private constructor(config: InstanceOfConfig<TConstructor, TOptional, TNullable, TDefault>) {
+  private constructor(config: InstanceOfConfig<TConstructor>) {
     this._config = config
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TConstructor extends AnyConstructor>(constructor: TConstructor): InstanceOfSchema<TConstructor, false, false, null> {
+  public static create<TConstructor extends AnyConstructor>(constructor: TConstructor): InstanceOfSchema<TConstructor, false, false, false> {
     return new InstanceOfSchema({ constructor, optional: false, nullable: false, default: null, fallback: null })
   }
 
@@ -85,7 +85,7 @@ implements GenericSchema<Maybe<InstanceType<TConstructor>, TOptional, TNullable,
   }
 
   // CONFIG
-  public default(value: InstanceType<TConstructor>): InstanceOfSchema<TConstructor, TOptional, TNullable, InstanceType<TConstructor>> {
+  public default(value: InstanceType<TConstructor>): InstanceOfSchema<TConstructor, TOptional, TNullable, true> {
     return new InstanceOfSchema({
       ...this._config,
       default: value,

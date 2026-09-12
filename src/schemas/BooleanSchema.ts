@@ -3,29 +3,29 @@ import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema, Maybe } from '@/lib/GenericSchema'
 
 // INTERFACE
-interface BooleanConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean | null> {
-  optional: TOptional
-  nullable: TNullable
-  default: TDefault
+interface BooleanConfig {
+  optional: boolean
+  nullable: boolean
+  default: boolean | null
   fallback: boolean | null
 }
 
 // CLASS
-export class BooleanSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean | null>
+export class BooleanSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
 implements GenericSchema<Maybe<boolean, TOptional, TNullable, TDefault>> {
 
   // PROPERTIES
-  private readonly _config: BooleanConfig<TOptional, TNullable, TDefault>
+  private readonly _config: BooleanConfig
 
   // CONSTRUCTOR
-  private constructor(config: BooleanConfig<TOptional, TNullable, TDefault>) {
+  private constructor(config: BooleanConfig) {
     this._config = config
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create(): BooleanSchema<false, false, null> {
+  public static create(): BooleanSchema<false, false, false> {
     return new BooleanSchema({ optional: false, nullable: false, default: null, fallback: null })
   }
 
@@ -80,7 +80,7 @@ implements GenericSchema<Maybe<boolean, TOptional, TNullable, TDefault>> {
   }
 
   // CONFIG
-  public default(value: boolean): BooleanSchema<TOptional, TNullable, boolean> {
+  public default(value: boolean): BooleanSchema<TOptional, TNullable, true> {
     return new BooleanSchema({
       ...this._config,
       default: value,

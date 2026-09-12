@@ -3,30 +3,30 @@ import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema, Maybe } from '@/lib/GenericSchema'
 
 // INTERFACE
-interface LiteralConfig<TValue extends string | number | boolean, TOptional extends boolean, TNullable extends boolean, TDefault extends TValue | null> {
+interface LiteralConfig<TValue extends string | number | boolean> {
   literal: TValue
-  optional: TOptional
-  nullable: TNullable
-  default: TDefault
+  optional: boolean
+  nullable: boolean
+  default: TValue | null
   fallback: TValue | null
 }
 
 // CLASS
-export class LiteralSchema<TValue extends string | number | boolean, TOptional extends boolean, TNullable extends boolean, TDefault extends TValue | null>
+export class LiteralSchema<TValue extends string | number | boolean, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
 implements GenericSchema<Maybe<TValue, TOptional, TNullable, TDefault>> {
 
   // PROPERTIES
-  private readonly _config: LiteralConfig<TValue, TOptional, TNullable, TDefault>
+  private readonly _config: LiteralConfig<TValue>
 
   // CONSTRUCTOR
-  private constructor(config: LiteralConfig<TValue, TOptional, TNullable, TDefault>) {
+  private constructor(config: LiteralConfig<TValue>) {
     this._config = config
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TValue extends string | number | boolean>(literal: TValue): LiteralSchema<TValue, false, false, null> {
+  public static create<TValue extends string | number | boolean>(literal: TValue): LiteralSchema<TValue, false, false, false> {
     return new LiteralSchema({ literal, optional: false, nullable: false, default: null, fallback: null })
   }
 
@@ -81,7 +81,7 @@ implements GenericSchema<Maybe<TValue, TOptional, TNullable, TDefault>> {
   }
 
   // CONFIG
-  public default(value: TValue): LiteralSchema<TValue, TOptional, TNullable, TValue> {
+  public default(value: TValue): LiteralSchema<TValue, TOptional, TNullable, true> {
     return new LiteralSchema({
       ...this._config,
       default: value,

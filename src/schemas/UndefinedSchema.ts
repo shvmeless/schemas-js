@@ -3,28 +3,28 @@ import { ValidationError } from '@/errors/ValidationError'
 import type { GenericSchema, Nullable } from '@/lib/GenericSchema'
 
 // INTERFACE
-interface UndefinedConfig<TNullable extends boolean, TDefault extends undefined | null> {
-  nullable: TNullable
-  default: TDefault
+interface UndefinedConfig {
+  nullable: boolean
+  default: undefined | null
   fallback: undefined | null
 }
 
 // CLASS
-export class UndefinedSchema<TNullable extends boolean, TDefault extends undefined | null>
+export class UndefinedSchema<TNullable extends boolean, TDefault extends boolean>
 implements GenericSchema<Nullable<undefined, TNullable, TDefault>> {
 
   // PROPERTIES
-  private readonly _config: UndefinedConfig<TNullable, TDefault>
+  private readonly _config: UndefinedConfig
 
   // CONSTRUCTOR
-  private constructor(config: UndefinedConfig<TNullable, TDefault>) {
+  private constructor(config: UndefinedConfig) {
     this._config = config
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create(): UndefinedSchema<false, null> {
+  public static create(): UndefinedSchema<false, false> {
     return new UndefinedSchema({ nullable: false, default: null, fallback: null })
   }
 
@@ -70,7 +70,7 @@ implements GenericSchema<Nullable<undefined, TNullable, TDefault>> {
   }
 
   // CONFIG
-  public default(value: undefined): UndefinedSchema<TNullable, undefined> {
+  public default(value: undefined): UndefinedSchema<TNullable, true> {
     return new UndefinedSchema({
       ...this._config,
       default: value,

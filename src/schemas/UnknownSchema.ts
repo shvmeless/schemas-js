@@ -2,29 +2,29 @@
 import type { GenericSchema, Maybe } from '@/lib/GenericSchema'
 
 // INTERFACE
-interface UnknownConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends unknown | null> {
-  optional: TOptional
-  nullable: TNullable
-  default: TDefault
-  fallback: unknown | null
+interface UnknownConfig {
+  optional: boolean
+  nullable: boolean
+  default: unknown
+  fallback: unknown
 }
 
 // CLASS
-export class UnknownSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends unknown | null>
+export class UnknownSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
 implements GenericSchema<Maybe<unknown, TOptional, TNullable, TDefault>> {
 
   // PROPERTIES
-  private readonly _config: UnknownConfig<TOptional, TNullable, TDefault>
+  private readonly _config: UnknownConfig
 
   // CONSTRUCTOR
-  private constructor(config: UnknownConfig<TOptional, TNullable, TDefault>) {
+  private constructor(config: UnknownConfig) {
     this._config = config
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create(): UnknownSchema<false, false, null> {
+  public static create(): UnknownSchema<false, false, false> {
     return new UnknownSchema({ optional: false, nullable: false, default: null, fallback: null })
   }
 
@@ -75,7 +75,7 @@ implements GenericSchema<Maybe<unknown, TOptional, TNullable, TDefault>> {
   }
 
   // CONFIG
-  public default(value: unknown): UnknownSchema<TOptional, TNullable, unknown> {
+  public default(value: unknown): UnknownSchema<TOptional, TNullable, true> {
     return new UnknownSchema({
       ...this._config,
       default: value,

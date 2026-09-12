@@ -8,26 +8,26 @@ import { stringify } from '@/utils/stringify'
 type MapValidations<TKey, TValue> = GenericValidations<'size' | 'min' | 'max' | 'some' | 'every' | 'none', Map<TKey, TValue>>
 
 // INTERFACE
-interface MapConfig<TKey, TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends Map<TKey, TValue> | null> {
+interface MapConfig<TKey, TValue> {
   keySchema: GenericSchema<TKey>
   valueSchema: GenericSchema<TValue>
   prune: boolean
-  optional: TOptional
-  nullable: TNullable
-  default: TDefault
+  optional: boolean
+  nullable: boolean
+  default: Map<TKey, TValue> | null
   fallback: Map<TKey, TValue> | null
 }
 
 // CLASS
-export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends Map<TKey, TValue> | null>
+export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
 implements GenericSchema<Maybe<Map<TKey, TValue>, TOptional, TNullable, TDefault>> {
 
   // PROPERTIES
-  private readonly _config: MapConfig<TKey, TValue, TOptional, TNullable, TDefault>
+  private readonly _config: MapConfig<TKey, TValue>
   private readonly _validations: MapValidations<TKey, TValue>
 
   // CONSTRUCTOR
-  private constructor(config: MapConfig<TKey, TValue, TOptional, TNullable, TDefault>, validations: MapValidations<TKey, TValue>) {
+  private constructor(config: MapConfig<TKey, TValue>, validations: MapValidations<TKey, TValue>) {
     this._config = config
     this._validations = validations
   }
@@ -35,8 +35,8 @@ implements GenericSchema<Maybe<Map<TKey, TValue>, TOptional, TNullable, TDefault
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TKey, TValue>(keySchema: GenericSchema<TKey>, valueSchema: GenericSchema<TValue>): MapSchema<TKey, TValue, false, false, null> {
-    return new MapSchema<TKey, TValue, false, false, null>({
+  public static create<TKey, TValue>(keySchema: GenericSchema<TKey>, valueSchema: GenericSchema<TValue>): MapSchema<TKey, TValue, false, false, false> {
+    return new MapSchema<TKey, TValue, false, false, false>({
       keySchema: keySchema,
       valueSchema: valueSchema,
       prune: false,
@@ -50,7 +50,7 @@ implements GenericSchema<Maybe<Map<TKey, TValue>, TOptional, TNullable, TDefault
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private updateConfig(config: Partial<MapConfig<TKey, TValue, TOptional, TNullable, TDefault>> = {}): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
+  private updateConfig(config: Partial<MapConfig<TKey, TValue>> = {}): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     return new MapSchema<TKey, TValue, TOptional, TNullable, TDefault>(
       { ...this._config, ...config },
       this._validations,
@@ -149,7 +149,7 @@ implements GenericSchema<Maybe<Map<TKey, TValue>, TOptional, TNullable, TDefault
   }
 
   // CONFIG
-  public default(value: Map<TKey, TValue>): MapSchema<TKey, TValue, TOptional, TNullable, Map<TKey, TValue>> {
+  public default(value: Map<TKey, TValue>): MapSchema<TKey, TValue, TOptional, TNullable, true> {
     return new MapSchema({
       ...this._config,
       default: value,
