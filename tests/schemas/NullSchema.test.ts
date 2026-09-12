@@ -81,3 +81,29 @@ describe('.default(value)', () => {
     })
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.fallback(value)', () => {
+
+  const base = NullSchema.create()
+  const schema = base.fallback(null)
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(NullSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` is `null`.', () => {
+    expectValidation(schema, null).toReturn(null)
+  })
+
+  it('returns the `fallback` value when `input` is not `null`.', () => {
+    DataTypeGenerator.skip('null').forEach((value) => {
+      expectValidation(schema, value).toReturn(null)
+    })
+  })
+
+  it('returns when `input` is `undefined` and the schema is optional.', () => {
+    expectValidation(schema.optional(), undefined).toReturn(undefined)
+  })
+})

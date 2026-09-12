@@ -119,6 +119,41 @@ describe('.default(value)', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
+describe('.fallback(value)', () => {
+
+  const base = StringSchema.create()
+  const schema = base.fallback('fallback')
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(StringSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` is a string.', () => {
+    expectValidation(schema, 'string').toReturn('string')
+  })
+
+  it('returns the `fallback` value when `input` is not a string.', () => {
+    DataTypeGenerator.skip('strings').forEach((value) => {
+      expectValidation(schema, value).toReturn('fallback')
+    })
+  })
+
+  it('returns the `fallback` value when `input` does not satisfy the validations.', () => {
+    const constrained = StringSchema.create().min(8).fallback('fallback')
+    expectValidation(constrained, 'short').toReturn('fallback')
+  })
+
+  it('returns when `input` is `undefined` and the schema is optional.', () => {
+    expectValidation(schema.optional(), undefined).toReturn(undefined)
+  })
+
+  it('returns when `input` is `null` and the schema is nullable.', () => {
+    expectValidation(schema.nullable(), null).toReturn(null)
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
 describe('.length(length)', () => {
   describe('when `length` is `NaN`', () => {
     it('throws when the schema is being built.', () => {

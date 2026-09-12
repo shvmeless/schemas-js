@@ -219,6 +219,48 @@ describe('.default(value)', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
+describe('.fallback(value)', () => {
+
+  const base = SetSchema.create(StringSchema.create())
+  const schema = base.fallback(new Set(['fallback']))
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(SetSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` is a `Set` instance.', () => {
+    const input = new Set(['a', 'b', 'c'])
+    const expected = new Set(['a', 'b', 'c'])
+    expectValidation(schema, input).toReturnNew(expected)
+  })
+
+  it('returns the `fallback` value when `input` is not a `Set` instance.', () => {
+    DataTypeGenerator.skip('sets').forEach((value) => {
+      expectValidation(schema, value).toReturn(new Set(['fallback']))
+    })
+  })
+
+  it('returns the `fallback` value when at least one `input` element does not match the `shape` schema.', () => {
+    const input = new Set(['a', 255, 'c'])
+    expectValidation(schema, input).toReturn(new Set(['fallback']))
+  })
+
+  it('returns the `fallback` value when `input` does not satisfy the validations.', () => {
+    const constrained = SetSchema.create(StringSchema.create()).size(2).fallback(new Set(['fallback']))
+    expectValidation(constrained, new Set(['a'])).toReturn(new Set(['fallback']))
+  })
+
+  it('returns when `input` is `undefined` and the schema is optional.', () => {
+    expectValidation(schema.optional(), undefined).toReturn(undefined)
+  })
+
+  it('returns when `input` is `null` and the schema is nullable.', () => {
+    expectValidation(schema.nullable(), null).toReturn(null)
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
 describe('.size(length)', () => {
   describe('when `length` is `NaN`', () => {
     it('throws when the schema is being built.', () => {

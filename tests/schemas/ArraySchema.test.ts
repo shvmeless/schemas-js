@@ -218,6 +218,48 @@ describe('.default(value)', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
+describe('.fallback(value)', () => {
+
+  const base = ArraySchema.create(StringSchema.create())
+  const schema = base.fallback(['fallback'])
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(ArraySchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` is an array.', () => {
+    const input = ['a', 'b', 'c']
+    const expected = ['a', 'b', 'c']
+    expectValidation(schema, input).toReturnNew(expected)
+  })
+
+  it('returns the `fallback` value when `input` is not an array.', () => {
+    DataTypeGenerator.skip('arrays').forEach((value) => {
+      expectValidation(schema, value).toReturn(['fallback'])
+    })
+  })
+
+  it('returns the `fallback` value when at least one `input` element does not match the `shape` schema.', () => {
+    const input = [true, 'b', 255]
+    expectValidation(schema, input).toReturn(['fallback'])
+  })
+
+  it('returns the `fallback` value when `input` does not satisfy the validations.', () => {
+    const constrained = ArraySchema.create(StringSchema.create()).min(5).fallback(['fallback'])
+    expectValidation(constrained, ['a', 'b']).toReturn(['fallback'])
+  })
+
+  it('returns when `input` is `undefined` and the schema is optional.', () => {
+    expectValidation(schema.optional(), undefined).toReturn(undefined)
+  })
+
+  it('returns when `input` is `null` and the schema is nullable.', () => {
+    expectValidation(schema.nullable(), null).toReturn(null)
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
 describe('.length(length)', () => {
   describe('when `length` is `NaN`', () => {
     it('throws when the schema is being built.', () => {

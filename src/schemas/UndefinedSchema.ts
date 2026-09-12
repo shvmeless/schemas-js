@@ -6,6 +6,7 @@ import type { GenericSchema, Nullable } from '@/lib/GenericSchema'
 interface UndefinedConfig<TNullable extends boolean, TDefault extends undefined | null> {
   nullable: TNullable
   default: TDefault
+  fallback: undefined | null
 }
 
 // CLASS
@@ -24,7 +25,7 @@ implements GenericSchema<Nullable<undefined, TNullable, TDefault>> {
 
   // FACTORY
   public static create(): UndefinedSchema<false, null> {
-    return new UndefinedSchema({ nullable: false, default: null })
+    return new UndefinedSchema({ nullable: false, default: null, fallback: null })
   }
 
   // --------------------------------------------------------------------------
@@ -46,14 +47,19 @@ implements GenericSchema<Nullable<undefined, TNullable, TDefault>> {
 
   // VALIDATOR
   public validate(input: unknown): Nullable<undefined, TNullable, TDefault> {
+    try {
 
-    const resolved = this._resolveInput(input)
+      const resolved = this._resolveInput(input)
 
-    if (resolved === undefined) return undefined as Nullable<undefined, TNullable, TDefault>
-    if (resolved === null) return null as Nullable<undefined, TNullable, TDefault>
+      if (resolved === undefined) return undefined as Nullable<undefined, TNullable, TDefault>
+      if (resolved === null) return null as Nullable<undefined, TNullable, TDefault>
 
-    return resolved as Nullable<undefined, TNullable, TDefault>
+      return resolved as Nullable<undefined, TNullable, TDefault>
 
+    } catch (error) {
+      if (this._config.fallback !== null) return this._config.fallback
+      throw error
+    }
   }
 
   // --------------------------------------------------------------------------
@@ -68,6 +74,14 @@ implements GenericSchema<Nullable<undefined, TNullable, TDefault>> {
     return new UndefinedSchema({
       ...this._config,
       default: value,
+    })
+  }
+
+  // CONFIG
+  public fallback(value: undefined): UndefinedSchema<TNullable, TDefault> {
+    return new UndefinedSchema({
+      ...this._config,
+      fallback: value,
     })
   }
 

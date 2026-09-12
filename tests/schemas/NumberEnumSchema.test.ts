@@ -158,3 +158,36 @@ describe('.default(value)', () => {
     })
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.fallback(value)', () => {
+
+  const base = EnumSchema.create(-1000, 0, 1000)
+  const schema = base.fallback(0)
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(EnumSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` matches one of the `literals`.', () => {
+    expectValidation(schema, -1000).toReturn(-1000)
+    expectValidation(schema, 0).toReturn(0)
+    expectValidation(schema, 1000).toReturn(1000)
+  })
+
+  it('returns the `fallback` value when `input` does not match any of the `literals`.', () => {
+    DataTypeGenerator.skip('numbers').forEach((value) => {
+      expectValidation(schema, value).toReturn(0)
+    })
+    expectValidation(schema, 100).toReturn(0)
+  })
+
+  it('returns when `input` is `undefined` and the schema is optional.', () => {
+    expectValidation(schema.optional(), undefined).toReturn(undefined)
+  })
+
+  it('returns when `input` is `null` and the schema is nullable.', () => {
+    expectValidation(schema.nullable(), null).toReturn(null)
+  })
+})

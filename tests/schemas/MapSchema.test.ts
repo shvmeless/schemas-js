@@ -207,6 +207,48 @@ describe('.nullable()', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
+describe('.fallback(value)', () => {
+
+  const base = MapSchema.create(StringSchema.create(), NumberSchema.create())
+  const schema = base.fallback(new Map([['fallback', 0]]))
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(MapSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when all `input` entries match the `key` and `value` schemas.', () => {
+    const input = new Map([['a', 1], ['b', 2], ['c', 3]])
+    const expected = new Map([['a', 1], ['b', 2], ['c', 3]])
+    expectValidation(schema, input).toReturnNew(expected)
+  })
+
+  it('returns the `fallback` value when `input` is not a `Map` instance.', () => {
+    DataTypeGenerator.skip('maps').forEach((value) => {
+      expectValidation(schema, value).toReturn(new Map([['fallback', 0]]))
+    })
+  })
+
+  it('returns the `fallback` value when at least one `input` entry does not match the `key` and `value` schemas.', () => {
+    const input = new Map<string, unknown>([['a', true], ['b', 2], ['c', false]])
+    expectValidation(schema, input).toReturn(new Map([['fallback', 0]]))
+  })
+
+  it('returns the `fallback` value when `input` does not satisfy the validations.', () => {
+    const constrained = MapSchema.create(StringSchema.create(), NumberSchema.create()).size(2).fallback(new Map([['fallback', 0]]))
+    expectValidation(constrained, new Map([['a', 1]])).toReturn(new Map([['fallback', 0]]))
+  })
+
+  it('returns when `input` is `undefined` and the schema is optional.', () => {
+    expectValidation(schema.optional(), undefined).toReturn(undefined)
+  })
+
+  it('returns when `input` is `null` and the schema is nullable.', () => {
+    expectValidation(schema.nullable(), null).toReturn(null)
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
 describe('.default(value)', () => {
 
   const base = MapSchema.create(StringSchema.create(), NumberSchema.create()).optional()

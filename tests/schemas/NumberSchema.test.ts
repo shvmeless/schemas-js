@@ -105,6 +105,42 @@ describe('.nullable()', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
+describe('.fallback(value)', () => {
+
+  const base = NumberSchema.create()
+  const schema = base.fallback(0)
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(NumberSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` is a number.', () => {
+    expectValidation(schema, 255).toReturn(255)
+    expectValidation(schema, 3.14).toReturn(3.14)
+  })
+
+  it('returns the `fallback` value when `input` is not a number.', () => {
+    DataTypeGenerator.skip('numbers').forEach((value) => {
+      expectValidation(schema, value).toReturn(0)
+    })
+  })
+
+  it('returns the `fallback` value when `input` does not satisfy the validations.', () => {
+    const constrained = NumberSchema.create().greaterThan(10).fallback(0)
+    expectValidation(constrained, 5).toReturn(0)
+  })
+
+  it('returns when `input` is `undefined` and the schema is optional.', () => {
+    expectValidation(schema.optional(), undefined).toReturn(undefined)
+  })
+
+  it('returns when `input` is `null` and the schema is nullable.', () => {
+    expectValidation(schema.nullable(), null).toReturn(null)
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
 describe('.default(value)', () => {
 
   const base = NumberSchema.create().optional()

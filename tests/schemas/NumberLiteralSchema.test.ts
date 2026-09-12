@@ -156,3 +156,34 @@ describe('.default(value)', () => {
     })
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.fallback(value)', () => {
+
+  const base = LiteralSchema.create(1000)
+  const schema = base.fallback(1000)
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(LiteralSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` matches the `literal`.', () => {
+    expectValidation(schema, 1000).toReturn(1000)
+  })
+
+  it('returns the `fallback` value when `input` does not match the `literal`.', () => {
+    DataTypeGenerator.skip('numbers').forEach((value) => {
+      expectValidation(schema, value).toReturn(1000)
+    })
+    expectValidation(schema, 0).toReturn(1000)
+  })
+
+  it('returns when `input` is `undefined` and the schema is optional.', () => {
+    expectValidation(schema.optional(), undefined).toReturn(undefined)
+  })
+
+  it('returns when `input` is `null` and the schema is nullable.', () => {
+    expectValidation(schema.nullable(), null).toReturn(null)
+  })
+})

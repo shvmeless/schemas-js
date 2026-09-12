@@ -14,6 +14,7 @@ interface SetConfig<TValue, TOptional extends boolean, TNullable extends boolean
   optional: TOptional
   nullable: TNullable
   default: TDefault
+  fallback: Set<TValue> | null
 }
 
 // CLASS
@@ -40,6 +41,7 @@ implements GenericSchema<Maybe<Set<TValue>, TOptional, TNullable, TDefault>> {
       optional: false,
       nullable: false,
       default: null,
+      fallback: null,
     }, {})
   }
 
@@ -84,35 +86,40 @@ implements GenericSchema<Maybe<Set<TValue>, TOptional, TNullable, TDefault>> {
 
   // VALIDATOR
   public validate(input: unknown): Maybe<Set<TValue>, TOptional, TNullable, TDefault> {
+    try {
 
-    const resolved = this._resolveInput(input)
+      const resolved = this._resolveInput(input)
 
-    if (resolved === undefined) return undefined as Maybe<Set<TValue>, TOptional, TNullable, TDefault>
-    if (resolved === null) return null as Maybe<Set<TValue>, TOptional, TNullable, TDefault>
+      if (resolved === undefined) return undefined as Maybe<Set<TValue>, TOptional, TNullable, TDefault>
+      if (resolved === null) return null as Maybe<Set<TValue>, TOptional, TNullable, TDefault>
 
-    const result = new Set<TValue>()
-    const errors = ValidationError.prepare()
+      const result = new Set<TValue>()
+      const errors = ValidationError.prepare()
 
-    for (const element of resolved) {
-      try {
-        const value = this._config.schema.validate(element)
-        result.add(value)
-      } catch (error) {
-        if (error instanceof ValidationError) {
-          if (this._config.prune) continue
-          errors.add(element, error)
-        } else throw error
+      for (const element of resolved) {
+        try {
+          const value = this._config.schema.validate(element)
+          result.add(value)
+        } catch (error) {
+          if (error instanceof ValidationError) {
+            if (this._config.prune) continue
+            errors.add(element, error)
+          } else throw error
+        }
       }
+
+      if (errors.size > 0) {
+        errors.throw(input, 'At least one element does not match the given schema.')
+      }
+
+      runValidations(this._validations, input, result)
+
+      return result as Maybe<Set<TValue>, TOptional, TNullable, TDefault>
+
+    } catch (error) {
+      if (this._config.fallback !== null) return this._config.fallback
+      throw error
     }
-
-    if (errors.size > 0) {
-      errors.throw(input, 'At least one element does not match the given schema.')
-    }
-
-    runValidations(this._validations, input, result)
-
-    return result as Maybe<Set<TValue>, TOptional, TNullable, TDefault>
-
   }
 
   // --------------------------------------------------------------------------
@@ -143,6 +150,14 @@ implements GenericSchema<Maybe<Set<TValue>, TOptional, TNullable, TDefault>> {
     return new SetSchema({
       ...this._config,
       default: value,
+    }, this._validations)
+  }
+
+  // CONFIG
+  public fallback(value: Set<TValue>): SetSchema<TValue, TOptional, TNullable, TDefault> {
+    return new SetSchema({
+      ...this._config,
+      fallback: value,
     }, this._validations)
   }
 

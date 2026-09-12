@@ -9,6 +9,7 @@ interface TupleConfig<TShape extends ReadonlyArray<unknown>, TOptional extends b
   optional: TOptional
   nullable: TNullable
   default: TDefault
+  fallback: TShape | null
 }
 
 // CLASS
@@ -36,6 +37,7 @@ implements GenericSchema<Maybe<TShape, TOptional, TNullable, TDefault>> {
       optional: false,
       nullable: false,
       default: null,
+      fallback: null,
     })
   }
 
@@ -71,46 +73,51 @@ implements GenericSchema<Maybe<TShape, TOptional, TNullable, TDefault>> {
 
   // VALIDATOR
   public validate(input: unknown): Maybe<TShape, TOptional, TNullable, TDefault> {
+    try {
 
-    const resolved = this._resolveInput(input)
+      const resolved = this._resolveInput(input)
 
-    if (resolved === undefined) return undefined as Maybe<TShape, TOptional, TNullable, TDefault>
-    if (resolved === null) return null as Maybe<TShape, TOptional, TNullable, TDefault>
+      if (resolved === undefined) return undefined as Maybe<TShape, TOptional, TNullable, TDefault>
+      if (resolved === null) return null as Maybe<TShape, TOptional, TNullable, TDefault>
 
-    const result: Array<unknown> = []
-    const errors = ValidationError.prepare()
+      const result: Array<unknown> = []
+      const errors = ValidationError.prepare()
 
-    const longest = Math.max(this._config.shape.length, resolved.length)
-    for (let index = 0; index < longest; index++) {
-      try {
+      const longest = Math.max(this._config.shape.length, resolved.length)
+      for (let index = 0; index < longest; index++) {
+        try {
 
-        const value = resolved[index]
-        const shape = this._config.shape[index]
+          const value = resolved[index]
+          const shape = this._config.shape[index]
 
-        if (shape === undefined) {
-          if (this._config.strip) continue
-          throw new ValidationError(value, 'Unexpected element.')
+          if (shape === undefined) {
+            if (this._config.strip) continue
+            throw new ValidationError(value, 'Unexpected element.')
+          }
+
+          result[index] = shape.validate(value)
+
+        } catch (error) {
+          if (error instanceof ValidationError) errors.add(index, error)
+          else throw error
         }
-
-        result[index] = shape.validate(value)
-
-      } catch (error) {
-        if (error instanceof ValidationError) errors.add(index, error)
-        else throw error
       }
+
+      if (errors.size > 0) {
+        const message = (resolved.length !== this._config.shape.length)
+          ? (resolved.length < this._config.shape.length)
+              ? 'The tuple is missing one or more required elements.'
+              : 'The tuple contains one or more unexpected elements.'
+          : 'At least one element does not match the given schema.'
+        errors.throw(input, message)
+      }
+
+      return result as unknown as Maybe<TShape, TOptional, TNullable, TDefault>
+
+    } catch (error) {
+      if (this._config.fallback !== null) return this._config.fallback
+      throw error
     }
-
-    if (errors.size > 0) {
-      const message = (resolved.length !== this._config.shape.length)
-        ? (resolved.length < this._config.shape.length)
-            ? 'The tuple is missing one or more required elements.'
-            : 'The tuple contains one or more unexpected elements.'
-        : 'At least one element does not match the given schema.'
-      errors.throw(input, message)
-    }
-
-    return result as unknown as Maybe<TShape, TOptional, TNullable, TDefault>
-
   }
 
   // --------------------------------------------------------------------------
@@ -141,6 +148,14 @@ implements GenericSchema<Maybe<TShape, TOptional, TNullable, TDefault>> {
     return new TupleSchema({
       ...this._config,
       default: value,
+    })
+  }
+
+  // CONFIG
+  public fallback(value: TShape): TupleSchema<TShape, TOptional, TNullable, TDefault> {
+    return new TupleSchema({
+      ...this._config,
+      fallback: value,
     })
   }
 

@@ -152,3 +152,36 @@ describe('.default(value)', () => {
     })
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.fallback(value)', () => {
+
+  const base = EnumSchema.create('ALLOWED', 'LITERAL', 'EXAMPLE')
+  const schema = base.fallback('LITERAL')
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(EnumSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` matches one of the `literals`.', () => {
+    expectValidation(schema, 'ALLOWED').toReturn('ALLOWED')
+    expectValidation(schema, 'LITERAL').toReturn('LITERAL')
+    expectValidation(schema, 'EXAMPLE').toReturn('EXAMPLE')
+  })
+
+  it('returns the `fallback` value when `input` does not match any of the `literals`.', () => {
+    DataTypeGenerator.skip('strings').forEach((value) => {
+      expectValidation(schema, value).toReturn('LITERAL')
+    })
+    expectValidation(schema, 'WRONG').toReturn('LITERAL')
+  })
+
+  it('returns when `input` is `undefined` and the schema is optional.', () => {
+    expectValidation(schema.optional(), undefined).toReturn(undefined)
+  })
+
+  it('returns when `input` is `null` and the schema is nullable.', () => {
+    expectValidation(schema.nullable(), null).toReturn(null)
+  })
+})

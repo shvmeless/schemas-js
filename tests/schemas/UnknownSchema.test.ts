@@ -95,3 +95,29 @@ describe('.default(value)', () => {
     expectValidation(schema.nullable(), null).toReturn('default-unknown')
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.fallback(value)', () => {
+
+  const base = UnknownSchema.create()
+  const schema = base.fallback('fallback-unknown')
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(UnknownSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns any `input` as `unknown`.', () => {
+    DataTypeGenerator.skip('undefined').forEach((value) => {
+      expectValidation(schema, value).toReturn(value)
+    })
+  })
+
+  it('returns when `input` is `undefined` and the schema is optional.', () => {
+    expectValidation(schema.optional(), undefined).toReturn(undefined)
+  })
+
+  it('returns when `input` is `null` and the schema is nullable.', () => {
+    expectValidation(schema.nullable(), null).toReturn(null)
+  })
+})

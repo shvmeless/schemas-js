@@ -12,6 +12,7 @@ interface InstanceOfConfig<TConstructor extends AnyConstructor, TOptional extend
   optional: TOptional
   nullable: TNullable
   default: TDefault
+  fallback: InstanceType<TConstructor> | null
 }
 
 // CLASS
@@ -30,7 +31,7 @@ implements GenericSchema<Maybe<InstanceType<TConstructor>, TOptional, TNullable,
 
   // FACTORY
   public static create<TConstructor extends AnyConstructor>(constructor: TConstructor): InstanceOfSchema<TConstructor, false, false, null> {
-    return new InstanceOfSchema({ constructor, optional: false, nullable: false, default: null })
+    return new InstanceOfSchema({ constructor, optional: false, nullable: false, default: null, fallback: null })
   }
 
   // --------------------------------------------------------------------------
@@ -56,14 +57,19 @@ implements GenericSchema<Maybe<InstanceType<TConstructor>, TOptional, TNullable,
 
   // VALIDATOR
   public validate(input: unknown): Maybe<InstanceType<TConstructor>, TOptional, TNullable, TDefault> {
+    try {
 
-    const resolved = this._resolveInput(input)
+      const resolved = this._resolveInput(input)
 
-    if (resolved === undefined) return undefined as Maybe<InstanceType<TConstructor>, TOptional, TNullable, TDefault>
-    if (resolved === null) return null as Maybe<InstanceType<TConstructor>, TOptional, TNullable, TDefault>
+      if (resolved === undefined) return undefined as Maybe<InstanceType<TConstructor>, TOptional, TNullable, TDefault>
+      if (resolved === null) return null as Maybe<InstanceType<TConstructor>, TOptional, TNullable, TDefault>
 
-    return resolved as Maybe<InstanceType<TConstructor>, TOptional, TNullable, TDefault>
+      return resolved as Maybe<InstanceType<TConstructor>, TOptional, TNullable, TDefault>
 
+    } catch (error) {
+      if (this._config.fallback !== null) return this._config.fallback
+      throw error
+    }
   }
 
   // --------------------------------------------------------------------------
@@ -83,6 +89,14 @@ implements GenericSchema<Maybe<InstanceType<TConstructor>, TOptional, TNullable,
     return new InstanceOfSchema({
       ...this._config,
       default: value,
+    })
+  }
+
+  // CONFIG
+  public fallback(value: InstanceType<TConstructor>): InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault> {
+    return new InstanceOfSchema({
+      ...this._config,
+      fallback: value,
     })
   }
 

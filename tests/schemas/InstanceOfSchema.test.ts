@@ -124,3 +124,38 @@ describe('.default(value)', () => {
     })
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.fallback(value)', () => {
+
+  const fallback = new Date('1993-06-26')
+  const base = InstanceOfSchema.create(Date)
+  const schema = base.fallback(fallback)
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(InstanceOfSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` is an instance of the `constructor`.', () => {
+    expectValidation(schema, new Date()).toReturnInstanceOf(Date)
+  })
+
+  it('returns the same `input` instance.', () => {
+    const input = new Date()
+    expectValidation(schema, input).toReturnSame(input)
+  })
+
+  it('returns the `fallback` value when `input` is not an instance of the `constructor`.', () => {
+    expectValidation(schema, new Map()).toReturnSame(fallback)
+    expectValidation(schema, 'not-a-date').toReturnSame(fallback)
+  })
+
+  it('returns when `input` is `undefined` and the schema is optional.', () => {
+    expectValidation(schema.optional(), undefined).toReturn(undefined)
+  })
+
+  it('returns when `input` is `null` and the schema is nullable.', () => {
+    expectValidation(schema.nullable(), null).toReturn(null)
+  })
+})

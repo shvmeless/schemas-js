@@ -15,6 +15,7 @@ interface MapConfig<TKey, TValue, TOptional extends boolean, TNullable extends b
   optional: TOptional
   nullable: TNullable
   default: TDefault
+  fallback: Map<TKey, TValue> | null
 }
 
 // CLASS
@@ -42,6 +43,7 @@ implements GenericSchema<Maybe<Map<TKey, TValue>, TOptional, TNullable, TDefault
       optional: false,
       nullable: false,
       default: null,
+      fallback: null,
     }, {})
   }
 
@@ -86,36 +88,41 @@ implements GenericSchema<Maybe<Map<TKey, TValue>, TOptional, TNullable, TDefault
 
   // VALIDATOR
   public validate(input: unknown): Maybe<Map<TKey, TValue>, TOptional, TNullable, TDefault> {
+    try {
 
-    const resolved = this._resolveInput(input)
+      const resolved = this._resolveInput(input)
 
-    if (resolved === undefined) return undefined as Maybe<Map<TKey, TValue>, TOptional, TNullable, TDefault>
-    if (resolved === null) return null as Maybe<Map<TKey, TValue>, TOptional, TNullable, TDefault>
+      if (resolved === undefined) return undefined as Maybe<Map<TKey, TValue>, TOptional, TNullable, TDefault>
+      if (resolved === null) return null as Maybe<Map<TKey, TValue>, TOptional, TNullable, TDefault>
 
-    const result = new Map<TKey, TValue>()
-    const errors = ValidationError.prepare()
+      const result = new Map<TKey, TValue>()
+      const errors = ValidationError.prepare()
 
-    resolved.forEach((value: unknown, key: unknown) => {
-      try {
-        const validatedKey = this._config.keySchema.validate(key)
-        const validatedValue = this._config.valueSchema.validate(value)
-        result.set(validatedKey, validatedValue)
-      } catch (error) {
-        if (error instanceof ValidationError) {
-          if (this._config.prune) return
-          errors.add(key, error)
-        } else throw error
+      resolved.forEach((value: unknown, key: unknown) => {
+        try {
+          const validatedKey = this._config.keySchema.validate(key)
+          const validatedValue = this._config.valueSchema.validate(value)
+          result.set(validatedKey, validatedValue)
+        } catch (error) {
+          if (error instanceof ValidationError) {
+            if (this._config.prune) return
+            errors.add(key, error)
+          } else throw error
+        }
+      })
+
+      if (errors.size > 0) {
+        errors.throw(input, 'At least one entry does not match the given schema.')
       }
-    })
 
-    if (errors.size > 0) {
-      errors.throw(input, 'At least one entry does not match the given schema.')
+      runValidations(this._validations, input, result)
+
+      return result as Maybe<Map<TKey, TValue>, TOptional, TNullable, TDefault>
+
+    } catch (error) {
+      if (this._config.fallback !== null) return this._config.fallback
+      throw error
     }
-
-    runValidations(this._validations, input, result)
-
-    return result as Maybe<Map<TKey, TValue>, TOptional, TNullable, TDefault>
-
   }
 
   // --------------------------------------------------------------------------
@@ -146,6 +153,14 @@ implements GenericSchema<Maybe<Map<TKey, TValue>, TOptional, TNullable, TDefault
     return new MapSchema({
       ...this._config,
       default: value,
+    }, this._validations)
+  }
+
+  // CONFIG
+  public fallback(value: Map<TKey, TValue>): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
+    return new MapSchema({
+      ...this._config,
+      fallback: value,
     }, this._validations)
   }
 

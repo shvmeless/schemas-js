@@ -14,6 +14,7 @@ interface ArrayConfig<TItem, TOptional extends boolean, TNullable extends boolea
   optional: TOptional
   nullable: TNullable
   default: TDefault
+  fallback: Array<TItem> | null
 }
 
 // CLASS
@@ -40,6 +41,7 @@ implements GenericSchema<Maybe<Array<TItem>, TOptional, TNullable, TDefault>> {
       optional: false,
       nullable: false,
       default: null,
+      fallback: null,
     }, {})
   }
 
@@ -76,35 +78,40 @@ implements GenericSchema<Maybe<Array<TItem>, TOptional, TNullable, TDefault>> {
 
   // VALIDATOR
   public validate(input: unknown): Maybe<Array<TItem>, TOptional, TNullable, TDefault> {
+    try {
 
-    const resolved = this._resolveInput(input)
+      const resolved = this._resolveInput(input)
 
-    if (resolved === undefined) return undefined as Maybe<Array<TItem>, TOptional, TNullable, TDefault>
-    if (resolved === null) return null as Maybe<Array<TItem>, TOptional, TNullable, TDefault>
+      if (resolved === undefined) return undefined as Maybe<Array<TItem>, TOptional, TNullable, TDefault>
+      if (resolved === null) return null as Maybe<Array<TItem>, TOptional, TNullable, TDefault>
 
-    const output: Array<TItem> = []
-    const errors = ValidationError.prepare()
+      const output: Array<TItem> = []
+      const errors = ValidationError.prepare()
 
-    resolved.forEach((element, index) => {
-      try {
-        const value = this._config.schema.validate(element)
-        output.push(value)
-      } catch (error) {
-        if (error instanceof ValidationError) {
-          if (this._config.prune) return
-          errors.add(index, error)
-        } else throw error
+      resolved.forEach((element, index) => {
+        try {
+          const value = this._config.schema.validate(element)
+          output.push(value)
+        } catch (error) {
+          if (error instanceof ValidationError) {
+            if (this._config.prune) return
+            errors.add(index, error)
+          } else throw error
+        }
+      })
+
+      if (errors.size > 0) {
+        errors.throw(input, 'At least one element does not match the given schema.')
       }
-    })
 
-    if (errors.size > 0) {
-      errors.throw(input, 'At least one element does not match the given schema.')
+      runValidations(this._validations, input, output)
+
+      return output as Maybe<Array<TItem>, TOptional, TNullable, TDefault>
+
+    } catch (error) {
+      if (this._config.fallback !== null) return this._config.fallback
+      throw error
     }
-
-    runValidations(this._validations, input, output)
-
-    return output as Maybe<Array<TItem>, TOptional, TNullable, TDefault>
-
   }
 
   // --------------------------------------------------------------------------
@@ -138,6 +145,14 @@ implements GenericSchema<Maybe<Array<TItem>, TOptional, TNullable, TDefault>> {
     return new ArraySchema({
       ...this._config,
       default: value,
+    }, this._validations)
+  }
+
+  // CONFIG
+  public fallback(value: Array<TItem>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+    return new ArraySchema({
+      ...this._config,
+      fallback: value,
     }, this._validations)
   }
 

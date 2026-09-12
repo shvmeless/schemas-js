@@ -14,6 +14,7 @@ interface RecordConfig<TValue, TOptional extends boolean, TNullable extends bool
   optional: TOptional
   nullable: TNullable
   default: TDefault
+  fallback: Record<string, TValue> | null
 }
 
 // CLASS
@@ -40,6 +41,7 @@ implements GenericSchema<Maybe<Record<string, TValue>, TOptional, TNullable, TDe
       optional: false,
       nullable: false,
       default: null,
+      fallback: null,
     }, {})
   }
 
@@ -84,34 +86,39 @@ implements GenericSchema<Maybe<Record<string, TValue>, TOptional, TNullable, TDe
 
   // VALIDATOR
   public validate(input: unknown): Maybe<Record<string, TValue>, TOptional, TNullable, TDefault> {
+    try {
 
-    const resolved = this._resolveInput(input)
+      const resolved = this._resolveInput(input)
 
-    if (resolved === undefined) return undefined as Maybe<Record<string, TValue>, TOptional, TNullable, TDefault>
-    if (resolved === null) return null as Maybe<Record<string, TValue>, TOptional, TNullable, TDefault>
+      if (resolved === undefined) return undefined as Maybe<Record<string, TValue>, TOptional, TNullable, TDefault>
+      if (resolved === null) return null as Maybe<Record<string, TValue>, TOptional, TNullable, TDefault>
 
-    const result: Record<string, TValue> = {}
-    const errors = ValidationError.prepare()
+      const result: Record<string, TValue> = {}
+      const errors = ValidationError.prepare()
 
-    for (const [key, value] of Object.entries(resolved)) {
-      try {
-        result[key] = this._config.schema.validate(value)
-      } catch (error) {
-        if (error instanceof ValidationError) {
-          if (this._config.prune) continue
-          errors.add(key, error)
-        } else throw error
+      for (const [key, value] of Object.entries(resolved)) {
+        try {
+          result[key] = this._config.schema.validate(value)
+        } catch (error) {
+          if (error instanceof ValidationError) {
+            if (this._config.prune) continue
+            errors.add(key, error)
+          } else throw error
+        }
       }
+
+      if (errors.size > 0) {
+        errors.throw(input, 'At least one entry does not match the given schema.')
+      }
+
+      runValidations(this._validations, input, result)
+
+      return result as Maybe<Record<string, TValue>, TOptional, TNullable, TDefault>
+
+    } catch (error) {
+      if (this._config.fallback !== null) return this._config.fallback
+      throw error
     }
-
-    if (errors.size > 0) {
-      errors.throw(input, 'At least one entry does not match the given schema.')
-    }
-
-    runValidations(this._validations, input, result)
-
-    return result as Maybe<Record<string, TValue>, TOptional, TNullable, TDefault>
-
   }
 
   // --------------------------------------------------------------------------
@@ -142,6 +149,14 @@ implements GenericSchema<Maybe<Record<string, TValue>, TOptional, TNullable, TDe
     return new RecordSchema({
       ...this._config,
       default: value,
+    }, this._validations)
+  }
+
+  // CONFIG
+  public fallback(value: Record<string, TValue>): RecordSchema<TValue, TOptional, TNullable, TDefault> {
+    return new RecordSchema({
+      ...this._config,
+      fallback: value,
     }, this._validations)
   }
 

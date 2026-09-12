@@ -115,3 +115,34 @@ describe('.default(value)', () => {
     })
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.fallback(value)', () => {
+
+  const base = BooleanSchema.create()
+  const schema = base.fallback(false)
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(BooleanSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` is a boolean.', () => {
+    expectValidation(schema, true).toReturn(true)
+    expectValidation(schema, false).toReturn(false)
+  })
+
+  it('returns the `fallback` value when `input` is not a boolean.', () => {
+    DataTypeGenerator.skip('booleans').forEach((value) => {
+      expectValidation(schema, value).toReturn(false)
+    })
+  })
+
+  it('returns when `input` is `undefined` and the schema is optional.', () => {
+    expectValidation(schema.optional(), undefined).toReturn(undefined)
+  })
+
+  it('returns when `input` is `null` and the schema is nullable.', () => {
+    expectValidation(schema.nullable(), null).toReturn(null)
+  })
+})

@@ -12,6 +12,7 @@ interface StringConfig<TOptional extends boolean, TNullable extends boolean, TDe
   optional: TOptional
   nullable: TNullable
   default: TDefault
+  fallback: string | null
 }
 
 // CLASS
@@ -32,7 +33,7 @@ implements GenericSchema<Maybe<string, TOptional, TNullable, TDefault>> {
 
   // FACTORY
   public static create(): StringSchema<false, false, null> {
-    return new StringSchema({ optional: false, nullable: false, default: null }, {})
+    return new StringSchema({ optional: false, nullable: false, default: null, fallback: null }, {})
   }
 
   // --------------------------------------------------------------------------
@@ -65,16 +66,21 @@ implements GenericSchema<Maybe<string, TOptional, TNullable, TDefault>> {
 
   // VALIDATOR
   public validate(input: unknown): Maybe<string, TOptional, TNullable, TDefault> {
+    try {
 
-    const resolved = this._resolveInput(input)
+      const resolved = this._resolveInput(input)
 
-    if (resolved === undefined) return undefined as Maybe<string, TOptional, TNullable, TDefault>
-    if (resolved === null) return null as Maybe<string, TOptional, TNullable, TDefault>
+      if (resolved === undefined) return undefined as Maybe<string, TOptional, TNullable, TDefault>
+      if (resolved === null) return null as Maybe<string, TOptional, TNullable, TDefault>
 
-    runValidations(this._validations, input, resolved)
+      runValidations(this._validations, input, resolved)
 
-    return resolved as Maybe<string, TOptional, TNullable, TDefault>
+      return resolved as Maybe<string, TOptional, TNullable, TDefault>
 
+    } catch (error) {
+      if (this._config.fallback !== null) return this._config.fallback
+      throw error
+    }
   }
 
   // --------------------------------------------------------------------------
@@ -94,6 +100,14 @@ implements GenericSchema<Maybe<string, TOptional, TNullable, TDefault>> {
     return new StringSchema({
       ...this._config,
       default: value,
+    }, this._validations)
+  }
+
+  // CONFIG
+  public fallback(value: string): StringSchema<TOptional, TNullable, TDefault> {
+    return new StringSchema({
+      ...this._config,
+      fallback: value,
     }, this._validations)
   }
 

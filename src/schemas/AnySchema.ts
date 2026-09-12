@@ -9,6 +9,7 @@ interface AnyConfig<TOptional extends boolean, TNullable extends boolean, TDefau
   optional: TOptional
   nullable: TNullable
   default: TDefault
+  fallback: any
 }
 
 // CLASS
@@ -27,7 +28,7 @@ implements GenericSchema<Maybe<any, TOptional, TNullable, TDefault>> {
 
   // FACTORY
   public static create(): AnySchema<false, false, null> {
-    return new AnySchema({ optional: false, nullable: false, default: null })
+    return new AnySchema({ optional: false, nullable: false, default: null, fallback: null })
   }
 
   // --------------------------------------------------------------------------
@@ -49,14 +50,19 @@ implements GenericSchema<Maybe<any, TOptional, TNullable, TDefault>> {
 
   // VALIDATOR
   public validate(input: any): Maybe<any, TOptional, TNullable, TDefault> {
+    try {
 
-    const resolved = this._resolveInput(input)
+      const resolved = this._resolveInput(input)
 
-    if (resolved === undefined) return undefined as Maybe<any, TOptional, TNullable, TDefault>
-    if (resolved === null) return null as Maybe<any, TOptional, TNullable, TDefault>
+      if (resolved === undefined) return undefined as Maybe<any, TOptional, TNullable, TDefault>
+      if (resolved === null) return null as Maybe<any, TOptional, TNullable, TDefault>
 
-    return resolved as Maybe<any, TOptional, TNullable, TDefault>
+      return resolved as Maybe<any, TOptional, TNullable, TDefault>
 
+    } catch (error) {
+      if (this._config.fallback !== null) return this._config.fallback
+      throw error
+    }
   }
 
   // --------------------------------------------------------------------------
@@ -76,6 +82,14 @@ implements GenericSchema<Maybe<any, TOptional, TNullable, TDefault>> {
     return new AnySchema({
       ...this._config,
       default: value,
+    })
+  }
+
+  // CONFIG
+  public fallback(value: unknown): AnySchema<TOptional, TNullable, TDefault> {
+    return new AnySchema({
+      ...this._config,
+      fallback: value,
     })
   }
 

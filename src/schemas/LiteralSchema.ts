@@ -8,6 +8,7 @@ interface LiteralConfig<TValue extends string | number | boolean, TOptional exte
   optional: TOptional
   nullable: TNullable
   default: TDefault
+  fallback: TValue | null
 }
 
 // CLASS
@@ -26,7 +27,7 @@ implements GenericSchema<Maybe<TValue, TOptional, TNullable, TDefault>> {
 
   // FACTORY
   public static create<TValue extends string | number | boolean>(literal: TValue): LiteralSchema<TValue, false, false, null> {
-    return new LiteralSchema({ literal, optional: false, nullable: false, default: null })
+    return new LiteralSchema({ literal, optional: false, nullable: false, default: null, fallback: null })
   }
 
   // --------------------------------------------------------------------------
@@ -52,14 +53,19 @@ implements GenericSchema<Maybe<TValue, TOptional, TNullable, TDefault>> {
 
   // VALIDATOR
   public validate(input: unknown): Maybe<TValue, TOptional, TNullable, TDefault> {
+    try {
 
-    const resolved = this._resolveInput(input)
+      const resolved = this._resolveInput(input)
 
-    if (resolved === undefined) return undefined as Maybe<TValue, TOptional, TNullable, TDefault>
-    if (resolved === null) return null as Maybe<TValue, TOptional, TNullable, TDefault>
+      if (resolved === undefined) return undefined as Maybe<TValue, TOptional, TNullable, TDefault>
+      if (resolved === null) return null as Maybe<TValue, TOptional, TNullable, TDefault>
 
-    return resolved as Maybe<TValue, TOptional, TNullable, TDefault>
+      return resolved as Maybe<TValue, TOptional, TNullable, TDefault>
 
+    } catch (error) {
+      if (this._config.fallback !== null) return this._config.fallback
+      throw error
+    }
   }
 
   // --------------------------------------------------------------------------
@@ -79,6 +85,14 @@ implements GenericSchema<Maybe<TValue, TOptional, TNullable, TDefault>> {
     return new LiteralSchema({
       ...this._config,
       default: value,
+    })
+  }
+
+  // CONFIG
+  public fallback(value: TValue): LiteralSchema<TValue, TOptional, TNullable, TDefault> {
+    return new LiteralSchema({
+      ...this._config,
+      fallback: value,
     })
   }
 

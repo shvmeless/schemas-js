@@ -6,6 +6,7 @@ interface UnknownConfig<TOptional extends boolean, TNullable extends boolean, TD
   optional: TOptional
   nullable: TNullable
   default: TDefault
+  fallback: unknown | null
 }
 
 // CLASS
@@ -24,7 +25,7 @@ implements GenericSchema<Maybe<unknown, TOptional, TNullable, TDefault>> {
 
   // FACTORY
   public static create(): UnknownSchema<false, false, null> {
-    return new UnknownSchema({ optional: false, nullable: false, default: null })
+    return new UnknownSchema({ optional: false, nullable: false, default: null, fallback: null })
   }
 
   // --------------------------------------------------------------------------
@@ -46,14 +47,19 @@ implements GenericSchema<Maybe<unknown, TOptional, TNullable, TDefault>> {
 
   // VALIDATOR
   public validate(input: unknown): Maybe<unknown, TOptional, TNullable, TDefault> {
+    try {
 
-    const resolved = this._resolveInput(input)
+      const resolved = this._resolveInput(input)
 
-    if (resolved === undefined) return undefined as Maybe<unknown, TOptional, TNullable, TDefault>
-    if (resolved === null) return null as Maybe<unknown, TOptional, TNullable, TDefault>
+      if (resolved === undefined) return undefined as Maybe<unknown, TOptional, TNullable, TDefault>
+      if (resolved === null) return null as Maybe<unknown, TOptional, TNullable, TDefault>
 
-    return resolved as Maybe<unknown, TOptional, TNullable, TDefault>
+      return resolved as Maybe<unknown, TOptional, TNullable, TDefault>
 
+    } catch (error) {
+      if (this._config.fallback !== null) return this._config.fallback
+      throw error
+    }
   }
 
   // --------------------------------------------------------------------------
@@ -73,6 +79,14 @@ implements GenericSchema<Maybe<unknown, TOptional, TNullable, TDefault>> {
     return new UnknownSchema({
       ...this._config,
       default: value,
+    })
+  }
+
+  // CONFIG
+  public fallback(value: unknown): UnknownSchema<TOptional, TNullable, TDefault> {
+    return new UnknownSchema({
+      ...this._config,
+      fallback: value,
     })
   }
 

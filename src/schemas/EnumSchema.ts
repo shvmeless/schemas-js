@@ -8,6 +8,7 @@ interface EnumConfig<TValue extends string | number, TOptional extends boolean, 
   optional: TOptional
   nullable: TNullable
   default: TDefault
+  fallback: TValue | null
 }
 
 // CLASS
@@ -29,7 +30,7 @@ implements GenericSchema<Maybe<TValue, TOptional, TNullable, TDefault>> {
 
   // FACTORY
   public static create<TValue extends string | number>(...values: ReadonlyArray<TValue>): EnumSchema<TValue, false, false, null> {
-    return new EnumSchema({ values, optional: false, nullable: false, default: null })
+    return new EnumSchema({ values, optional: false, nullable: false, default: null, fallback: null })
   }
 
   // --------------------------------------------------------------------------
@@ -55,14 +56,19 @@ implements GenericSchema<Maybe<TValue, TOptional, TNullable, TDefault>> {
 
   // VALIDATOR
   public validate(input: unknown): Maybe<TValue, TOptional, TNullable, TDefault> {
+    try {
 
-    const resolved = this._resolveInput(input)
+      const resolved = this._resolveInput(input)
 
-    if (resolved === undefined) return undefined as Maybe<TValue, TOptional, TNullable, TDefault>
-    if (resolved === null) return null as Maybe<TValue, TOptional, TNullable, TDefault>
+      if (resolved === undefined) return undefined as Maybe<TValue, TOptional, TNullable, TDefault>
+      if (resolved === null) return null as Maybe<TValue, TOptional, TNullable, TDefault>
 
-    return resolved as Maybe<TValue, TOptional, TNullable, TDefault>
+      return resolved as Maybe<TValue, TOptional, TNullable, TDefault>
 
+    } catch (error) {
+      if (this._config.fallback !== null) return this._config.fallback
+      throw error
+    }
   }
 
   // --------------------------------------------------------------------------
@@ -82,6 +88,14 @@ implements GenericSchema<Maybe<TValue, TOptional, TNullable, TDefault>> {
     return new EnumSchema({
       ...this._config,
       default: value,
+    })
+  }
+
+  // CONFIG
+  public fallback(value: TValue): EnumSchema<TValue, TOptional, TNullable, TDefault> {
+    return new EnumSchema({
+      ...this._config,
+      fallback: value,
     })
   }
 

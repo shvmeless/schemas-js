@@ -12,6 +12,7 @@ interface NumberConfig<TOptional extends boolean, TNullable extends boolean, TDe
   optional: TOptional
   nullable: TNullable
   default: TDefault
+  fallback: number | null
 }
 
 // CLASS
@@ -32,7 +33,7 @@ implements GenericSchema<Maybe<number, TOptional, TNullable, TDefault>> {
 
   // FACTORY
   public static create(): NumberSchema<false, false, null> {
-    return new NumberSchema({ optional: false, nullable: false, default: null }, {})
+    return new NumberSchema({ optional: false, nullable: false, default: null, fallback: null }, {})
   }
 
   // --------------------------------------------------------------------------
@@ -65,16 +66,21 @@ implements GenericSchema<Maybe<number, TOptional, TNullable, TDefault>> {
 
   // VALIDATOR
   public validate(input: unknown): Maybe<number, TOptional, TNullable, TDefault> {
+    try {
 
-    const resolved = this._resolveInput(input)
+      const resolved = this._resolveInput(input)
 
-    if (resolved === undefined) return undefined as Maybe<number, TOptional, TNullable, TDefault>
-    if (resolved === null) return null as Maybe<number, TOptional, TNullable, TDefault>
+      if (resolved === undefined) return undefined as Maybe<number, TOptional, TNullable, TDefault>
+      if (resolved === null) return null as Maybe<number, TOptional, TNullable, TDefault>
 
-    runValidations(this._validations, input, resolved)
+      runValidations(this._validations, input, resolved)
 
-    return resolved as Maybe<number, TOptional, TNullable, TDefault>
+      return resolved as Maybe<number, TOptional, TNullable, TDefault>
 
+    } catch (error) {
+      if (this._config.fallback !== null) return this._config.fallback
+      throw error
+    }
   }
 
   // --------------------------------------------------------------------------
@@ -94,6 +100,14 @@ implements GenericSchema<Maybe<number, TOptional, TNullable, TDefault>> {
     return new NumberSchema({
       ...this._config,
       default: value,
+    }, this._validations)
+  }
+
+  // CONFIG
+  public fallback(value: number): NumberSchema<TOptional, TNullable, TDefault> {
+    return new NumberSchema({
+      ...this._config,
+      fallback: value,
     }, this._validations)
   }
 

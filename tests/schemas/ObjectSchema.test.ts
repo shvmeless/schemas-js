@@ -244,3 +244,45 @@ describe('.default(value)', () => {
     })
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.fallback(value)', () => {
+
+  const base = ObjectSchema.create({
+    string: StringSchema.create(),
+    number: NumberSchema.create(),
+    boolean: BooleanSchema.create(),
+  })
+  const fallbackInput = { string: 'FALLBACK', number: 0, boolean: false }
+  const schema = base.fallback(fallbackInput)
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(ObjectSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` matches the `shape` schema.', () => {
+    const input = { string: 'STRING', number: 74105280, boolean: true }
+    const expected = { string: 'STRING', number: 74105280, boolean: true }
+    expectValidation(schema, input).toReturnNew(expected)
+  })
+
+  it('returns the `fallback` value when `input` is not an object.', () => {
+    DataTypeGenerator.skip('objects').forEach((value) => {
+      expectValidation(schema, value).toReturn(fallbackInput)
+    })
+  })
+
+  it('returns the `fallback` value when `input` does not match the `shape` schema.', () => {
+    const input = { string: 'STRING' }
+    expectValidation(schema, input).toReturn(fallbackInput)
+  })
+
+  it('returns when `input` is `undefined` and the schema is optional.', () => {
+    expectValidation(schema.optional(), undefined).toReturn(undefined)
+  })
+
+  it('returns when `input` is `null` and the schema is nullable.', () => {
+    expectValidation(schema.nullable(), null).toReturn(null)
+  })
+})

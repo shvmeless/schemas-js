@@ -11,6 +11,7 @@ interface UnionConfig<TSchemas, TOptional extends boolean, TNullable extends boo
   optional: TOptional
   nullable: TNullable
   default: TDefault
+  fallback: TSchemas | null
   schemas: ReadonlyArray<GenericSchema<TSchemas>>
 }
 
@@ -36,6 +37,7 @@ implements GenericSchema<Maybe<TSchemas, TOptional, TNullable, TDefault>> {
       optional: false,
       nullable: false,
       default: null,
+      fallback: null,
     })
   }
 
@@ -43,26 +45,31 @@ implements GenericSchema<Maybe<TSchemas, TOptional, TNullable, TDefault>> {
 
   // VALIDATOR
   public validate(input: unknown): Maybe<TSchemas, TOptional, TNullable, TDefault> {
+    try {
 
-    if (input === undefined && this._config.optional) {
-      return ((this._config.default !== null) ? this._config.default : undefined) as Maybe<TSchemas, TOptional, TNullable, TDefault>
-    }
-
-    if (input === null && this._config.nullable) {
-      return ((this._config.default !== null) ? this._config.default : null) as Maybe<TSchemas, TOptional, TNullable, TDefault>
-    }
-
-    for (const schema of this._config.schemas) {
-      try {
-        return schema.validate(input) as Maybe<TSchemas, TOptional, TNullable, TDefault>
-      } catch (error) {
-        if (error instanceof ValidationError) continue
-        else throw error
+      if (input === undefined && this._config.optional) {
+        return ((this._config.default !== null) ? this._config.default : undefined) as Maybe<TSchemas, TOptional, TNullable, TDefault>
       }
+
+      if (input === null && this._config.nullable) {
+        return ((this._config.default !== null) ? this._config.default : null) as Maybe<TSchemas, TOptional, TNullable, TDefault>
+      }
+
+      for (const schema of this._config.schemas) {
+        try {
+          return schema.validate(input) as Maybe<TSchemas, TOptional, TNullable, TDefault>
+        } catch (error) {
+          if (error instanceof ValidationError) continue
+          else throw error
+        }
+      }
+
+      throw new ValidationError(input, 'The value does not match any of the given schemas.')
+
+    } catch (error) {
+      if (this._config.fallback !== null) return this._config.fallback
+      throw error
     }
-
-    throw new ValidationError(input, 'The value does not match any of the given schemas.')
-
   }
 
   // --------------------------------------------------------------------------
@@ -82,6 +89,14 @@ implements GenericSchema<Maybe<TSchemas, TOptional, TNullable, TDefault>> {
     return new UnionSchema<TSchemas, TOptional, TNullable, TSchemas>({
       ...this._config,
       default: value,
+    })
+  }
+
+  // CONFIG
+  public fallback(value: TSchemas): UnionSchema<TSchemas, TOptional, TNullable, TDefault> {
+    return new UnionSchema<TSchemas, TOptional, TNullable, TDefault>({
+      ...this._config,
+      fallback: value,
     })
   }
 

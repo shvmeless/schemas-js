@@ -157,3 +157,39 @@ describe('.default(value)', () => {
     })
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.fallback(value)', () => {
+
+  const base = UnionSchema.create(
+    StringSchema.create(),
+    NumberSchema.create(),
+    BooleanSchema.create(),
+  )
+  const schema = base.fallback('STRING')
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(UnionSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` matches any of the `inner` schemas.', () => {
+    expectValidation(schema, 'STRING').toReturn('STRING')
+    expectValidation(schema, 250).toReturn(250)
+    expectValidation(schema, true).toReturn(true)
+  })
+
+  it('returns the `fallback` value when `input` does not match any of the `inner` schemas.', () => {
+    DataTypeGenerator.skip('strings', 'numbers', 'booleans').forEach((value) => {
+      expectValidation(schema, value).toReturn('STRING')
+    })
+  })
+
+  it('returns when `input` is `undefined` and the schema is optional.', () => {
+    expectValidation(schema.optional(), undefined).toReturn(undefined)
+  })
+
+  it('returns when `input` is `null` and the schema is nullable.', () => {
+    expectValidation(schema.nullable(), null).toReturn(null)
+  })
+})

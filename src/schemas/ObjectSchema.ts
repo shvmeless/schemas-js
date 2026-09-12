@@ -9,6 +9,7 @@ interface ObjectConfig<TShape, TOptional extends boolean, TNullable extends bool
   optional: TOptional
   nullable: TNullable
   default: TDefault
+  fallback: TShape | null
 }
 
 // CLASS
@@ -33,6 +34,7 @@ implements GenericSchema<Maybe<TShape, TOptional, TNullable, TDefault>> {
       optional: false,
       nullable: false,
       default: null,
+      fallback: null,
     })
   }
 
@@ -68,46 +70,51 @@ implements GenericSchema<Maybe<TShape, TOptional, TNullable, TDefault>> {
 
   // VALIDATOR
   public validate(input: unknown): Maybe<TShape, TOptional, TNullable, TDefault> {
+    try {
 
-    const resolved = this._resolveInput(input)
+      const resolved = this._resolveInput(input)
 
-    if (resolved === undefined) return undefined as Maybe<TShape, TOptional, TNullable, TDefault>
-    if (resolved === null) return null as Maybe<TShape, TOptional, TNullable, TDefault>
+      if (resolved === undefined) return undefined as Maybe<TShape, TOptional, TNullable, TDefault>
+      if (resolved === null) return null as Maybe<TShape, TOptional, TNullable, TDefault>
 
-    const result: Record<string, unknown> = {}
-    const errors = ValidationError.prepare()
+      const result: Record<string, unknown> = {}
+      const errors = ValidationError.prepare()
 
-    const keys = new Set([...Object.keys(this._config.schema), ...Object.keys(resolved)])
-    for (const key of keys) {
-      try {
+      const keys = new Set([...Object.keys(this._config.schema), ...Object.keys(resolved)])
+      for (const key of keys) {
+        try {
 
-        const value = resolved[key]
-        const schema = this._config.schema[key as keyof TShape]
+          const value = resolved[key]
+          const schema = this._config.schema[key as keyof TShape]
 
-        if (schema === undefined) {
-          if (this._config.strip) continue
-          throw new ValidationError(value, 'Unexpected property.')
+          if (schema === undefined) {
+            if (this._config.strip) continue
+            throw new ValidationError(value, 'Unexpected property.')
+          }
+
+          result[key] = schema.validate(value)
+
+        } catch (error) {
+          if (error instanceof ValidationError) errors.add(key, error)
+          else throw error
         }
-
-        result[key] = schema.validate(value)
-
-      } catch (error) {
-        if (error instanceof ValidationError) errors.add(key, error)
-        else throw error
       }
+
+      if (errors.size > 0) {
+        const message = (Object.keys(resolved as object).length !== Object.keys(this._config.schema).length)
+          ? (Object.keys(resolved as object).length < Object.keys(this._config.schema).length)
+              ? 'The object is missing one or more required properties.'
+              : 'The object contains one or more unexpected properties.'
+          : 'At least one property does not match the given schema.'
+        errors.throw(input, message)
+      }
+
+      return result as Maybe<TShape, TOptional, TNullable, TDefault>
+
+    } catch (error) {
+      if (this._config.fallback !== null) return this._config.fallback
+      throw error
     }
-
-    if (errors.size > 0) {
-      const message = (Object.keys(resolved as object).length !== Object.keys(this._config.schema).length)
-        ? (Object.keys(resolved as object).length < Object.keys(this._config.schema).length)
-            ? 'The object is missing one or more required properties.'
-            : 'The object contains one or more unexpected properties.'
-        : 'At least one property does not match the given schema.'
-      errors.throw(input, message)
-    }
-
-    return result as Maybe<TShape, TOptional, TNullable, TDefault>
-
   }
 
   // --------------------------------------------------------------------------
@@ -138,6 +145,14 @@ implements GenericSchema<Maybe<TShape, TOptional, TNullable, TDefault>> {
     return new ObjectSchema({
       ...this._config,
       default: value,
+    })
+  }
+
+  // CONFIG
+  public fallback(value: TShape): ObjectSchema<TShape, TOptional, TNullable, TDefault> {
+    return new ObjectSchema({
+      ...this._config,
+      fallback: value,
     })
   }
 
