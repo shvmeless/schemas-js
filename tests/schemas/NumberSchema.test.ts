@@ -78,6 +78,33 @@ describe('.optional()', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
+describe('.nullable()', () => {
+
+  const base = NumberSchema.create()
+  const schema = base.nullable()
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(NumberSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` is a number.', () => {
+    expectValidation(schema, 255).toReturn(255)
+    expectValidation(schema, 3.14).toReturn(3.14)
+  })
+
+  it('returns when `input` is `null`.', () => {
+    expectValidation(schema, null).toReturn(null)
+  })
+
+  it('throws when `input` is not a number.', () => {
+    DataTypeGenerator.skip('numbers', 'null').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be a number.')
+    })
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
 describe('.lessThan(target, { clamp })', () => {
 
   describe('when `target` is `NaN`', () => {

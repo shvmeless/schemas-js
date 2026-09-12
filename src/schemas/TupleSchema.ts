@@ -1,23 +1,24 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema, Optional } from '@/lib/GenericSchema'
+import type { GenericSchema, Maybe } from '@/lib/GenericSchema'
 
 // INTERFACE
-interface TupleConfig<TShape extends ReadonlyArray<unknown>, TOptional extends boolean> {
+interface TupleConfig<TShape extends ReadonlyArray<unknown>, TOptional extends boolean, TNullable extends boolean> {
   shape: { [K in keyof TShape]: GenericSchema<TShape[K]> }
   strip: boolean
   optional: TOptional
+  nullable: TNullable
 }
 
 // CLASS
-export class TupleSchema<TShape extends ReadonlyArray<unknown>, TOptional extends boolean>
-implements GenericSchema<Optional<TShape, TOptional>> {
+export class TupleSchema<TShape extends ReadonlyArray<unknown>, TOptional extends boolean, TNullable extends boolean>
+implements GenericSchema<Maybe<TShape, TOptional, TNullable>> {
 
   // PROPERTIES
-  private readonly _config: TupleConfig<TShape, TOptional>
+  private readonly _config: TupleConfig<TShape, TOptional, TNullable>
 
   // CONSTRUCTOR
-  private constructor(config: TupleConfig<TShape, TOptional>) {
+  private constructor(config: TupleConfig<TShape, TOptional, TNullable>) {
     this._config = {
       ...config,
       shape: [...config.shape] as unknown as { [K in keyof TShape]: GenericSchema<TShape[K]> },
@@ -27,19 +28,20 @@ implements GenericSchema<Optional<TShape, TOptional>> {
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TShape extends ReadonlyArray<unknown>>(shape: { [K in keyof TShape]: GenericSchema<TShape[K]> }): TupleSchema<TShape, false> {
-    return new TupleSchema<TShape, false>({
+  public static create<TShape extends ReadonlyArray<unknown>>(shape: { [K in keyof TShape]: GenericSchema<TShape[K]> }): TupleSchema<TShape, false, false> {
+    return new TupleSchema<TShape, false, false>({
       shape: shape,
       strip: false,
       optional: false,
+      nullable: false,
     })
   }
 
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private updateConfig(config: Partial<TupleConfig<TShape, TOptional>> = {}): TupleSchema<TShape, TOptional> {
-    return new TupleSchema<TShape, TOptional>(
+  private updateConfig(config: Partial<TupleConfig<TShape, TOptional, TNullable>> = {}): TupleSchema<TShape, TOptional, TNullable> {
+    return new TupleSchema<TShape, TOptional, TNullable>(
       { ...this._config, ...config },
     )
   }
@@ -47,9 +49,10 @@ implements GenericSchema<Optional<TShape, TOptional>> {
   // --------------------------------------------------------------------------
 
   // VALIDATOR
-  public validate(input: unknown): Optional<TShape, TOptional> {
+  public validate(input: unknown): Maybe<TShape, TOptional, TNullable> {
 
-    if (input === undefined && this._config.optional) return input as Optional<TShape, TOptional>
+    if (input === undefined && this._config.optional) return input as Maybe<TShape, TOptional, TNullable>
+    if (input === null && this._config.nullable) return input as Maybe<TShape, TOptional, TNullable>
 
     if (!Array.isArray(input)) {
       throw new ValidationError(input, 'The value must be an array.')
@@ -87,22 +90,30 @@ implements GenericSchema<Optional<TShape, TOptional>> {
       errors.throw(input, message)
     }
 
-    return result as unknown as Optional<TShape, TOptional>
+    return result as unknown as Maybe<TShape, TOptional, TNullable>
 
   }
 
   // --------------------------------------------------------------------------
 
   // METHOD
-  public strip(): TupleSchema<TShape, TOptional> {
+  public strip(): TupleSchema<TShape, TOptional, TNullable> {
     return this.updateConfig({ strip: true })
   }
 
   // CONFIG
-  public optional(): TupleSchema<TShape, true> {
+  public optional(): TupleSchema<TShape, true, TNullable> {
     return new TupleSchema({
       ...this._config,
       optional: true,
+    })
+  }
+
+  // CONFIG
+  public nullable(): TupleSchema<TShape, TOptional, true> {
+    return new TupleSchema({
+      ...this._config,
+      nullable: true,
     })
   }
 

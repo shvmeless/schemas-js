@@ -57,3 +57,30 @@ describe('.optional()', () => {
     })
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.nullable()', () => {
+
+  const base = BooleanSchema.create()
+  const schema = base.nullable()
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(BooleanSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` is a boolean.', () => {
+    expectValidation(schema, true).toReturn(true)
+    expectValidation(schema, false).toReturn(false)
+  })
+
+  it('returns when `input` is `null`.', () => {
+    expectValidation(schema, null).toReturn(null)
+  })
+
+  it('throws when `input` is not a boolean.', () => {
+    DataTypeGenerator.skip('booleans', 'null').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be a boolean.')
+    })
+  })
+})

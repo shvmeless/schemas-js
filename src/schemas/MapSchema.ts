@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema, Optional } from '@/lib/GenericSchema'
+import type { GenericSchema, Maybe } from '@/lib/GenericSchema'
 import { runValidations, type GenericValidations } from '@/utils/validations'
 import { stringify } from '@/utils/stringify'
 
@@ -8,23 +8,24 @@ import { stringify } from '@/utils/stringify'
 type MapValidations<TKey, TValue> = GenericValidations<'size' | 'min' | 'max' | 'some' | 'every' | 'none', Map<TKey, TValue>>
 
 // INTERFACE
-interface MapConfig<TKey, TValue, TOptional extends boolean> {
+interface MapConfig<TKey, TValue, TOptional extends boolean, TNullable extends boolean> {
   keySchema: GenericSchema<TKey>
   valueSchema: GenericSchema<TValue>
   prune: boolean
   optional: TOptional
+  nullable: TNullable
 }
 
 // CLASS
-export class MapSchema<TKey, TValue, TOptional extends boolean>
-implements GenericSchema<Optional<Map<TKey, TValue>, TOptional>> {
+export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extends boolean>
+implements GenericSchema<Maybe<Map<TKey, TValue>, TOptional, TNullable>> {
 
   // PROPERTIES
-  private readonly _config: MapConfig<TKey, TValue, TOptional>
+  private readonly _config: MapConfig<TKey, TValue, TOptional, TNullable>
   private readonly _validations: MapValidations<TKey, TValue>
 
   // CONSTRUCTOR
-  private constructor(config: MapConfig<TKey, TValue, TOptional>, validations: MapValidations<TKey, TValue>) {
+  private constructor(config: MapConfig<TKey, TValue, TOptional, TNullable>, validations: MapValidations<TKey, TValue>) {
     this._config = config
     this._validations = validations
   }
@@ -32,28 +33,29 @@ implements GenericSchema<Optional<Map<TKey, TValue>, TOptional>> {
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TKey, TValue>(keySchema: GenericSchema<TKey>, valueSchema: GenericSchema<TValue>): MapSchema<TKey, TValue, false> {
-    return new MapSchema<TKey, TValue, false>({
+  public static create<TKey, TValue>(keySchema: GenericSchema<TKey>, valueSchema: GenericSchema<TValue>): MapSchema<TKey, TValue, false, false> {
+    return new MapSchema<TKey, TValue, false, false>({
       keySchema: keySchema,
       valueSchema: valueSchema,
       prune: false,
       optional: false,
+      nullable: false,
     }, {})
   }
 
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private updateConfig(config: Partial<MapConfig<TKey, TValue, TOptional>> = {}): MapSchema<TKey, TValue, TOptional> {
-    return new MapSchema<TKey, TValue, TOptional>(
+  private updateConfig(config: Partial<MapConfig<TKey, TValue, TOptional, TNullable>> = {}): MapSchema<TKey, TValue, TOptional, TNullable> {
+    return new MapSchema<TKey, TValue, TOptional, TNullable>(
       { ...this._config, ...config },
       this._validations,
     )
   }
 
   // UPDATER
-  private updateValidation(validations: MapValidations<TKey, TValue>): MapSchema<TKey, TValue, TOptional> {
-    return new MapSchema<TKey, TValue, TOptional>(
+  private updateValidation(validations: MapValidations<TKey, TValue>): MapSchema<TKey, TValue, TOptional, TNullable> {
+    return new MapSchema<TKey, TValue, TOptional, TNullable>(
       this._config,
       { ...this._validations, ...validations },
     )
@@ -62,9 +64,10 @@ implements GenericSchema<Optional<Map<TKey, TValue>, TOptional>> {
   // --------------------------------------------------------------------------
 
   // VALIDATOR
-  public validate(input: unknown): Optional<Map<TKey, TValue>, TOptional> {
+  public validate(input: unknown): Maybe<Map<TKey, TValue>, TOptional, TNullable> {
 
-    if (input === undefined && this._config.optional) return input as Optional<Map<TKey, TValue>, TOptional>
+    if (input === undefined && this._config.optional) return input as Maybe<Map<TKey, TValue>, TOptional, TNullable>
+    if (input === null && this._config.nullable) return input as Maybe<Map<TKey, TValue>, TOptional, TNullable>
 
     if (!(input instanceof Map)) {
       throw new ValidationError(input, 'The value must be a Map.')
@@ -92,27 +95,35 @@ implements GenericSchema<Optional<Map<TKey, TValue>, TOptional>> {
 
     runValidations(this._validations, input, result)
 
-    return result as Optional<Map<TKey, TValue>, TOptional>
+    return result as Maybe<Map<TKey, TValue>, TOptional, TNullable>
 
   }
 
   // --------------------------------------------------------------------------
 
   // METHOD
-  public prune(): MapSchema<TKey, TValue, TOptional> {
+  public prune(): MapSchema<TKey, TValue, TOptional, TNullable> {
     return this.updateConfig({ prune: true })
   }
 
   // CONFIG
-  public optional(): MapSchema<TKey, TValue, true> {
+  public optional(): MapSchema<TKey, TValue, true, TNullable> {
     return new MapSchema({
       ...this._config,
       optional: true,
     }, this._validations)
   }
 
+  // CONFIG
+  public nullable(): MapSchema<TKey, TValue, TOptional, true> {
+    return new MapSchema({
+      ...this._config,
+      nullable: true,
+    }, this._validations)
+  }
+
   // METHOD
-  public size(length: number): MapSchema<TKey, TValue, TOptional> {
+  public size(length: number): MapSchema<TKey, TValue, TOptional, TNullable> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
     return this.updateValidation({
@@ -126,7 +137,7 @@ implements GenericSchema<Optional<Map<TKey, TValue>, TOptional>> {
   }
 
   // METHOD
-  public min(length: number): MapSchema<TKey, TValue, TOptional> {
+  public min(length: number): MapSchema<TKey, TValue, TOptional, TNullable> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
     return this.updateValidation({
@@ -138,7 +149,7 @@ implements GenericSchema<Optional<Map<TKey, TValue>, TOptional>> {
   }
 
   // METHOD
-  public max(length: number): MapSchema<TKey, TValue, TOptional> {
+  public max(length: number): MapSchema<TKey, TValue, TOptional, TNullable> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
     return this.updateValidation({
@@ -150,7 +161,7 @@ implements GenericSchema<Optional<Map<TKey, TValue>, TOptional>> {
   }
 
   // METHOD
-  public some(callback: (value: TValue, key: TKey, map: Map<TKey, TValue>) => boolean): MapSchema<TKey, TValue, TOptional> {
+  public some(callback: (value: TValue, key: TKey, map: Map<TKey, TValue>) => boolean): MapSchema<TKey, TValue, TOptional, TNullable> {
     return this.updateValidation({
       some: (current, initial) => {
         for (const [key, value] of current) {
@@ -162,7 +173,7 @@ implements GenericSchema<Optional<Map<TKey, TValue>, TOptional>> {
   }
 
   // METHOD
-  public every(callback: (value: TValue, key: TKey, map: Map<TKey, TValue>) => boolean): MapSchema<TKey, TValue, TOptional> {
+  public every(callback: (value: TValue, key: TKey, map: Map<TKey, TValue>) => boolean): MapSchema<TKey, TValue, TOptional, TNullable> {
     return this.updateValidation({
       every: (current, initial) => {
         for (const [key, value] of current) {
@@ -173,7 +184,7 @@ implements GenericSchema<Optional<Map<TKey, TValue>, TOptional>> {
   }
 
   // METHOD
-  public none(callback: (value: TValue, key: TKey, map: Map<TKey, TValue>) => boolean): MapSchema<TKey, TValue, TOptional> {
+  public none(callback: (value: TValue, key: TKey, map: Map<TKey, TValue>) => boolean): MapSchema<TKey, TValue, TOptional, TNullable> {
     return this.updateValidation({
       none: (current, initial) => {
         for (const [key, value] of current) {

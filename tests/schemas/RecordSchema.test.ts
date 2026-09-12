@@ -138,6 +138,54 @@ describe('.optional()', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
+describe('.nullable()', () => {
+
+  const base = RecordSchema.create(NumberSchema.create())
+  const schema = base.nullable()
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(RecordSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` is an object.', () => {
+    const input = { a: 1, b: 2 }
+    const expected = { a: 1, b: 2 }
+    expectValidation(schema, input).toReturnNew(expected)
+  })
+
+  it('returns when `input` is `null`.', () => {
+    expectValidation(schema, null).toReturn(null)
+  })
+
+  it('throws when `input` is not an object.', () => {
+    DataTypeGenerator.skip('objects', 'null').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be an object.')
+    })
+  })
+
+  it('returns when all `input` entries match the `shape` schema.', () => {
+    const input = { a: 1, b: 2, c: 3 }
+    const expected = { a: 1, b: 2, c: 3 }
+    expectValidation(schema, input).toReturnNew(expected)
+  })
+
+  it('throws when at least one `input` entry does not match the `shape` schema.', () => {
+    const input = { a: true, b: 2, c: '3' }
+    expectValidation(schema, input).toThrow('At least one entry does not match the given schema.', [
+      ['a', {
+        value: true,
+        message: 'The value must be a number.',
+      }],
+      ['c', {
+        value: '3',
+        message: 'The value must be a number.',
+      }],
+    ])
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
 describe('.length(length)', () => {
   describe('when `length` is `NaN`', () => {
     it('throws when the schema is being built.', () => {

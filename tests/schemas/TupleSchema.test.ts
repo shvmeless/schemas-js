@@ -144,3 +144,45 @@ describe('.optional()', () => {
     ])
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.nullable()', () => {
+
+  const base = TupleSchema.create([StringSchema.create(), NumberSchema.create(), BooleanSchema.create()])
+  const schema = base.nullable()
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(TupleSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when all `input` elements match the `shapes` schemas.', () => {
+    const input = ['STRING', 74105280, true]
+    const expected = ['STRING', 74105280, true]
+    expectValidation(schema, input).toReturnNew(expected)
+  })
+
+  it('returns when `input` is `null`.', () => {
+    expectValidation(schema, null).toReturn(null)
+  })
+
+  it('throws when `input` is not an array.', () => {
+    DataTypeGenerator.skip('arrays', 'null').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be an array.')
+    })
+  })
+
+  it('throws when `input` contains fewer elements than expected.', () => {
+    const input = ['STRING']
+    expectValidation(schema, input).toThrow('The tuple is missing one or more required elements.', [
+      [1, {
+        value: undefined,
+        message: 'The value must be a number.',
+      }],
+      [2, {
+        value: undefined,
+        message: 'The value must be a boolean.',
+      }],
+    ])
+  })
+})

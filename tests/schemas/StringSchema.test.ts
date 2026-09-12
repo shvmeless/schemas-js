@@ -63,6 +63,32 @@ describe('.optional()', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
+describe('.nullable()', () => {
+
+  const base = StringSchema.create()
+  const schema = base.nullable()
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(StringSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` is a string.', () => {
+    expectValidation(schema, 'string').toReturn('string')
+  })
+
+  it('returns when `input` is `null`.', () => {
+    expectValidation(schema, null).toReturn(null)
+  })
+
+  it('throws when `input` is not a string.', () => {
+    DataTypeGenerator.skip('strings', 'null').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be a string.')
+    })
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
 describe('.length(length)', () => {
   describe('when `length` is `NaN`', () => {
     it('throws when the schema is being built.', () => {

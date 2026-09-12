@@ -92,3 +92,31 @@ describe('.optional()', () => {
     })
   })
 })
+
+// METHOD ---------------------------------------------------------------------
+describe('.nullable()', () => {
+
+  const base = EnumSchema.create('ALLOWED', 'LITERAL', 'EXAMPLE')
+  const schema = base.nullable()
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(EnumSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` matches one of the `literals`.', () => {
+    expectValidation(schema, 'ALLOWED').toReturn('ALLOWED')
+    expectValidation(schema, 'LITERAL').toReturn('LITERAL')
+    expectValidation(schema, 'EXAMPLE').toReturn('EXAMPLE')
+  })
+
+  it('returns when `input` is `null`.', () => {
+    expectValidation(schema, null).toReturn(null)
+  })
+
+  it('throws when `input` does not match any of the `literals`.', () => {
+    DataTypeGenerator.skip('strings', 'null').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be match one of the allowed literal values.')
+    })
+  })
+})
