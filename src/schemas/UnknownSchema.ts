@@ -1,5 +1,5 @@
 // IMPORTS
-import type { GenericSchema, Maybe } from '@/lib/GenericSchema'
+import type { NullishSchema, Nullish } from '@/lib/GenericSchema'
 
 // INTERFACE
 interface UnknownConfig {
@@ -11,7 +11,7 @@ interface UnknownConfig {
 
 // CLASS
 export class UnknownSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements GenericSchema<Maybe<unknown, TOptional, TNullable, TDefault>> {
+implements NullishSchema<unknown, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
   private readonly _config: UnknownConfig
@@ -30,7 +30,7 @@ implements GenericSchema<Maybe<unknown, TOptional, TNullable, TDefault>> {
 
   // --------------------------------------------------------------------------
 
-  // UPDATER
+  // PRIVATE
   private _resolveInput(input: unknown): unknown {
 
     if (input === undefined && this._config.optional) {
@@ -46,15 +46,16 @@ implements GenericSchema<Maybe<unknown, TOptional, TNullable, TDefault>> {
   }
 
   // VALIDATOR
-  public validate(input: unknown): Maybe<unknown, TOptional, TNullable, TDefault> {
+  public validate(input: unknown): Nullish<unknown, TOptional, TNullable, TDefault> {
+    type Output = Nullish<unknown, TOptional, TNullable, TDefault>
     try {
 
       const resolved = this._resolveInput(input)
 
-      if (resolved === undefined) return undefined as Maybe<unknown, TOptional, TNullable, TDefault>
-      if (resolved === null) return null as Maybe<unknown, TOptional, TNullable, TDefault>
+      if (resolved === undefined) return undefined as Output
+      if (resolved === null) return null as Output
 
-      return resolved as Maybe<unknown, TOptional, TNullable, TDefault>
+      return resolved as Output
 
     } catch (error) {
       if (this._config.fallback !== null) return this._config.fallback
@@ -66,12 +67,18 @@ implements GenericSchema<Maybe<unknown, TOptional, TNullable, TDefault>> {
 
   // CONFIG
   public optional(): UnknownSchema<true, TNullable, TDefault> {
-    return new UnknownSchema({ ...this._config, optional: true })
+    return new UnknownSchema({
+      ...this._config,
+      optional: true,
+    })
   }
 
   // CONFIG
   public nullable(): UnknownSchema<TOptional, true, TDefault> {
-    return new UnknownSchema({ ...this._config, nullable: true })
+    return new UnknownSchema({
+      ...this._config,
+      nullable: true,
+    })
   }
 
   // CONFIG

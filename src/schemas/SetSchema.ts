@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema, Maybe } from '@/lib/GenericSchema'
+import type { GenericSchema, NullishSchema, Nullish } from '@/lib/GenericSchema'
 import { runValidations, type GenericValidations } from '@/utils/validations'
 import { stringify } from '@/utils/stringify'
 
@@ -19,7 +19,7 @@ interface SetConfig<TValue> {
 
 // CLASS
 export class SetSchema<TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements GenericSchema<Maybe<Set<TValue>, TOptional, TNullable, TDefault>> {
+implements NullishSchema<Set<TValue>, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
   private readonly _config: SetConfig<TValue>
@@ -48,14 +48,6 @@ implements GenericSchema<Maybe<Set<TValue>, TOptional, TNullable, TDefault>> {
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private updateConfig(config: Partial<SetConfig<TValue>> = {}): SetSchema<TValue, TOptional, TNullable, TDefault> {
-    return new SetSchema<TValue, TOptional, TNullable, TDefault>(
-      { ...this._config, ...config },
-      this._validations,
-    )
-  }
-
-  // UPDATER
   private updateValidation(validations: SetValidations<TValue>): SetSchema<TValue, TOptional, TNullable, TDefault> {
     return new SetSchema<TValue, TOptional, TNullable, TDefault>(
       this._config,
@@ -65,7 +57,7 @@ implements GenericSchema<Maybe<Set<TValue>, TOptional, TNullable, TDefault>> {
 
   // --------------------------------------------------------------------------
 
-  // UPDATER
+  // PRIVATE
   private _resolveInput(input: unknown): Set<unknown> | null | undefined {
 
     if (input === undefined && this._config.optional) {
@@ -85,13 +77,14 @@ implements GenericSchema<Maybe<Set<TValue>, TOptional, TNullable, TDefault>> {
   }
 
   // VALIDATOR
-  public validate(input: unknown): Maybe<Set<TValue>, TOptional, TNullable, TDefault> {
+  public validate(input: unknown): Nullish<Set<TValue>, TOptional, TNullable, TDefault> {
+    type Output = Nullish<Set<TValue>, TOptional, TNullable, TDefault>
     try {
 
       const resolved = this._resolveInput(input)
 
-      if (resolved === undefined) return undefined as Maybe<Set<TValue>, TOptional, TNullable, TDefault>
-      if (resolved === null) return null as Maybe<Set<TValue>, TOptional, TNullable, TDefault>
+      if (resolved === undefined) return undefined as Output
+      if (resolved === null) return null as Output
 
       const result = new Set<TValue>()
       const errors = ValidationError.prepare()
@@ -114,7 +107,7 @@ implements GenericSchema<Maybe<Set<TValue>, TOptional, TNullable, TDefault>> {
 
       runValidations(this._validations, input, result)
 
-      return result as Maybe<Set<TValue>, TOptional, TNullable, TDefault>
+      return result as Output
 
     } catch (error) {
       if (this._config.fallback !== null) return this._config.fallback
@@ -126,7 +119,10 @@ implements GenericSchema<Maybe<Set<TValue>, TOptional, TNullable, TDefault>> {
 
   // CONFIG
   public prune(): SetSchema<TValue, TOptional, TNullable, TDefault> {
-    return this.updateConfig({ prune: true })
+    return new SetSchema({
+      ...this._config,
+      prune: true,
+    }, this._validations)
   }
 
   // CONFIG

@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema, Optional } from '@/lib/GenericSchema'
+import type { OptionalSchema, Optional } from '@/lib/GenericSchema'
 
 // INTERFACE
 interface NullConfig {
@@ -11,7 +11,7 @@ interface NullConfig {
 
 // CLASS
 export class NullSchema<TOptional extends boolean, TDefault extends boolean>
-implements GenericSchema<Optional<null, TOptional, TDefault>> {
+implements OptionalSchema<null, TOptional, TDefault> {
 
   // PROPERTIES
   private readonly _config: NullConfig
@@ -30,7 +30,7 @@ implements GenericSchema<Optional<null, TOptional, TDefault>> {
 
   // --------------------------------------------------------------------------
 
-  // UPDATER
+  // PRIVATE
   private _resolveInput(input: unknown): null | undefined {
 
     if (input === undefined && this._config.optional) {
@@ -47,14 +47,15 @@ implements GenericSchema<Optional<null, TOptional, TDefault>> {
 
   // VALIDATOR
   public validate(input: unknown): Optional<null, TOptional, TDefault> {
+    type Output = Optional<null, TOptional, TDefault>
     try {
 
       const resolved = this._resolveInput(input)
 
-      if (resolved === undefined) return undefined as Optional<null, TOptional, TDefault>
-      if (resolved === null) return null as Optional<null, TOptional, TDefault>
+      if (resolved === undefined) return undefined as Output
+      if (resolved === null) return null as Output
 
-      return resolved as Optional<null, TOptional, TDefault>
+      return resolved as Output
 
     } catch (error) {
       if (this._config.fallback !== undefined) return this._config.fallback
@@ -66,7 +67,10 @@ implements GenericSchema<Optional<null, TOptional, TDefault>> {
 
   // CONFIG
   public optional(): NullSchema<true, TDefault> {
-    return new NullSchema({ ...this._config, optional: true })
+    return new NullSchema({
+      ...this._config,
+      optional: true,
+    })
   }
 
   // CONFIG

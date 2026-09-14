@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema, Maybe } from '@/lib/GenericSchema'
+import type { NullishSchema, Nullish } from '@/lib/GenericSchema'
 import { runValidations, type GenericValidations } from '@/utils/validations'
 import { stringify } from '@/utils/stringify'
 
@@ -17,7 +17,7 @@ interface NumberConfig {
 
 // CLASS
 export class NumberSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements GenericSchema<Maybe<number, TOptional, TNullable, TDefault>> {
+implements NullishSchema<number, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
   private readonly _config: NumberConfig
@@ -45,7 +45,7 @@ implements GenericSchema<Maybe<number, TOptional, TNullable, TDefault>> {
 
   // --------------------------------------------------------------------------
 
-  // UPDATER
+  // PRIVATE
   private _resolveInput(input: unknown): number | null | undefined {
 
     if (input === undefined && this._config.optional) {
@@ -65,17 +65,18 @@ implements GenericSchema<Maybe<number, TOptional, TNullable, TDefault>> {
   }
 
   // VALIDATOR
-  public validate(input: unknown): Maybe<number, TOptional, TNullable, TDefault> {
+  public validate(input: unknown): Nullish<number, TOptional, TNullable, TDefault> {
+    type Output = Nullish<number, TOptional, TNullable, TDefault>
     try {
 
       const resolved = this._resolveInput(input)
 
-      if (resolved === undefined) return undefined as Maybe<number, TOptional, TNullable, TDefault>
-      if (resolved === null) return null as Maybe<number, TOptional, TNullable, TDefault>
+      if (resolved === undefined) return undefined as Output
+      if (resolved === null) return null as Output
 
       runValidations(this._validations, input, resolved)
 
-      return resolved as Maybe<number, TOptional, TNullable, TDefault>
+      return resolved as Output
 
     } catch (error) {
       if (this._config.fallback !== null) return this._config.fallback
@@ -87,12 +88,18 @@ implements GenericSchema<Maybe<number, TOptional, TNullable, TDefault>> {
 
   // CONFIG
   public optional(): NumberSchema<true, TNullable, TDefault> {
-    return new NumberSchema({ ...this._config, optional: true }, this._validations)
+    return new NumberSchema({
+      ...this._config,
+      optional: true,
+    }, this._validations)
   }
 
   // CONFIG
   public nullable(): NumberSchema<TOptional, true, TDefault> {
-    return new NumberSchema({ ...this._config, nullable: true }, this._validations)
+    return new NumberSchema({
+      ...this._config,
+      nullable: true,
+    }, this._validations)
   }
 
   // CONFIG

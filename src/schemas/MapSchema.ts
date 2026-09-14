@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema, Maybe } from '@/lib/GenericSchema'
+import type { GenericSchema, NullishSchema, Nullish } from '@/lib/GenericSchema'
 import { runValidations, type GenericValidations } from '@/utils/validations'
 import { stringify } from '@/utils/stringify'
 
@@ -20,7 +20,7 @@ interface MapConfig<TKey, TValue> {
 
 // CLASS
 export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements GenericSchema<Maybe<Map<TKey, TValue>, TOptional, TNullable, TDefault>> {
+implements NullishSchema<Map<TKey, TValue>, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
   private readonly _config: MapConfig<TKey, TValue>
@@ -50,14 +50,6 @@ implements GenericSchema<Maybe<Map<TKey, TValue>, TOptional, TNullable, TDefault
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private updateConfig(config: Partial<MapConfig<TKey, TValue>> = {}): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
-    return new MapSchema<TKey, TValue, TOptional, TNullable, TDefault>(
-      { ...this._config, ...config },
-      this._validations,
-    )
-  }
-
-  // UPDATER
   private updateValidation(validations: MapValidations<TKey, TValue>): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     return new MapSchema<TKey, TValue, TOptional, TNullable, TDefault>(
       this._config,
@@ -67,7 +59,7 @@ implements GenericSchema<Maybe<Map<TKey, TValue>, TOptional, TNullable, TDefault
 
   // --------------------------------------------------------------------------
 
-  // UPDATER
+  // PRIVATE
   private _resolveInput(input: unknown): Map<unknown, unknown> | null | undefined {
 
     if (input === undefined && this._config.optional) {
@@ -87,13 +79,14 @@ implements GenericSchema<Maybe<Map<TKey, TValue>, TOptional, TNullable, TDefault
   }
 
   // VALIDATOR
-  public validate(input: unknown): Maybe<Map<TKey, TValue>, TOptional, TNullable, TDefault> {
+  public validate(input: unknown): Nullish<Map<TKey, TValue>, TOptional, TNullable, TDefault> {
+    type Output = Nullish<Map<TKey, TValue>, TOptional, TNullable, TDefault>
     try {
 
       const resolved = this._resolveInput(input)
 
-      if (resolved === undefined) return undefined as Maybe<Map<TKey, TValue>, TOptional, TNullable, TDefault>
-      if (resolved === null) return null as Maybe<Map<TKey, TValue>, TOptional, TNullable, TDefault>
+      if (resolved === undefined) return undefined as Output
+      if (resolved === null) return null as Output
 
       const result = new Map<TKey, TValue>()
       const errors = ValidationError.prepare()
@@ -117,7 +110,7 @@ implements GenericSchema<Maybe<Map<TKey, TValue>, TOptional, TNullable, TDefault
 
       runValidations(this._validations, input, result)
 
-      return result as Maybe<Map<TKey, TValue>, TOptional, TNullable, TDefault>
+      return result as Output
 
     } catch (error) {
       if (this._config.fallback !== null) return this._config.fallback
@@ -129,7 +122,10 @@ implements GenericSchema<Maybe<Map<TKey, TValue>, TOptional, TNullable, TDefault
 
   // CONFIG
   public prune(): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
-    return this.updateConfig({ prune: true })
+    return new MapSchema({
+      ...this._config,
+      prune: true,
+    }, this._validations)
   }
 
   // CONFIG

@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema, Maybe } from '@/lib/GenericSchema'
+import type { GenericSchema, NullishSchema, Nullish } from '@/lib/GenericSchema'
 import { runValidations, type GenericValidations } from '@/utils/validations'
 import { stringify } from '@/utils/stringify'
 
@@ -19,7 +19,7 @@ interface ArrayConfig<TItem> {
 
 // CLASS
 export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements GenericSchema<Maybe<Array<TItem>, TOptional, TNullable, TDefault>> {
+implements NullishSchema<Array<TItem>, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
   private readonly _config: ArrayConfig<TItem>
@@ -57,7 +57,7 @@ implements GenericSchema<Maybe<Array<TItem>, TOptional, TNullable, TDefault>> {
 
   // --------------------------------------------------------------------------
 
-  // UPDATER
+  // PRIVATE
   private _resolveInput(input: unknown): Array<unknown> | null | undefined {
 
     if (input === undefined && this._config.optional) {
@@ -77,13 +77,14 @@ implements GenericSchema<Maybe<Array<TItem>, TOptional, TNullable, TDefault>> {
   }
 
   // VALIDATOR
-  public validate(input: unknown): Maybe<Array<TItem>, TOptional, TNullable, TDefault> {
+  public validate(input: unknown): Nullish<Array<TItem>, TOptional, TNullable, TDefault> {
+    type Output = Nullish<Array<TItem>, TOptional, TNullable, TDefault>
     try {
 
       const resolved = this._resolveInput(input)
 
-      if (resolved === undefined) return undefined as Maybe<Array<TItem>, TOptional, TNullable, TDefault>
-      if (resolved === null) return null as Maybe<Array<TItem>, TOptional, TNullable, TDefault>
+      if (resolved === undefined) return undefined as Output
+      if (resolved === null) return null as Output
 
       const output: Array<TItem> = []
       const errors = ValidationError.prepare()
@@ -106,7 +107,7 @@ implements GenericSchema<Maybe<Array<TItem>, TOptional, TNullable, TDefault>> {
 
       runValidations(this._validations, input, output)
 
-      return output as Maybe<Array<TItem>, TOptional, TNullable, TDefault>
+      return output as Output
 
     } catch (error) {
       if (this._config.fallback !== null) return this._config.fallback

@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema, Maybe } from '@/lib/GenericSchema'
+import type { GenericSchema, NullishSchema, Nullish } from '@/lib/GenericSchema'
 
 // TYPES
 type InferSchemaType<I> = I extends GenericSchema<infer T> ? T : never
@@ -17,7 +17,7 @@ interface UnionConfig<TSchemas> {
 
 // CLASS
 export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements GenericSchema<Maybe<TSchemas, TOptional, TNullable, TDefault>> {
+implements NullishSchema<TSchemas, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
   private readonly _config: UnionConfig<TSchemas>
@@ -44,20 +44,21 @@ implements GenericSchema<Maybe<TSchemas, TOptional, TNullable, TDefault>> {
   // --------------------------------------------------------------------------
 
   // VALIDATOR
-  public validate(input: unknown): Maybe<TSchemas, TOptional, TNullable, TDefault> {
+  public validate(input: unknown): Nullish<TSchemas, TOptional, TNullable, TDefault> {
+    type Output = Nullish<TSchemas, TOptional, TNullable, TDefault>
     try {
 
       if (input === undefined && this._config.optional) {
-        return ((this._config.default !== null) ? this._config.default : undefined) as Maybe<TSchemas, TOptional, TNullable, TDefault>
+        return ((this._config.default !== null) ? this._config.default : undefined) as Output
       }
 
       if (input === null && this._config.nullable) {
-        return ((this._config.default !== null) ? this._config.default : null) as Maybe<TSchemas, TOptional, TNullable, TDefault>
+        return ((this._config.default !== null) ? this._config.default : null) as Output
       }
 
       for (const schema of this._config.schemas) {
         try {
-          return schema.validate(input) as Maybe<TSchemas, TOptional, TNullable, TDefault>
+          return schema.validate(input) as Output
         } catch (error) {
           if (error instanceof ValidationError) continue
           else throw error
@@ -76,17 +77,23 @@ implements GenericSchema<Maybe<TSchemas, TOptional, TNullable, TDefault>> {
 
   // CONFIG
   public optional(): UnionSchema<TSchemas, true, TNullable, TDefault> {
-    return new UnionSchema<TSchemas, true, TNullable, TDefault>({ ...this._config, optional: true })
+    return new UnionSchema({
+      ...this._config,
+      optional: true,
+    })
   }
 
   // CONFIG
   public nullable(): UnionSchema<TSchemas, TOptional, true, TDefault> {
-    return new UnionSchema<TSchemas, TOptional, true, TDefault>({ ...this._config, nullable: true })
+    return new UnionSchema({
+      ...this._config,
+      nullable: true,
+    })
   }
 
   // CONFIG
   public default(value: TSchemas): UnionSchema<TSchemas, TOptional, TNullable, true> {
-    return new UnionSchema<TSchemas, TOptional, TNullable, true>({
+    return new UnionSchema({
       ...this._config,
       default: value,
     })
@@ -94,7 +101,7 @@ implements GenericSchema<Maybe<TSchemas, TOptional, TNullable, TDefault>> {
 
   // CONFIG
   public fallback(value: TSchemas): UnionSchema<TSchemas, TOptional, TNullable, TDefault> {
-    return new UnionSchema<TSchemas, TOptional, TNullable, TDefault>({
+    return new UnionSchema({
       ...this._config,
       fallback: value,
     })

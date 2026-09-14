@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema, Maybe } from '@/lib/GenericSchema'
+import type { NullishSchema, Nullish } from '@/lib/GenericSchema'
 
 // INTERFACE
 interface BooleanConfig {
@@ -12,7 +12,7 @@ interface BooleanConfig {
 
 // CLASS
 export class BooleanSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements GenericSchema<Maybe<boolean, TOptional, TNullable, TDefault>> {
+implements NullishSchema<boolean, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
   private readonly _config: BooleanConfig
@@ -31,7 +31,7 @@ implements GenericSchema<Maybe<boolean, TOptional, TNullable, TDefault>> {
 
   // --------------------------------------------------------------------------
 
-  // UPDATER
+  // PRIVATE
   private _resolveInput(input: unknown): boolean | null | undefined {
 
     if (input === undefined && this._config.optional) {
@@ -51,15 +51,16 @@ implements GenericSchema<Maybe<boolean, TOptional, TNullable, TDefault>> {
   }
 
   // VALIDATOR
-  public validate(input: unknown): Maybe<boolean, TOptional, TNullable, TDefault> {
+  public validate(input: unknown): Nullish<boolean, TOptional, TNullable, TDefault> {
+    type Output = Nullish<boolean, TOptional, TNullable, TDefault>
     try {
 
       const resolved = this._resolveInput(input)
 
-      if (resolved === undefined) return undefined as Maybe<boolean, TOptional, TNullable, TDefault>
-      if (resolved === null) return null as Maybe<boolean, TOptional, TNullable, TDefault>
+      if (resolved === undefined) return undefined as Output
+      if (resolved === null) return null as Output
 
-      return resolved as Maybe<boolean, TOptional, TNullable, TDefault>
+      return resolved as Output
 
     } catch (error) {
       if (this._config.fallback !== null) return this._config.fallback
@@ -71,12 +72,18 @@ implements GenericSchema<Maybe<boolean, TOptional, TNullable, TDefault>> {
 
   // CONFIG
   public optional(): BooleanSchema<true, TNullable, TDefault> {
-    return new BooleanSchema({ ...this._config, optional: true })
+    return new BooleanSchema({
+      ...this._config,
+      optional: true,
+    })
   }
 
   // CONFIG
   public nullable(): BooleanSchema<TOptional, true, TDefault> {
-    return new BooleanSchema({ ...this._config, nullable: true })
+    return new BooleanSchema({
+      ...this._config,
+      nullable: true,
+    })
   }
 
   // CONFIG

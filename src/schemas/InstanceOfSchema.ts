@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema, Maybe } from '@/lib/GenericSchema'
+import type { NullishSchema, Nullish } from '@/lib/GenericSchema'
 
 // TYPE
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -17,7 +17,7 @@ interface InstanceOfConfig<TConstructor extends AnyConstructor> {
 
 // CLASS
 export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements GenericSchema<Maybe<InstanceType<TConstructor>, TOptional, TNullable, TDefault>> {
+implements NullishSchema<InstanceType<TConstructor>, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
   private readonly _config: InstanceOfConfig<TConstructor>
@@ -36,7 +36,7 @@ implements GenericSchema<Maybe<InstanceType<TConstructor>, TOptional, TNullable,
 
   // --------------------------------------------------------------------------
 
-  // UPDATER
+  // PRIVATE
   private _resolveInput(input: unknown): InstanceType<TConstructor> | null | undefined {
 
     if (input === undefined && this._config.optional) {
@@ -56,15 +56,16 @@ implements GenericSchema<Maybe<InstanceType<TConstructor>, TOptional, TNullable,
   }
 
   // VALIDATOR
-  public validate(input: unknown): Maybe<InstanceType<TConstructor>, TOptional, TNullable, TDefault> {
+  public validate(input: unknown): Nullish<InstanceType<TConstructor>, TOptional, TNullable, TDefault> {
+    type Output = Nullish<InstanceType<TConstructor>, TOptional, TNullable, TDefault>
     try {
 
       const resolved = this._resolveInput(input)
 
-      if (resolved === undefined) return undefined as Maybe<InstanceType<TConstructor>, TOptional, TNullable, TDefault>
-      if (resolved === null) return null as Maybe<InstanceType<TConstructor>, TOptional, TNullable, TDefault>
+      if (resolved === undefined) return undefined as Output
+      if (resolved === null) return null as Output
 
-      return resolved as Maybe<InstanceType<TConstructor>, TOptional, TNullable, TDefault>
+      return resolved as Output
 
     } catch (error) {
       if (this._config.fallback !== null) return this._config.fallback
@@ -76,12 +77,18 @@ implements GenericSchema<Maybe<InstanceType<TConstructor>, TOptional, TNullable,
 
   // CONFIG
   public optional(): InstanceOfSchema<TConstructor, true, TNullable, TDefault> {
-    return new InstanceOfSchema({ ...this._config, optional: true })
+    return new InstanceOfSchema({
+      ...this._config,
+      optional: true,
+    })
   }
 
   // CONFIG
   public nullable(): InstanceOfSchema<TConstructor, TOptional, true, TDefault> {
-    return new InstanceOfSchema({ ...this._config, nullable: true })
+    return new InstanceOfSchema({
+      ...this._config,
+      nullable: true,
+    })
   }
 
   // CONFIG

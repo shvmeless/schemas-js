@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema, Nullable } from '@/lib/GenericSchema'
+import type { NullableSchema, Nullable } from '@/lib/GenericSchema'
 
 // INTERFACE
 interface UndefinedConfig {
@@ -11,7 +11,7 @@ interface UndefinedConfig {
 
 // CLASS
 export class UndefinedSchema<TNullable extends boolean, TDefault extends boolean>
-implements GenericSchema<Nullable<undefined, TNullable, TDefault>> {
+implements NullableSchema<undefined, TNullable, TDefault> {
 
   // PROPERTIES
   private readonly _config: UndefinedConfig
@@ -30,7 +30,7 @@ implements GenericSchema<Nullable<undefined, TNullable, TDefault>> {
 
   // --------------------------------------------------------------------------
 
-  // UPDATER
+  // PRIVATE
   private _resolveInput(input: unknown): undefined | null {
 
     if (input === null && this._config.nullable) {
@@ -47,14 +47,15 @@ implements GenericSchema<Nullable<undefined, TNullable, TDefault>> {
 
   // VALIDATOR
   public validate(input: unknown): Nullable<undefined, TNullable, TDefault> {
+    type Output = Nullable<undefined, TNullable, TDefault>
     try {
 
       const resolved = this._resolveInput(input)
 
-      if (resolved === undefined) return undefined as Nullable<undefined, TNullable, TDefault>
-      if (resolved === null) return null as Nullable<undefined, TNullable, TDefault>
+      if (resolved === undefined) return undefined as Output
+      if (resolved === null) return null as Output
 
-      return resolved as Nullable<undefined, TNullable, TDefault>
+      return resolved as Output
 
     } catch (error) {
       if (this._config.fallback !== null) return this._config.fallback
@@ -66,7 +67,10 @@ implements GenericSchema<Nullable<undefined, TNullable, TDefault>> {
 
   // CONFIG
   public nullable(): UndefinedSchema<true, TDefault> {
-    return new UndefinedSchema({ ...this._config, nullable: true })
+    return new UndefinedSchema({
+      ...this._config,
+      nullable: true,
+    })
   }
 
   // CONFIG

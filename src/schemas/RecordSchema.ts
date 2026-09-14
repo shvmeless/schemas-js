@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema, Maybe } from '@/lib/GenericSchema'
+import type { GenericSchema, NullishSchema, Nullish } from '@/lib/GenericSchema'
 import { runValidations, type GenericValidations } from '@/utils/validations'
 import { stringify } from '@/utils/stringify'
 
@@ -19,7 +19,7 @@ interface RecordConfig<TValue> {
 
 // CLASS
 export class RecordSchema<TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements GenericSchema<Maybe<Record<string, TValue>, TOptional, TNullable, TDefault>> {
+implements NullishSchema<Record<string, TValue>, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
   private readonly _config: RecordConfig<TValue>
@@ -48,14 +48,6 @@ implements GenericSchema<Maybe<Record<string, TValue>, TOptional, TNullable, TDe
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private updateConfig(config: Partial<RecordConfig<TValue>> = {}): RecordSchema<TValue, TOptional, TNullable, TDefault> {
-    return new RecordSchema<TValue, TOptional, TNullable, TDefault>(
-      { ...this._config, ...config },
-      this._validations,
-    )
-  }
-
-  // UPDATER
   private updateValidation(validations: RecordValidations<TValue>): RecordSchema<TValue, TOptional, TNullable, TDefault> {
     return new RecordSchema<TValue, TOptional, TNullable, TDefault>(
       this._config,
@@ -65,7 +57,7 @@ implements GenericSchema<Maybe<Record<string, TValue>, TOptional, TNullable, TDe
 
   // --------------------------------------------------------------------------
 
-  // UPDATER
+  // PRIVATE
   private _resolveInput(input: unknown): Record<string, unknown> | null | undefined {
 
     if (input === undefined && this._config.optional) {
@@ -85,13 +77,14 @@ implements GenericSchema<Maybe<Record<string, TValue>, TOptional, TNullable, TDe
   }
 
   // VALIDATOR
-  public validate(input: unknown): Maybe<Record<string, TValue>, TOptional, TNullable, TDefault> {
+  public validate(input: unknown): Nullish<Record<string, TValue>, TOptional, TNullable, TDefault> {
+    type Output = Nullish<Record<string, TValue>, TOptional, TNullable, TDefault>
     try {
 
       const resolved = this._resolveInput(input)
 
-      if (resolved === undefined) return undefined as Maybe<Record<string, TValue>, TOptional, TNullable, TDefault>
-      if (resolved === null) return null as Maybe<Record<string, TValue>, TOptional, TNullable, TDefault>
+      if (resolved === undefined) return undefined as Output
+      if (resolved === null) return null as Output
 
       const result: Record<string, TValue> = {}
       const errors = ValidationError.prepare()
@@ -113,7 +106,7 @@ implements GenericSchema<Maybe<Record<string, TValue>, TOptional, TNullable, TDe
 
       runValidations(this._validations, input, result)
 
-      return result as Maybe<Record<string, TValue>, TOptional, TNullable, TDefault>
+      return result as Output
 
     } catch (error) {
       if (this._config.fallback !== null) return this._config.fallback
@@ -125,7 +118,10 @@ implements GenericSchema<Maybe<Record<string, TValue>, TOptional, TNullable, TDe
 
   // CONFIG
   public prune(): RecordSchema<TValue, TOptional, TNullable, TDefault> {
-    return this.updateConfig({ prune: true })
+    return new RecordSchema({
+      ...this._config,
+      prune: true,
+    }, this._validations)
   }
 
   // CONFIG

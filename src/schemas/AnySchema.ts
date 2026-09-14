@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
 // IMPORTS
-import type { GenericSchema, Maybe } from '@/lib/GenericSchema'
+import type { NullishSchema, Nullish } from '@/lib/GenericSchema'
 
 // INTERFACE
 interface AnyConfig {
@@ -15,7 +15,7 @@ interface AnyConfig {
 
 // CLASS
 export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements GenericSchema<Maybe<any, TOptional, TNullable, TDefault>> {
+implements NullishSchema<any, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
   private readonly _config: AnyConfig
@@ -34,7 +34,7 @@ implements GenericSchema<Maybe<any, TOptional, TNullable, TDefault>> {
 
   // --------------------------------------------------------------------------
 
-  // UPDATER
+  // PRIVATE
   private _resolveInput(input: unknown): unknown {
 
     if (input === undefined && this._config.optional) {
@@ -50,15 +50,16 @@ implements GenericSchema<Maybe<any, TOptional, TNullable, TDefault>> {
   }
 
   // VALIDATOR
-  public validate(input: any): Maybe<any, TOptional, TNullable, TDefault> {
+  public validate(input: any): Nullish<any, TOptional, TNullable, TDefault> {
+    type Output = Nullish<any, TOptional, TNullable, TDefault>
     try {
 
       const resolved = this._resolveInput(input)
 
-      if (resolved === undefined) return undefined as Maybe<any, TOptional, TNullable, TDefault>
-      if (resolved === null) return null as Maybe<any, TOptional, TNullable, TDefault>
+      if (resolved === undefined) return undefined as Output
+      if (resolved === null) return null as Output
 
-      return resolved as Maybe<any, TOptional, TNullable, TDefault>
+      return resolved as Output
 
     } catch (error) {
       if (this._config.fallback !== null) return this._config.fallback
@@ -70,12 +71,18 @@ implements GenericSchema<Maybe<any, TOptional, TNullable, TDefault>> {
 
   // CONFIG
   public optional(): AnySchema<true, TNullable, TDefault> {
-    return new AnySchema({ ...this._config, optional: true })
+    return new AnySchema({
+      ...this._config,
+      optional: true,
+    })
   }
 
   // CONFIG
   public nullable(): AnySchema<TOptional, true, TDefault> {
-    return new AnySchema({ ...this._config, nullable: true })
+    return new AnySchema({
+      ...this._config,
+      nullable: true,
+    })
   }
 
   // CONFIG

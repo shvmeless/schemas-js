@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema, Maybe } from '@/lib/GenericSchema'
+import type { NullishSchema, Nullish } from '@/lib/GenericSchema'
 import { runValidations, type GenericValidations } from '@/utils/validations'
 import { stringify } from '@/utils/stringify'
 
@@ -17,7 +17,7 @@ interface StringConfig {
 
 // CLASS
 export class StringSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements GenericSchema<Maybe<string, TOptional, TNullable, TDefault>> {
+implements NullishSchema<string, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
   private readonly _config: StringConfig
@@ -45,7 +45,7 @@ implements GenericSchema<Maybe<string, TOptional, TNullable, TDefault>> {
 
   // --------------------------------------------------------------------------
 
-  // UPDATER
+  // PRIVATE
   private _resolveInput(input: unknown): string | null | undefined {
 
     if (input === undefined && this._config.optional) {
@@ -65,17 +65,18 @@ implements GenericSchema<Maybe<string, TOptional, TNullable, TDefault>> {
   }
 
   // VALIDATOR
-  public validate(input: unknown): Maybe<string, TOptional, TNullable, TDefault> {
+  public validate(input: unknown): Nullish<string, TOptional, TNullable, TDefault> {
+    type Output = Nullish<string, TOptional, TNullable, TDefault>
     try {
 
       const resolved = this._resolveInput(input)
 
-      if (resolved === undefined) return undefined as Maybe<string, TOptional, TNullable, TDefault>
-      if (resolved === null) return null as Maybe<string, TOptional, TNullable, TDefault>
+      if (resolved === undefined) return undefined as Output
+      if (resolved === null) return null as Output
 
       runValidations(this._validations, input, resolved)
 
-      return resolved as Maybe<string, TOptional, TNullable, TDefault>
+      return resolved as Output
 
     } catch (error) {
       if (this._config.fallback !== null) return this._config.fallback
@@ -87,12 +88,18 @@ implements GenericSchema<Maybe<string, TOptional, TNullable, TDefault>> {
 
   // CONFIG
   public optional(): StringSchema<true, TNullable, TDefault> {
-    return new StringSchema({ ...this._config, optional: true }, this._validations)
+    return new StringSchema({
+      ...this._config,
+      optional: true,
+    }, this._validations)
   }
 
   // CONFIG
   public nullable(): StringSchema<TOptional, true, TDefault> {
-    return new StringSchema({ ...this._config, nullable: true }, this._validations)
+    return new StringSchema({
+      ...this._config,
+      nullable: true,
+    }, this._validations)
   }
 
   // CONFIG

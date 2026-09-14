@@ -1,6 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema, Maybe } from '@/lib/GenericSchema'
+import type { NullishSchema, Nullish } from '@/lib/GenericSchema'
 
 // INTERFACE
 interface LiteralConfig<TValue extends string | number | boolean> {
@@ -13,7 +13,7 @@ interface LiteralConfig<TValue extends string | number | boolean> {
 
 // CLASS
 export class LiteralSchema<TValue extends string | number | boolean, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements GenericSchema<Maybe<TValue, TOptional, TNullable, TDefault>> {
+implements NullishSchema<TValue, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
   private readonly _config: LiteralConfig<TValue>
@@ -32,7 +32,7 @@ implements GenericSchema<Maybe<TValue, TOptional, TNullable, TDefault>> {
 
   // --------------------------------------------------------------------------
 
-  // UPDATER
+  // PRIVATE
   private _resolveInput(input: unknown): TValue | null | undefined {
 
     if (input === undefined && this._config.optional) {
@@ -52,15 +52,16 @@ implements GenericSchema<Maybe<TValue, TOptional, TNullable, TDefault>> {
   }
 
   // VALIDATOR
-  public validate(input: unknown): Maybe<TValue, TOptional, TNullable, TDefault> {
+  public validate(input: unknown): Nullish<TValue, TOptional, TNullable, TDefault> {
+    type Output = Nullish<TValue, TOptional, TNullable, TDefault>
     try {
 
       const resolved = this._resolveInput(input)
 
-      if (resolved === undefined) return undefined as Maybe<TValue, TOptional, TNullable, TDefault>
-      if (resolved === null) return null as Maybe<TValue, TOptional, TNullable, TDefault>
+      if (resolved === undefined) return undefined as Output
+      if (resolved === null) return null as Output
 
-      return resolved as Maybe<TValue, TOptional, TNullable, TDefault>
+      return resolved as Output
 
     } catch (error) {
       if (this._config.fallback !== null) return this._config.fallback
@@ -72,12 +73,18 @@ implements GenericSchema<Maybe<TValue, TOptional, TNullable, TDefault>> {
 
   // CONFIG
   public optional(): LiteralSchema<TValue, true, TNullable, TDefault> {
-    return new LiteralSchema({ ...this._config, optional: true })
+    return new LiteralSchema({
+      ...this._config,
+      optional: true,
+    })
   }
 
   // CONFIG
   public nullable(): LiteralSchema<TValue, TOptional, true, TDefault> {
-    return new LiteralSchema({ ...this._config, nullable: true })
+    return new LiteralSchema({
+      ...this._config,
+      nullable: true,
+    })
   }
 
   // CONFIG
