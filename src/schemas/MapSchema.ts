@@ -1,163 +1,236 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema } from '@/lib/GenericSchema'
+import type { GenericSchema, NullishSchema, Nullish } from '@/lib/GenericSchema'
+import { runValidations, type GenericValidations } from '@/utils/validations'
 import { stringify } from '@/utils/stringify'
 
+// TYPE
+type MapValidations<TKey, TValue> = GenericValidations<'size' | 'min' | 'max' | 'some' | 'every' | 'none', Map<TKey, TValue>>
+
+// INTERFACE
+interface MapConfig<TKey, TValue> {
+  keySchema: GenericSchema<TKey>
+  valueSchema: GenericSchema<TValue>
+  prune: boolean
+  optional: boolean
+  nullable: boolean
+  default: Map<TKey, TValue> | null
+  fallback: Map<TKey, TValue> | null
+}
+
 // CLASS
-export class MapSchema<K, T> implements GenericSchema<Map<K, T>> {
+export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
+implements NullishSchema<Map<TKey, TValue>, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
-  private readonly _keySchema: GenericSchema<K>
-  private readonly _valueSchema: GenericSchema<T>
-  private readonly _queue: Array<(original: Map<K, T>, output: Map<K, T>) => Map<K, T>>
-  private readonly _prune: boolean
+  private readonly _config: MapConfig<TKey, TValue>
+  private readonly _validations: MapValidations<TKey, TValue>
 
   // CONSTRUCTOR
-  private constructor(keySchema: GenericSchema<K>, valueSchema: GenericSchema<T>, queue: Array<(original: Map<K, T>, output: Map<K, T>) => Map<K, T>>, prune: boolean) {
-    this._keySchema = keySchema
-    this._valueSchema = valueSchema
-    this._queue = queue
-    this._prune = prune
+  private constructor(config: MapConfig<TKey, TValue>, validations: MapValidations<TKey, TValue>) {
+    this._config = config
+    this._validations = validations
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<K, T>(keySchema: GenericSchema<K>, valueSchema: GenericSchema<T>): MapSchema<K, T> {
-    return new MapSchema(keySchema, valueSchema, [], false)
+  public static create<TKey, TValue>(keySchema: GenericSchema<TKey>, valueSchema: GenericSchema<TValue>): MapSchema<TKey, TValue, false, false, false> {
+    return new MapSchema<TKey, TValue, false, false, false>({
+      keySchema: keySchema,
+      valueSchema: valueSchema,
+      prune: false,
+      optional: false,
+      nullable: false,
+      default: null,
+      fallback: null,
+    }, {})
   }
 
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private clone(params: {
-    keySchema?: GenericSchema<K>
-    valueSchema?: GenericSchema<T>
-    queue?: Array<(original: Map<K, T>, output: Map<K, T>) => Map<K, T>>
-    prune?: boolean
-  } = {}): MapSchema<K, T> {
-    return new MapSchema(
-      params.keySchema ?? this._keySchema,
-      params.valueSchema ?? this._valueSchema,
-      params.queue ?? this._queue,
-      params.prune ?? this._prune,
+  private updateValidation(validations: MapValidations<TKey, TValue>): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
+    return new MapSchema<TKey, TValue, TOptional, TNullable, TDefault>(
+      this._config,
+      { ...this._validations, ...validations },
     )
   }
 
-  // UPDATER
-  private push(fn: (original: Map<K, T>, output: Map<K, T>) => Map<K, T>): MapSchema<K, T> {
-    return new MapSchema(this._keySchema, this._valueSchema, [...this._queue, fn], false)
-  }
-
   // --------------------------------------------------------------------------
 
-  // VALIDATOR
-  public validate(input: unknown): Map<K, T> {
+  // PRIVATE
+  private _resolveInput(input: unknown): Map<unknown, unknown> | null | undefined {
+
+    if (input === undefined && this._config.optional) {
+      return (this._config.default !== null) ? this._config.default : undefined
+    }
+
+    if (input === null && this._config.nullable) {
+      return (this._config.default !== null) ? this._config.default : null
+    }
 
     if (!(input instanceof Map)) {
       throw new ValidationError(input, 'The value must be a Map.')
     }
 
-    let result = new Map<K, T>()
-    const errors = ValidationError.prepare()
+    return input
 
-    input.forEach((value: unknown, key: unknown) => {
-      try {
-        const validatedKey = this._keySchema.validate(key)
-        const validatedValue = this._valueSchema.validate(value)
-        result.set(validatedKey, validatedValue)
-      } catch (error) {
-        if (error instanceof ValidationError) {
-          if (this._prune) return
-          errors.add(key, error)
-        } else throw error
+  }
+
+  // VALIDATOR
+  public validate(input: unknown): Nullish<Map<TKey, TValue>, TOptional, TNullable, TDefault> {
+    type Output = Nullish<Map<TKey, TValue>, TOptional, TNullable, TDefault>
+    try {
+
+      const resolved = this._resolveInput(input)
+
+      if (resolved === undefined) return undefined as Output
+      if (resolved === null) return null as Output
+
+      const result = new Map<TKey, TValue>()
+      const errors = ValidationError.prepare()
+
+      resolved.forEach((value: unknown, key: unknown) => {
+        try {
+          const validatedKey = this._config.keySchema.validate(key)
+          const validatedValue = this._config.valueSchema.validate(value)
+          result.set(validatedKey, validatedValue)
+        } catch (error) {
+          if (error instanceof ValidationError) {
+            if (this._config.prune) return
+            errors.add(key, error)
+          } else throw error
+        }
+      })
+
+      if (errors.size > 0) {
+        errors.throw(input, 'At least one entry does not match the given schema.')
       }
-    })
 
-    if (errors.size > 0) {
-      errors.throw(input, 'At least one entry does not match the given schema.')
+      runValidations(this._validations, input, result)
+
+      return result as Output
+
+    } catch (error) {
+      if (this._config.fallback !== null) return this._config.fallback
+      throw error
     }
+  }
 
-    for (const fn of this._queue) {
-      result = fn(input as Map<K, T>, result)
-    }
+  // --------------------------------------------------------------------------
 
-    return result
+  // CONFIG
+  public prune(): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
+    return new MapSchema({
+      ...this._config,
+      prune: true,
+    }, this._validations)
+  }
 
+  // CONFIG
+  public optional(): MapSchema<TKey, TValue, true, TNullable, TDefault> {
+    return new MapSchema({
+      ...this._config,
+      optional: true,
+    }, this._validations)
+  }
+
+  // CONFIG
+  public nullable(): MapSchema<TKey, TValue, TOptional, true, TDefault> {
+    return new MapSchema({
+      ...this._config,
+      nullable: true,
+    }, this._validations)
+  }
+
+  // CONFIG
+  public default(value: Map<TKey, TValue>): MapSchema<TKey, TValue, TOptional, TNullable, true> {
+    return new MapSchema({
+      ...this._config,
+      default: value,
+    }, this._validations)
+  }
+
+  // CONFIG
+  public fallback(value: Map<TKey, TValue>): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
+    return new MapSchema({
+      ...this._config,
+      fallback: value,
+    }, this._validations)
   }
 
   // --------------------------------------------------------------------------
 
   // METHOD
-  public prune(): MapSchema<K, T> {
-    return this.clone({ prune: true })
-  }
-
-  // METHOD
-  public size(length: number): MapSchema<K, T> {
+  public size(length: number): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this.push((original, output) => {
-      if (output.size !== length) throw new ValidationError(original, `The value must be ${stringify(length)} entries long.`)
-      return output
+    return this.updateValidation({
+      min: undefined,
+      max: undefined,
+      size: (current, initial) => {
+        if (current.size === length) return
+        throw new ValidationError(initial, `The value must be ${stringify(length)} entries long.`)
+      },
     })
   }
 
   // METHOD
-  public min(length: number): MapSchema<K, T> {
+  public min(length: number): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this.push((original, output) => {
-      if (output.size < length) throw new ValidationError(original, `The value must be at least ${stringify(length)} entries long.`)
-      return output
+    return this.updateValidation({
+      min: (current, initial) => {
+        if (current.size >= length) return
+        throw new ValidationError(initial, `The value must be at least ${stringify(length)} entries long.`)
+      },
     })
   }
 
   // METHOD
-  public max(length: number): MapSchema<K, T> {
+  public max(length: number): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this.push((original, output) => {
-      if (output.size > length) throw new ValidationError(original, `The value must be at most ${stringify(length)} entries long.`)
-      return output
+    return this.updateValidation({
+      max: (current, initial) => {
+        if (current.size <= length) return
+        throw new ValidationError(initial, `The value must be at most ${stringify(length)} entries long.`)
+      },
     })
   }
 
   // METHOD
-  public filter(callback: (value: T, key: K, map: Map<K, T>) => boolean): MapSchema<K, T> {
-    return this.push((_, output) => {
-      const entries = Array.from(output).filter(([key, value]) => callback(value, key, output))
-      return new Map(entries)
+  public some(callback: (value: TValue, key: TKey, map: Map<TKey, TValue>) => boolean): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
+    return this.updateValidation({
+      some: (current, initial) => {
+        for (const [key, value] of current) {
+          if (callback(value, key, current)) return
+        }
+        throw new ValidationError(initial, 'No entry satisfies the given validation function.')
+      },
     })
   }
 
   // METHOD
-  public some(callback: (value: T, key: K, map: Map<K, T>) => boolean): MapSchema<K, T> {
-    return this.push((original, output) => {
-      for (const [key, value] of output) {
-        if (callback(value, key, output)) return output
-      }
-      throw new ValidationError(original, 'No entry satisfies the given validation function.')
+  public every(callback: (value: TValue, key: TKey, map: Map<TKey, TValue>) => boolean): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
+    return this.updateValidation({
+      every: (current, initial) => {
+        for (const [key, value] of current) {
+          if (!callback(value, key, current)) throw new ValidationError(initial, 'At least one entry does not satisfy the given validation function.')
+        }
+      },
     })
   }
 
   // METHOD
-  public every(callback: (value: T, key: K, map: Map<K, T>) => boolean): MapSchema<K, T> {
-    return this.push((original, output) => {
-      for (const [key, value] of output) {
-        if (!callback(value, key, output)) throw new ValidationError(original, 'At least one entry does not satisfy the given validation function.')
-      }
-      return output
-    })
-  }
-
-  // METHOD
-  public none(callback: (value: T, key: K, map: Map<K, T>) => boolean): MapSchema<K, T> {
-    return this.push((original, output) => {
-      for (const [key, value] of output) {
-        if (callback(value, key, output)) throw new ValidationError(original, 'At least one entry satisfies the given validation function.')
-      }
-      return output
+  public none(callback: (value: TValue, key: TKey, map: Map<TKey, TValue>) => boolean): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
+    return this.updateValidation({
+      none: (current, initial) => {
+        for (const [key, value] of current) {
+          if (callback(value, key, current)) throw new ValidationError(initial, 'At least one entry satisfies the given validation function.')
+        }
+      },
     })
   }
 

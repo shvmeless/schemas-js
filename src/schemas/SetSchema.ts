@@ -1,158 +1,233 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema } from '@/lib/GenericSchema'
+import type { GenericSchema, NullishSchema, Nullish } from '@/lib/GenericSchema'
+import { runValidations, type GenericValidations } from '@/utils/validations'
 import { stringify } from '@/utils/stringify'
 
+// TYPE
+type SetValidations<TValue> = GenericValidations<'size' | 'min' | 'max' | 'some' | 'every' | 'none', Set<TValue>>
+
+// INTERFACE
+interface SetConfig<TValue> {
+  schema: GenericSchema<TValue>
+  prune: boolean
+  optional: boolean
+  nullable: boolean
+  default: Set<TValue> | null
+  fallback: Set<TValue> | null
+}
+
 // CLASS
-export class SetSchema<T> implements GenericSchema<Set<T>> {
+export class SetSchema<TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
+implements NullishSchema<Set<TValue>, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
-  private readonly _schema: GenericSchema<T>
-  private readonly _queue: Array<(original: Set<T>, output: Set<T>) => Set<T>>
-  private readonly _prune: boolean
+  private readonly _config: SetConfig<TValue>
+  private readonly _validations: SetValidations<TValue>
 
   // CONSTRUCTOR
-  private constructor(schema: GenericSchema<T>, queue: Array<(original: Set<T>, output: Set<T>) => Set<T>>, prune: boolean) {
-    this._schema = schema
-    this._queue = queue
-    this._prune = prune
+  private constructor(config: SetConfig<TValue>, validations: SetValidations<TValue>) {
+    this._config = config
+    this._validations = validations
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<T>(schema: GenericSchema<T>): SetSchema<T> {
-    return new SetSchema<T>(schema, [], false)
+  public static create<TValue>(schema: GenericSchema<TValue>): SetSchema<TValue, false, false, false> {
+    return new SetSchema<TValue, false, false, false>({
+      schema: schema,
+      prune: false,
+      optional: false,
+      nullable: false,
+      default: null,
+      fallback: null,
+    }, {})
   }
 
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private clone(params: {
-    schema?: GenericSchema<T>
-    queue?: Array<(original: Set<T>, output: Set<T>) => Set<T>>
-    prune?: boolean
-  } = {}): SetSchema<T> {
-    return new SetSchema<T>(
-      params.schema ?? this._schema,
-      params.queue ?? this._queue,
-      params.prune ?? this._prune,
+  private updateValidation(validations: SetValidations<TValue>): SetSchema<TValue, TOptional, TNullable, TDefault> {
+    return new SetSchema<TValue, TOptional, TNullable, TDefault>(
+      this._config,
+      { ...this._validations, ...validations },
     )
   }
 
-  // UPDATER
-  private push(fn: (original: Set<T>, output: Set<T>) => Set<T>): SetSchema<T> {
-    return new SetSchema<T>(this._schema, [...this._queue, fn], false)
-  }
-
   // --------------------------------------------------------------------------
 
-  // VALIDATOR
-  public validate(input: unknown): Set<T> {
+  // PRIVATE
+  private _resolveInput(input: unknown): Set<unknown> | null | undefined {
+
+    if (input === undefined && this._config.optional) {
+      return (this._config.default !== null) ? this._config.default : undefined
+    }
+
+    if (input === null && this._config.nullable) {
+      return (this._config.default !== null) ? this._config.default : null
+    }
 
     if (!(input instanceof Set)) {
       throw new ValidationError(input, 'The value must be a Set.')
     }
 
-    let result = new Set<T>()
-    const errors = ValidationError.prepare()
+    return input
 
-    for (const element of input) {
-      try {
-        const value = this._schema.validate(element)
-        result.add(value)
-      } catch (error) {
-        if (error instanceof ValidationError) {
-          if (this._prune) continue
-          errors.add(element, error)
-        } else throw error
+  }
+
+  // VALIDATOR
+  public validate(input: unknown): Nullish<Set<TValue>, TOptional, TNullable, TDefault> {
+    type Output = Nullish<Set<TValue>, TOptional, TNullable, TDefault>
+    try {
+
+      const resolved = this._resolveInput(input)
+
+      if (resolved === undefined) return undefined as Output
+      if (resolved === null) return null as Output
+
+      const result = new Set<TValue>()
+      const errors = ValidationError.prepare()
+
+      for (const element of resolved) {
+        try {
+          const value = this._config.schema.validate(element)
+          result.add(value)
+        } catch (error) {
+          if (error instanceof ValidationError) {
+            if (this._config.prune) continue
+            errors.add(element, error)
+          } else throw error
+        }
       }
+
+      if (errors.size > 0) {
+        errors.throw(input, 'At least one element does not match the given schema.')
+      }
+
+      runValidations(this._validations, input, result)
+
+      return result as Output
+
+    } catch (error) {
+      if (this._config.fallback !== null) return this._config.fallback
+      throw error
     }
+  }
 
-    if (errors.size > 0) {
-      errors.throw(input, 'At least one element does not match the given schema.')
-    }
+  // --------------------------------------------------------------------------
 
-    for (const fn of this._queue) {
-      result = fn(input as Set<T>, result)
-    }
+  // CONFIG
+  public prune(): SetSchema<TValue, TOptional, TNullable, TDefault> {
+    return new SetSchema({
+      ...this._config,
+      prune: true,
+    }, this._validations)
+  }
 
-    return result
+  // CONFIG
+  public optional(): SetSchema<TValue, true, TNullable, TDefault> {
+    return new SetSchema({
+      ...this._config,
+      optional: true,
+    }, this._validations)
+  }
 
+  // CONFIG
+  public nullable(): SetSchema<TValue, TOptional, true, TDefault> {
+    return new SetSchema({
+      ...this._config,
+      nullable: true,
+    }, this._validations)
+  }
+
+  // CONFIG
+  public default(value: Set<TValue>): SetSchema<TValue, TOptional, TNullable, true> {
+    return new SetSchema({
+      ...this._config,
+      default: value,
+    }, this._validations)
+  }
+
+  // CONFIG
+  public fallback(value: Set<TValue>): SetSchema<TValue, TOptional, TNullable, TDefault> {
+    return new SetSchema({
+      ...this._config,
+      fallback: value,
+    }, this._validations)
   }
 
   // --------------------------------------------------------------------------
 
   // METHOD
-  public prune(): SetSchema<T> {
-    return this.clone({ prune: true })
-  }
-
-  // METHOD
-  public size(length: number): SetSchema<T> {
+  public size(length: number): SetSchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this.push((original, output) => {
-      if (output.size !== length) throw new ValidationError(original, `The value must be ${stringify(length)} elements long.`)
-      return output
+    return this.updateValidation({
+      min: undefined,
+      max: undefined,
+      size: (current, initial) => {
+        if (current.size === length) return
+        throw new ValidationError(initial, `The value must be ${stringify(length)} elements long.`)
+      },
     })
   }
 
   // METHOD
-  public min(length: number): SetSchema<T> {
+  public min(length: number): SetSchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this.push((original, output) => {
-      if (output.size < length) throw new ValidationError(original, `The value must be at least ${stringify(length)} elements long.`)
-      return output
+    return this.updateValidation({
+      min: (current, initial) => {
+        if (current.size >= length) return
+        throw new ValidationError(initial, `The value must be at least ${stringify(length)} elements long.`)
+      },
     })
   }
 
   // METHOD
-  public max(length: number): SetSchema<T> {
+  public max(length: number): SetSchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this.push((original, output) => {
-      if (output.size > length) throw new ValidationError(original, `The value must be at most ${stringify(length)} elements long.`)
-      return output
+    return this.updateValidation({
+      max: (current, initial) => {
+        if (current.size <= length) return
+        throw new ValidationError(initial, `The value must be at most ${stringify(length)} elements long.`)
+      },
     })
   }
 
   // METHOD
-  public filter(callback: (value: T, set: Set<T>) => boolean): SetSchema<T> {
-    return this.push((_, output) => {
-      const entries = Array.from(output).filter((value) => callback(value, output))
-      return new Set(entries)
+  public some(callback: (value: TValue, set: Set<TValue>) => boolean): SetSchema<TValue, TOptional, TNullable, TDefault> {
+    return this.updateValidation({
+      some: (current, initial) => {
+        for (const value of current) {
+          if (callback(value, current)) return
+        }
+        throw new ValidationError(initial, 'No element satisfies the given validation function.')
+      },
     })
   }
 
   // METHOD
-  public some(callback: (value: T, set: Set<T>) => boolean): SetSchema<T> {
-    return this.push((original, output) => {
-      for (const value of output) {
-        if (callback(value, output)) return output
-      }
-      throw new ValidationError(original, 'No element satisfies the given validation function.')
+  public every(callback: (value: TValue, set: Set<TValue>) => boolean): SetSchema<TValue, TOptional, TNullable, TDefault> {
+    return this.updateValidation({
+      every: (current, initial) => {
+        for (const value of current) {
+          if (!callback(value, current)) throw new ValidationError(initial, 'At least one element does not satisfy the given validation function.')
+        }
+      },
     })
   }
 
   // METHOD
-  public every(callback: (value: T, set: Set<T>) => boolean): SetSchema<T> {
-    return this.push((original, output) => {
-      for (const value of output) {
-        if (!callback(value, output)) throw new ValidationError(original, 'At least one element does not satisfy the given validation function.')
-      }
-      return output
-    })
-  }
-
-  // METHOD
-  public none(callback: (value: T, set: Set<T>) => boolean): SetSchema<T> {
-    return this.push((original, output) => {
-      for (const value of output) {
-        if (callback(value, output)) throw new ValidationError(original, 'At least one element satisfies the given validation function.')
-      }
-      return output
+  public none(callback: (value: TValue, set: Set<TValue>) => boolean): SetSchema<TValue, TOptional, TNullable, TDefault> {
+    return this.updateValidation({
+      none: (current, initial) => {
+        for (const value of current) {
+          if (callback(value, current)) throw new ValidationError(initial, 'At least one element satisfies the given validation function.')
+        }
+      },
     })
   }
 

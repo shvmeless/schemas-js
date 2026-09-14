@@ -91,6 +91,176 @@ describe('.prune()', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
+describe('.optional()', () => {
+
+  const base = SetSchema.create(StringSchema.create())
+  const schema = base.optional()
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(SetSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` is a `Set` instance.', () => {
+    const input = new Set(['a', 'b', 'c'])
+    const expected = new Set(['a', 'b', 'c'])
+    expectValidation(schema, input).toReturnNew(expected)
+  })
+
+  it('returns when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn(undefined)
+  })
+
+  it('throws when `input` is not a `Set` instance.', () => {
+    DataTypeGenerator.skip('sets', 'undefined').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be a Set.')
+    })
+  })
+
+  it('returns when all `input` elements match the `shape` schema.', () => {
+    const input = new Set(['a', 'b', 'c'])
+    const expected = new Set(['a', 'b', 'c'])
+    expectValidation(schema, input).toReturnNew(expected)
+  })
+
+  it('throws when at least one `input` element does not match the `shape` schema.', () => {
+    const input = new Set([true, 'b', 255])
+    expectValidation(schema, input).toThrow('At least one element does not match the given schema.', [
+      [true, {
+        value: true,
+        message: 'The value must be a string.',
+      }],
+      [255, {
+        value: 255,
+        message: 'The value must be a string.',
+      }],
+    ])
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
+describe('.nullable()', () => {
+
+  const base = SetSchema.create(StringSchema.create())
+  const schema = base.nullable()
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(SetSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` is a `Set` instance.', () => {
+    const input = new Set(['a', 'b', 'c'])
+    const expected = new Set(['a', 'b', 'c'])
+    expectValidation(schema, input).toReturnNew(expected)
+  })
+
+  it('returns when `input` is `null`.', () => {
+    expectValidation(schema, null).toReturn(null)
+  })
+
+  it('throws when `input` is not a `Set` instance.', () => {
+    DataTypeGenerator.skip('sets', 'null').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be a Set.')
+    })
+  })
+
+  it('returns when all `input` elements match the `shape` schema.', () => {
+    const input = new Set(['a', 'b', 'c'])
+    const expected = new Set(['a', 'b', 'c'])
+    expectValidation(schema, input).toReturnNew(expected)
+  })
+
+  it('throws when at least one `input` element does not match the `shape` schema.', () => {
+    const input = new Set([true, 'b', 255])
+    expectValidation(schema, input).toThrow('At least one element does not match the given schema.', [
+      [true, {
+        value: true,
+        message: 'The value must be a string.',
+      }],
+      [255, {
+        value: 255,
+        message: 'The value must be a string.',
+      }],
+    ])
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
+describe('.default(value)', () => {
+
+  const base = SetSchema.create(StringSchema.create()).optional()
+  const schema = base.default(new Set(['default']))
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(SetSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` is a `Set` instance.', () => {
+    const input = new Set(['a', 'b', 'c'])
+    const expected = new Set(['a', 'b', 'c'])
+    expectValidation(schema, input).toReturnNew(expected)
+  })
+
+  it('returns the `default` value when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn(new Set(['default']))
+  })
+
+  it('returns the `default` value when `input` is `null` and the schema is nullable.', () => {
+    expectValidation(schema.nullable(), null).toReturn(new Set(['default']))
+  })
+
+  it('throws when `input` is not a `Set` instance.', () => {
+    DataTypeGenerator.skip('sets', 'undefined').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be a Set.')
+    })
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
+describe('.fallback(value)', () => {
+
+  const base = SetSchema.create(StringSchema.create())
+  const schema = base.fallback(new Set(['fallback']))
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(SetSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` is a `Set` instance.', () => {
+    const input = new Set(['a', 'b', 'c'])
+    const expected = new Set(['a', 'b', 'c'])
+    expectValidation(schema, input).toReturnNew(expected)
+  })
+
+  it('returns the `fallback` value when `input` is not a `Set` instance.', () => {
+    DataTypeGenerator.skip('sets').forEach((value) => {
+      expectValidation(schema, value).toReturn(new Set(['fallback']))
+    })
+  })
+
+  it('returns the `fallback` value when at least one `input` element does not match the `shape` schema.', () => {
+    const input = new Set(['a', 255, 'c'])
+    expectValidation(schema, input).toReturn(new Set(['fallback']))
+  })
+
+  it('returns the `fallback` value when `input` does not satisfy the validations.', () => {
+    const constrained = SetSchema.create(StringSchema.create()).size(2).fallback(new Set(['fallback']))
+    expectValidation(constrained, new Set(['a'])).toReturn(new Set(['fallback']))
+  })
+
+  it('returns when `input` is `undefined` and the schema is optional.', () => {
+    expectValidation(schema.optional(), undefined).toReturn(undefined)
+  })
+
+  it('returns when `input` is `null` and the schema is nullable.', () => {
+    expectValidation(schema.nullable(), null).toReturn(null)
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
 describe('.size(length)', () => {
   describe('when `length` is `NaN`', () => {
     it('throws when the schema is being built.', () => {
@@ -294,36 +464,6 @@ describe('.max(length)', () => {
       const input = new Set(['A', 'B', 'C', 'D', 'E', 'F', 'G'])
       expectValidation(schema, input).toThrow('The value must be at most 5 elements long.')
     })
-  })
-})
-
-// METHOD ---------------------------------------------------------------------
-describe('.filter(callback)', () => {
-
-  const base = SetSchema.create(StringSchema.create())
-  const schema = base.filter((value) => (value !== ''))
-
-  it('returns a new instance of the schema.', () => {
-    expect(schema).toBeInstanceOf(SetSchema)
-    expect(schema).not.toBe(base)
-  })
-
-  it('returns when `callback` returns `true` for all `input` elements.', () => {
-    const input = new Set(['A', 'B', 'C'])
-    const expected = new Set(['A', 'B', 'C'])
-    expectValidation(schema, input).toReturnNew(expected)
-  })
-
-  it('filters when `callback` returns `false` for some `input` elements.', () => {
-    const input = new Set(['A', '', 'C'])
-    const expected = new Set(['A', 'C'])
-    expectValidation(schema, input).toReturnNew(expected)
-  })
-
-  it('filters when `callback` returns `false` for all `input` elements.', () => {
-    const input = new Set(['', '', ''])
-    const expected: Set<string> = new Set([])
-    expectValidation(schema, input).toReturnNew(expected)
   })
 })
 

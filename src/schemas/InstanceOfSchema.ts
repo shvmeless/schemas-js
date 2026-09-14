@@ -1,40 +1,110 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema } from '@/lib/GenericSchema'
+import type { NullishSchema, Nullish } from '@/lib/GenericSchema'
 
 // TYPE
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyConstructor<T = unknown> = abstract new (...args: Array<any>) => T
 
+// INTERFACE
+interface InstanceOfConfig<TConstructor extends AnyConstructor> {
+  constructor: TConstructor
+  optional: boolean
+  nullable: boolean
+  default: InstanceType<TConstructor> | null
+  fallback: InstanceType<TConstructor> | null
+}
+
 // CLASS
-export class InstanceOfSchema<T extends AnyConstructor> implements GenericSchema<InstanceType<T>> {
+export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
+implements NullishSchema<InstanceType<TConstructor>, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
-  private readonly _constructor: T
+  private readonly _config: InstanceOfConfig<TConstructor>
 
   // CONSTRUCTOR
-  private constructor(constructor: T) {
-    this._constructor = constructor
+  private constructor(config: InstanceOfConfig<TConstructor>) {
+    this._config = config
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<T extends AnyConstructor>(constructor: T): InstanceOfSchema<T> {
-    return new InstanceOfSchema(constructor)
+  public static create<TConstructor extends AnyConstructor>(constructor: TConstructor): InstanceOfSchema<TConstructor, false, false, false> {
+    return new InstanceOfSchema({ constructor, optional: false, nullable: false, default: null, fallback: null })
   }
 
   // --------------------------------------------------------------------------
 
-  // VALIDATOR
-  public validate(input: unknown): InstanceType<T> {
+  // PRIVATE
+  private _resolveInput(input: unknown): InstanceType<TConstructor> | null | undefined {
 
-    if (!(input instanceof this._constructor)) {
-      throw new ValidationError(input, `Expected instance of ${this._constructor.name}.`)
+    if (input === undefined && this._config.optional) {
+      return (this._config.default !== null) ? this._config.default : undefined
     }
 
-    return input as InstanceType<T>
+    if (input === null && this._config.nullable) {
+      return (this._config.default !== null) ? this._config.default : null
+    }
 
+    if (!(input instanceof this._config.constructor)) {
+      throw new ValidationError(input, `Expected instance of ${this._config.constructor.name}.`)
+    }
+
+    return input as InstanceType<TConstructor>
+
+  }
+
+  // VALIDATOR
+  public validate(input: unknown): Nullish<InstanceType<TConstructor>, TOptional, TNullable, TDefault> {
+    type Output = Nullish<InstanceType<TConstructor>, TOptional, TNullable, TDefault>
+    try {
+
+      const resolved = this._resolveInput(input)
+
+      if (resolved === undefined) return undefined as Output
+      if (resolved === null) return null as Output
+
+      return resolved as Output
+
+    } catch (error) {
+      if (this._config.fallback !== null) return this._config.fallback
+      throw error
+    }
+  }
+
+  // --------------------------------------------------------------------------
+
+  // CONFIG
+  public optional(): InstanceOfSchema<TConstructor, true, TNullable, TDefault> {
+    return new InstanceOfSchema({
+      ...this._config,
+      optional: true,
+    })
+  }
+
+  // CONFIG
+  public nullable(): InstanceOfSchema<TConstructor, TOptional, true, TDefault> {
+    return new InstanceOfSchema({
+      ...this._config,
+      nullable: true,
+    })
+  }
+
+  // CONFIG
+  public default(value: InstanceType<TConstructor>): InstanceOfSchema<TConstructor, TOptional, TNullable, true> {
+    return new InstanceOfSchema({
+      ...this._config,
+      default: value,
+    })
+  }
+
+  // CONFIG
+  public fallback(value: InstanceType<TConstructor>): InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault> {
+    return new InstanceOfSchema({
+      ...this._config,
+      fallback: value,
+    })
   }
 
 }

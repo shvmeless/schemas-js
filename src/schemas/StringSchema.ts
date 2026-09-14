@@ -1,154 +1,240 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema } from '@/lib/GenericSchema'
+import type { NullishSchema, Nullish } from '@/lib/GenericSchema'
+import { runValidations, type GenericValidations } from '@/utils/validations'
 import { stringify } from '@/utils/stringify'
 
+// TYPE
+type StringValidations = GenericValidations<'length' | 'min' | 'max' | 'casing' | 'trim' | 'prefix' | 'suffix' | 'includes' | 'excludes' | 'pattern', string>
+
+// INTERFACE
+interface StringConfig {
+  optional: boolean
+  nullable: boolean
+  default: string | null
+  fallback: string | null
+}
+
 // CLASS
-export class StringSchema implements GenericSchema<string> {
+export class StringSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
+implements NullishSchema<string, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
-  private readonly _queue: Array<(original: string, output: string) => string>
+  private readonly _config: StringConfig
+  private readonly _validations: StringValidations
 
   // CONSTRUCTOR
-  private constructor(queue: Array<(original: string, output: string) => string>) {
-    this._queue = queue
+  private constructor(config: StringConfig, validations: StringValidations) {
+    this._config = config
+    this._validations = validations
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create(): StringSchema {
-    return new StringSchema([])
+  public static create(): StringSchema<false, false, false> {
+    return new StringSchema({ optional: false, nullable: false, default: null, fallback: null }, {})
   }
 
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private push(fn: (original: string, output: string) => string): StringSchema {
-    return new StringSchema([...this._queue, fn])
+  private updateValidation(validations: StringValidations): StringSchema<TOptional, TNullable, TDefault> {
+    return new StringSchema(this._config, { ...this._validations, ...validations })
   }
 
   // --------------------------------------------------------------------------
 
-  // VALIDATOR
-  public validate(input: unknown): string {
+  // PRIVATE
+  private _resolveInput(input: unknown): string | null | undefined {
+
+    if (input === undefined && this._config.optional) {
+      return (this._config.default !== null) ? this._config.default : undefined
+    }
+
+    if (input === null && this._config.nullable) {
+      return (this._config.default !== null) ? this._config.default : null
+    }
 
     if (typeof input !== 'string') {
       throw new ValidationError(input, 'The value must be a string.')
     }
 
-    let output = input
-    for (const fn of this._queue) {
-      output = fn(input, output)
+    return input
+
+  }
+
+  // VALIDATOR
+  public validate(input: unknown): Nullish<string, TOptional, TNullable, TDefault> {
+    type Output = Nullish<string, TOptional, TNullable, TDefault>
+    try {
+
+      const resolved = this._resolveInput(input)
+
+      if (resolved === undefined) return undefined as Output
+      if (resolved === null) return null as Output
+
+      runValidations(this._validations, input, resolved)
+
+      return resolved as Output
+
+    } catch (error) {
+      if (this._config.fallback !== null) return this._config.fallback
+      throw error
     }
+  }
 
-    return output
+  // --------------------------------------------------------------------------
 
+  // CONFIG
+  public optional(): StringSchema<true, TNullable, TDefault> {
+    return new StringSchema({
+      ...this._config,
+      optional: true,
+    }, this._validations)
+  }
+
+  // CONFIG
+  public nullable(): StringSchema<TOptional, true, TDefault> {
+    return new StringSchema({
+      ...this._config,
+      nullable: true,
+    }, this._validations)
+  }
+
+  // CONFIG
+  public default(value: string): StringSchema<TOptional, TNullable, true> {
+    return new StringSchema({
+      ...this._config,
+      default: value,
+    }, this._validations)
+  }
+
+  // CONFIG
+  public fallback(value: string): StringSchema<TOptional, TNullable, TDefault> {
+    return new StringSchema({
+      ...this._config,
+      fallback: value,
+    }, this._validations)
   }
 
   // --------------------------------------------------------------------------
 
   // METHOD
-  public length(length: number): StringSchema {
+  public length(length: number): StringSchema<TOptional, TNullable, TDefault> {
     if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
-    return this.push((original, output) => {
-      if (output.length === length) return output
-      throw new ValidationError(original, `The value must be ${stringify(length)} characters long.`)
+    return this.updateValidation({
+      min: undefined,
+      max: undefined,
+      length: (current, initial) => {
+        if (current.length === length) return
+        throw new ValidationError(initial, `The value must be ${stringify(length)} characters long.`)
+      },
     })
   }
 
   // METHOD
-  public min(length: number): StringSchema {
+  public min(length: number): StringSchema<TOptional, TNullable, TDefault> {
     if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
-    return this.push((original, output) => {
-      if (output.length >= length) return output
-      throw new ValidationError(original, `The value must be at least ${stringify(length)} characters long.`)
+    return this.updateValidation({
+      min: (current, initial) => {
+        if (current.length >= length) return
+        throw new ValidationError(initial, `The value must be at least ${stringify(length)} characters long.`)
+      },
     })
   }
 
   // METHOD
-  public max(length: number): StringSchema {
+  public max(length: number): StringSchema<TOptional, TNullable, TDefault> {
     if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
-    return this.push((original, output) => {
-      if (output.length <= length) return output
-      throw new ValidationError(original, `The value must be at most ${stringify(length)} characters long.`)
+    return this.updateValidation({
+      max: (current, initial) => {
+        if (current.length <= length) return
+        throw new ValidationError(initial, `The value must be at most ${stringify(length)} characters long.`)
+      },
     })
   }
 
   // METHOD
-  public lowercase(options: { fix?: boolean } = {}): StringSchema {
-    return this.push((original, output) => {
-      if (output.toLowerCase() === output) return output
-      if (options.fix === true) return output.toLowerCase()
-      throw new ValidationError(original, 'The value must be lowercase.')
+  public lowercase(): StringSchema<TOptional, TNullable, TDefault> {
+    return this.updateValidation({
+      casing: (current, initial) => {
+        if (current.toLowerCase() === current) return
+        throw new ValidationError(initial, 'The value must be lowercase.')
+      },
+
     })
   }
 
   // METHOD
-  public uppercase(options: { fix?: boolean } = {}): StringSchema {
-    return this.push((original, output) => {
-      if (output.toUpperCase() === output) return output
-      if (options.fix === true) return output.toUpperCase()
-      throw new ValidationError(original, 'The value must be uppercase.')
+  public uppercase(): StringSchema<TOptional, TNullable, TDefault> {
+    return this.updateValidation({
+      casing: (current, initial) => {
+        if (current.toUpperCase() === current) return
+        throw new ValidationError(initial, 'The value must be uppercase.')
+      },
+
     })
   }
 
   // METHOD
-  public trim(options: { fix?: boolean } = {}): StringSchema {
-    return this.push((original, output) => {
-      if (output.trim() === output) return output
-      if (options.fix === true) return output.trim()
-      throw new ValidationError(original, 'The value must be trimmed.')
+  public trim(): StringSchema<TOptional, TNullable, TDefault> {
+    return this.updateValidation({
+      trim: (current, initial) => {
+        if (current.trim() === current) return
+        throw new ValidationError(initial, 'The value must be trimmed.')
+      },
     })
   }
 
   // METHOD
-  public startsWith(prefix: string, options: { fix?: boolean } = {}): StringSchema {
-    return this.push((original, output) => {
-      if (output.startsWith(prefix)) return output
-      if (options.fix === true) return (prefix + output)
-      throw new ValidationError(original, `The value must start with ${stringify(prefix)}.`)
+  public startsWith(prefix: string): StringSchema<TOptional, TNullable, TDefault> {
+    return this.updateValidation({
+      prefix: (current, initial) => {
+        if (current.startsWith(prefix)) return
+        throw new ValidationError(initial, `The value must start with ${stringify(prefix)}.`)
+      },
     })
   }
 
   // METHOD
-  public endsWith(suffix: string, options: { fix?: boolean } = {}): StringSchema {
-    return this.push((original, output) => {
-      if (output.endsWith(suffix)) return output
-      if (options.fix === true) return (output + suffix)
-      throw new ValidationError(original, `The value must end with ${stringify(suffix)}.`)
+  public endsWith(suffix: string): StringSchema<TOptional, TNullable, TDefault> {
+    return this.updateValidation({
+      suffix: (current, initial) => {
+        if (current.endsWith(suffix)) return
+        throw new ValidationError(initial, `The value must end with ${stringify(suffix)}.`)
+      },
     })
   }
 
   // METHOD
-  public includes(search: string): StringSchema {
-    return this.push((original, output) => {
-      if (output.includes(search)) return output
-      throw new ValidationError(original, `The value must include ${stringify(search)}.`)
+  public includes(search: string): StringSchema<TOptional, TNullable, TDefault> {
+    return this.updateValidation({
+      includes: (current, initial) => {
+        if (current.includes(search)) return
+        throw new ValidationError(initial, `The value must include ${stringify(search)}.`)
+      },
     })
   }
 
   // METHOD
-  public excludes(search: string): StringSchema {
-    return this.push((original, output) => {
-      if (!output.includes(search)) return output
-      throw new ValidationError(original, `The value must not include ${stringify(search)}.`)
+  public excludes(search: string): StringSchema<TOptional, TNullable, TDefault> {
+    return this.updateValidation({
+      excludes: (current, initial) => {
+        if (!current.includes(search)) return
+        throw new ValidationError(initial, `The value must not include ${stringify(search)}.`)
+      },
     })
   }
 
   // METHOD
-  public match(pattern: RegExp): StringSchema {
-    return this.push((original, output) => {
-      if (pattern.test(output)) return output
-      throw new ValidationError(original, `The value must match the pattern ${stringify(pattern)}.`)
+  public match(pattern: RegExp): StringSchema<TOptional, TNullable, TDefault> {
+    return this.updateValidation({
+      pattern: (current, initial) => {
+        if (pattern.test(current)) return
+        throw new ValidationError(initial, `The value must match the pattern ${stringify(pattern)}.`)
+      },
     })
   }
 
-  // METHOD
-  public default(value: string): StringSchema {
-    return this.push((_original, output) => {
-      if (output === '') return value
-      return output
-    })
-  }
 }
