@@ -1,12 +1,9 @@
 // IMPORTS
 import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
-import type { GenericSchema, GenericValidations } from '@/lib/GenericSchema'
+import type { GenericSchema, TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { NullishSchema } from '@/lib/NullishSchema'
 import { stringify } from '@/utils/stringify'
-
-// TYPE
-type SetValidations<TValue> = GenericValidations<'size' | 'min' | 'max' | 'some' | 'every' | 'none', Set<TValue>>
 
 // INTERFACE
 interface SetConfig<TValue> extends NullishConfig<Set<TValue>> {
@@ -20,13 +17,13 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
 
   // PROPERTIES
   protected readonly _config: SetConfig<TValue>
-  protected readonly _validations: SetValidations<TValue>
+  protected readonly _tests: TestObject<Set<TValue>>
 
   // CONSTRUCTOR
-  private constructor(config: SetConfig<TValue>, validations: SetValidations<TValue>) {
+  private constructor(config: SetConfig<TValue>, tests: TestObject<Set<TValue>>) {
     super()
     this._config = config
-    this._validations = validations
+    this._tests = tests
   }
 
   // --------------------------------------------------------------------------
@@ -49,15 +46,15 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
   private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(config: Partial<SetConfig<TValue>>): SetSchema<TValue, TOptional, TNullable, TDefault> {
     return new SetSchema(
       { ...this._config, ...config },
-      this._validations,
+      this._tests,
     )
   }
 
   // UPDATER
-  private _updateValidation(validations: SetValidations<TValue>): SetSchema<TValue, TOptional, TNullable, TDefault> {
+  private _updateTests(tests: Partial<TestObject<Set<TValue>>>): SetSchema<TValue, TOptional, TNullable, TDefault> {
     return new SetSchema<TValue, TOptional, TNullable, TDefault>(
       this._config,
-      { ...this._validations, ...validations },
+      { ...this._tests, ...tests },
     )
   }
 
@@ -129,12 +126,12 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
   public size(length: number): SetSchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this._updateValidation({
+    return this._updateTests({
       min: undefined,
       max: undefined,
-      size: (current, initial) => {
-        if (current.size === length) return
-        throw new ValidationError(initial, `The value must be ${stringify(length)} elements long.`)
+      size: (current) => {
+        if (current.size !== length) return `The value must be ${stringify(length)} elements long.`
+        return null
       },
     })
   }
@@ -143,10 +140,10 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
   public min(length: number): SetSchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this._updateValidation({
-      min: (current, initial) => {
-        if (current.size >= length) return
-        throw new ValidationError(initial, `The value must be at least ${stringify(length)} elements long.`)
+    return this._updateTests({
+      min: (current) => {
+        if (current.size < length) return `The value must be at least ${stringify(length)} elements long.`
+        return null
       },
     })
   }
@@ -155,44 +152,46 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
   public max(length: number): SetSchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this._updateValidation({
-      max: (current, initial) => {
-        if (current.size <= length) return
-        throw new ValidationError(initial, `The value must be at most ${stringify(length)} elements long.`)
+    return this._updateTests({
+      max: (current) => {
+        if (current.size > length) return `The value must be at most ${stringify(length)} elements long.`
+        return null
       },
     })
   }
 
   // METHOD
   public some(callback: (value: TValue, set: Set<TValue>) => boolean): SetSchema<TValue, TOptional, TNullable, TDefault> {
-    return this._updateValidation({
-      some: (current, initial) => {
+    return this._updateTests({
+      some: (current) => {
         for (const value of current) {
-          if (callback(value, current)) return
+          if (callback(value, current)) return null
         }
-        throw new ValidationError(initial, 'No element satisfies the given validation function.')
+        return 'No element satisfies the given validation function.'
       },
     })
   }
 
   // METHOD
   public every(callback: (value: TValue, set: Set<TValue>) => boolean): SetSchema<TValue, TOptional, TNullable, TDefault> {
-    return this._updateValidation({
-      every: (current, initial) => {
+    return this._updateTests({
+      every: (current) => {
         for (const value of current) {
-          if (!callback(value, current)) throw new ValidationError(initial, 'At least one element does not satisfy the given validation function.')
+          if (!callback(value, current)) return 'At least one element does not satisfy the given validation function.'
         }
+        return null
       },
     })
   }
 
   // METHOD
   public none(callback: (value: TValue, set: Set<TValue>) => boolean): SetSchema<TValue, TOptional, TNullable, TDefault> {
-    return this._updateValidation({
-      none: (current, initial) => {
+    return this._updateTests({
+      none: (current) => {
         for (const value of current) {
-          if (callback(value, current)) throw new ValidationError(initial, 'At least one element satisfies the given validation function.')
+          if (callback(value, current)) return 'At least one element satisfies the given validation function.'
         }
+        return null
       },
     })
   }

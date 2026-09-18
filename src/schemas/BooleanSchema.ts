@@ -9,7 +9,7 @@ export class BooleanSchema<TOptional extends boolean, TNullable extends boolean,
 
   // PROPERTIES
   protected readonly _config: NullishConfig<boolean>
-  protected readonly _validations = {}
+  protected readonly _tests = {}
 
   // CONSTRUCTOR
   private constructor(config: NullishConfig<boolean>) {

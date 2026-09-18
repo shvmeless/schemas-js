@@ -21,7 +21,7 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
 
   // PROPERTIES
   protected readonly _config: ObjectConfig<TObject>
-  protected readonly _validations = {}
+  protected readonly _tests = {}
 
   // CONSTRUCTOR
   private constructor(config: ObjectConfig<TObject>) {

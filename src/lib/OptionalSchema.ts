@@ -1,5 +1,5 @@
 // IMPORTS
-import type { GenericValidations } from '@/lib/GenericSchema'
+import type { TestObject } from '@/lib/GenericSchema'
 import { GenericSchema } from '@/lib/GenericSchema'
 
 // TYPE
@@ -19,7 +19,7 @@ export abstract class OptionalSchema<TType, TOptional extends boolean, TDefault 
 
   // ABSTRACT PROPERTIES
   protected abstract override readonly _config: OptionalConfig<TType>
-  protected abstract override readonly _validations: GenericValidations<string, TType>
+  protected abstract override readonly _tests: TestObject<TType>
 
   // ABSTRACT METHODS
   public abstract optional(): OptionalSchema<TType, true, TDefault>
@@ -39,7 +39,7 @@ export abstract class OptionalSchema<TType, TOptional extends boolean, TDefault 
 
       const output = fn(resolved)
 
-      this._runValidations(input, output)
+      this._runTests(input, output)
 
       return output
 

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 // IMPORTS
 import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
 import type { GenericSchema } from '@/lib/GenericSchema'
@@ -6,7 +8,7 @@ import { NullishSchema } from '@/lib/NullishSchema'
 
 // TYPES
 type InferSchemaType<I> = I extends GenericSchema<infer T> ? T : never
-type SchemaTypeUnion<A extends ReadonlyArray<GenericSchema<unknown>>> = InferSchemaType<A[number]>
+type SchemaTypeUnion<A extends ReadonlyArray<GenericSchema<any>>> = InferSchemaType<A[number]>
 
 // INTERFACE
 interface UnionConfig<TSchemas> extends NullishConfig<TSchemas> {
@@ -19,7 +21,7 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
 
   // PROPERTIES
   protected readonly _config: UnionConfig<TSchemas>
-  protected readonly _validations = {}
+  protected readonly _tests = {}
 
   // CONSTRUCTOR
   private constructor(config: UnionConfig<TSchemas>) {
@@ -31,7 +33,7 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<A extends ReadonlyArray<GenericSchema<unknown>>>(...schemas: A): UnionSchema<SchemaTypeUnion<A>, false, false, false> {
+  public static create<A extends ReadonlyArray<GenericSchema<any>>>(...schemas: A): UnionSchema<SchemaTypeUnion<A>, false, false, false> {
     return new UnionSchema<SchemaTypeUnion<A>, false, false, false>({
       schemas: schemas as ReadonlyArray<GenericSchema<SchemaTypeUnion<A>>>,
       optional: false,

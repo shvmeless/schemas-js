@@ -14,7 +14,7 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
 
   // PROPERTIES
   protected readonly _config: EnumConfig<TValues>
-  protected readonly _validations = {}
+  protected readonly _tests = {}
 
   // CONSTRUCTOR
   private constructor(config: EnumConfig<TValues>) {

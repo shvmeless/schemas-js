@@ -21,7 +21,7 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
 
   // PROPERTIES
   protected readonly _config: TupleConfig<TTuple>
-  protected readonly _validations = {}
+  protected readonly _tests = {}
 
   // CONSTRUCTOR
   private constructor(config: TupleConfig<TTuple>) {

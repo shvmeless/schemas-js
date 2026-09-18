@@ -9,7 +9,7 @@ export class NullSchema<TOptional extends boolean, TDefault extends boolean>
 
   // PROPERTIES
   protected readonly _config: OptionalConfig<null>
-  protected readonly _validations = {}
+  protected readonly _tests = {}
 
   // CONSTRUCTOR
   private constructor(config: OptionalConfig<null>) {

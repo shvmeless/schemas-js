@@ -14,7 +14,7 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
 
   // PROPERTIES
   protected readonly _config: LiteralConfig<TValue>
-  protected readonly _validations = {}
+  protected readonly _tests = {}
 
   // CONSTRUCTOR
   private constructor(config: LiteralConfig<TValue>) {

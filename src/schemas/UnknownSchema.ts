@@ -8,7 +8,7 @@ export class UnknownSchema<TOptional extends boolean, TNullable extends boolean,
 
   // PROPERTIES
   protected readonly _config: NullishConfig<unknown>
-  protected readonly _validations = {}
+  protected readonly _tests = {}
 
   // CONSTRUCTOR
   private constructor(config: NullishConfig<unknown>) {

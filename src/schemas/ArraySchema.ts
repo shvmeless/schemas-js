@@ -1,12 +1,9 @@
 // IMPORTS
 import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
-import type { GenericSchema, GenericValidations } from '@/lib/GenericSchema'
+import type { GenericSchema, TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { NullishSchema } from '@/lib/NullishSchema'
 import { stringify } from '@/utils/stringify'
-
-// TYPE
-type ArrayValidations<TItem> = GenericValidations<'length' | 'min' | 'max' | 'some' | 'every' | 'none', Array<TItem>>
 
 // INTERFACE
 interface ArrayConfig<TItem> extends NullishConfig<Array<TItem>> {
@@ -20,13 +17,13 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
 
   // PROPERTIES
   protected readonly _config: ArrayConfig<TItem>
-  protected readonly _validations: ArrayValidations<TItem>
+  protected readonly _tests: TestObject<Array<TItem>>
 
   // CONSTRUCTOR
-  private constructor(config: ArrayConfig<TItem>, validations: ArrayValidations<TItem>) {
+  private constructor(config: ArrayConfig<TItem>, tests: TestObject<Array<TItem>>) {
     super()
     this._config = config
-    this._validations = validations
+    this._tests = tests
   }
 
   // --------------------------------------------------------------------------
@@ -49,15 +46,15 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(config: Partial<ArrayConfig<TItem>>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
     return new ArraySchema(
       { ...this._config, ...config },
-      this._validations,
+      this._tests,
     )
   }
 
   // UPDATER
-  private _updateValidation(validations: ArrayValidations<TItem>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+  private _updateTests(tests: TestObject<Array<TItem>>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
     return new ArraySchema(
       this._config,
-      { ...this._validations, ...validations },
+      { ...this._tests, ...tests },
     )
   }
 
@@ -129,12 +126,12 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   public length(length: number): ArraySchema<TItem, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this._updateValidation({
+    return this._updateTests({
       min: undefined,
       max: undefined,
-      length: (current, initial) => {
-        if (current.length === length) return
-        throw new ValidationError(initial, `The value must be ${stringify(length)} elements long.`)
+      length: (current) => {
+        if (current.length !== length) return `The value must be ${stringify(length)} elements long.`
+        return null
       },
     })
   }
@@ -143,10 +140,10 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   public min(length: number): ArraySchema<TItem, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this._updateValidation({
-      min: (current, initial) => {
-        if (current.length >= length) return
-        throw new ValidationError(initial, `The value must be at least ${stringify(length)} elements long.`)
+    return this._updateTests({
+      min: (current) => {
+        if (current.length < length) return `The value must be at least ${stringify(length)} elements long.`
+        return null
       },
     })
   }
@@ -155,47 +152,49 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   public max(length: number): ArraySchema<TItem, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this._updateValidation({
-      max: (current, initial) => {
-        if (current.length <= length) return
-        throw new ValidationError(initial, `The value must be at most ${stringify(length)} elements long.`)
+    return this._updateTests({
+      max: (current) => {
+        if (current.length > length) return `The value must be at most ${stringify(length)} elements long.`
+        return null
       },
     })
   }
 
   // METHOD
   public some(callback: (value: TItem, index: number, array: Array<TItem>) => boolean): ArraySchema<TItem, TOptional, TNullable, TDefault> {
-    return this._updateValidation({
-      some: (current, initial) => {
+    return this._updateTests({
+      some: (current) => {
         for (let index = 0; index < current.length; index++) {
           const value = current[index] as TItem
-          if (callback(value, index, current)) return
+          if (callback(value, index, current)) return null
         }
-        throw new ValidationError(initial, 'No element satisfies the given validation function.')
+        return 'No element satisfies the given validation function.'
       },
     })
   }
 
   // METHOD
   public every(callback: (value: TItem, index: number, array: Array<TItem>) => boolean): ArraySchema<TItem, TOptional, TNullable, TDefault> {
-    return this._updateValidation({
-      every: (current, initial) => {
+    return this._updateTests({
+      every: (current) => {
         for (let index = 0; index < current.length; index++) {
           const value = current[index] as TItem
-          if (!callback(value, index, current)) throw new ValidationError(initial, 'At least one element does not satisfy the given validation function.')
+          if (!callback(value, index, current)) return 'At least one element does not satisfy the given validation function.'
         }
+        return null
       },
     })
   }
 
   // METHOD
   public none(callback: (value: TItem, index: number, array: Array<TItem>) => boolean): ArraySchema<TItem, TOptional, TNullable, TDefault> {
-    return this._updateValidation({
-      none: (current, initial) => {
+    return this._updateTests({
+      none: (current) => {
         for (let index = 0; index < current.length; index++) {
           const value = current[index] as TItem
-          if (callback(value, index, current)) throw new ValidationError(initial, 'At least one element satisfies the given validation function.')
+          if (callback(value, index, current)) return 'At least one element satisfies the given validation function.'
         }
+        return null
       },
     })
   }

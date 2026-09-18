@@ -9,7 +9,7 @@ export class UndefinedSchema<TNullable extends boolean, TDefault extends boolean
 
   // PROPERTIES
   protected readonly _config: NullableConfig<undefined>
-  protected readonly _validations = {}
+  protected readonly _tests = {}
 
   // CONSTRUCTOR
   private constructor(config: NullableConfig<undefined>) {

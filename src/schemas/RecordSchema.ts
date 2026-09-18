@@ -1,12 +1,9 @@
 // IMPORTS
 import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
-import type { GenericSchema, GenericValidations } from '@/lib/GenericSchema'
+import type { GenericSchema, TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { NullishSchema } from '@/lib/NullishSchema'
 import { stringify } from '@/utils/stringify'
-
-// TYPE
-type RecordValidations<TValue> = GenericValidations<'length' | 'min' | 'max' | 'some' | 'every' | 'none', Record<string, TValue>>
 
 // INTERFACE
 interface RecordConfig<TValue> extends NullishConfig<Record<string, TValue>> {
@@ -20,13 +17,13 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
 
   // PROPERTIES
   protected readonly _config: RecordConfig<TValue>
-  protected readonly _validations: RecordValidations<TValue>
+  protected readonly _tests: TestObject<Record<string, TValue>>
 
   // CONSTRUCTOR
-  private constructor(config: RecordConfig<TValue>, validations: RecordValidations<TValue>) {
+  private constructor(config: RecordConfig<TValue>, tests: TestObject<Record<string, TValue>>) {
     super()
     this._config = config
-    this._validations = validations
+    this._tests = tests
   }
 
   // --------------------------------------------------------------------------
@@ -49,15 +46,15 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
   private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(config: Partial<RecordConfig<TValue>>): RecordSchema<TValue, TOptional, TNullable, TDefault> {
     return new RecordSchema(
       { ...this._config, ...config },
-      this._validations,
+      this._tests,
     )
   }
 
   // UPDATER
-  private _updateValidation(validations: RecordValidations<TValue>): RecordSchema<TValue, TOptional, TNullable, TDefault> {
+  private _updateTests(tests: Partial<TestObject<Record<string, TValue>>>): RecordSchema<TValue, TOptional, TNullable, TDefault> {
     return new RecordSchema<TValue, TOptional, TNullable, TDefault>(
       this._config,
-      { ...this._validations, ...validations },
+      { ...this._tests, ...tests },
     )
   }
 
@@ -128,12 +125,12 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
   public length(length: number): RecordSchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this._updateValidation({
+    return this._updateTests({
       min: undefined,
       max: undefined,
-      length: (current, initial) => {
-        if (Object.entries(current).length === length) return
-        throw new ValidationError(initial, `The value must be ${stringify(length)} entries long.`)
+      length: (current) => {
+        if (Object.entries(current).length !== length) return `The value must be ${stringify(length)} entries long.`
+        return null
       },
     })
   }
@@ -142,10 +139,10 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
   public min(length: number): RecordSchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this._updateValidation({
-      min: (current, initial) => {
-        if (Object.entries(current).length >= length) return
-        throw new ValidationError(initial, `The value must be at least ${stringify(length)} entries long.`)
+    return this._updateTests({
+      min: (current) => {
+        if (Object.entries(current).length < length) return `The value must be at least ${stringify(length)} entries long.`
+        return null
       },
     })
   }
@@ -154,44 +151,46 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
   public max(length: number): RecordSchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this._updateValidation({
-      max: (current, initial) => {
-        if (Object.entries(current).length <= length) return
-        throw new ValidationError(initial, `The value must be at most ${stringify(length)} entries long.`)
+    return this._updateTests({
+      max: (current) => {
+        if (Object.entries(current).length > length) return `The value must be at most ${stringify(length)} entries long.`
+        return null
       },
     })
   }
 
   // METHOD
   public some(callback: (value: TValue, key: string, record: Record<string, TValue>) => boolean): RecordSchema<TValue, TOptional, TNullable, TDefault> {
-    return this._updateValidation({
-      some: (current, initial) => {
+    return this._updateTests({
+      some: (current) => {
         for (const [key, value] of Object.entries(current)) {
-          if (callback(value, key, current)) return
+          if (callback(value, key, current)) return null
         }
-        throw new ValidationError(initial, 'No entry satisfies the given validation function.')
+        return 'No entry satisfies the given validation function.'
       },
     })
   }
 
   // METHOD
   public every(callback: (value: TValue, key: string, record: Record<string, TValue>) => boolean): RecordSchema<TValue, TOptional, TNullable, TDefault> {
-    return this._updateValidation({
-      every: (current, initial) => {
+    return this._updateTests({
+      every: (current) => {
         for (const [key, value] of Object.entries(current)) {
-          if (!callback(value, key, current)) throw new ValidationError(initial, 'At least one entry does not satisfy the given validation function.')
+          if (!callback(value, key, current)) return 'At least one entry does not satisfy the given validation function.'
         }
+        return null
       },
     })
   }
 
   // METHOD
   public none(callback: (value: TValue, key: string, record: Record<string, TValue>) => boolean): RecordSchema<TValue, TOptional, TNullable, TDefault> {
-    return this._updateValidation({
-      none: (current, initial) => {
+    return this._updateTests({
+      none: (current) => {
         for (const [key, value] of Object.entries(current)) {
-          if (callback(value, key, current)) throw new ValidationError(initial, 'At least one entry satisfies the given validation function.')
+          if (callback(value, key, current)) return 'At least one entry satisfies the given validation function.'
         }
+        return null
       },
     })
   }

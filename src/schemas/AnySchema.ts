@@ -11,7 +11,7 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
 
   // PROPERTIES
   protected readonly _config: NullishConfig<any>
-  protected readonly _validations = {}
+  protected readonly _tests = {}
 
   // CONSTRUCTOR
   private constructor(config: NullishConfig<any>) {

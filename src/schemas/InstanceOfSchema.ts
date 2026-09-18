@@ -18,7 +18,7 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
 
   // PROPERTIES
   protected readonly _config: InstanceOfConfig<TConstructor>
-  protected readonly _validations = {}
+  protected readonly _tests = {}
 
   // CONSTRUCTOR
   private constructor(config: InstanceOfConfig<TConstructor>) {

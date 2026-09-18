@@ -1,5 +1,5 @@
 // IMPORTS
-import type { GenericValidations } from '@/lib/GenericSchema'
+import type { TestObject } from '@/lib/GenericSchema'
 import { GenericSchema } from '@/lib/GenericSchema'
 import type { Nullable } from '@/lib/NullableSchema'
 import type { Optional } from '@/lib/OptionalSchema'
@@ -22,7 +22,7 @@ export abstract class NullishSchema<TType, TOptional extends boolean, TNullable 
 
   // ABSTRACT PROPERTIES
   protected abstract override readonly _config: NullishConfig<TType>
-  protected abstract override readonly _validations: GenericValidations<string, TType>
+  protected abstract override readonly _tests: TestObject<TType>
 
   // ABSTRACT METHODS
   public abstract optional(): NullishSchema<TType, true, TNullable, TDefault>
@@ -48,7 +48,7 @@ export abstract class NullishSchema<TType, TOptional extends boolean, TNullable 
 
       const output = fn(resolved)
 
-      this._runValidations(input, output)
+      this._runTests(input, output)
 
       return output
 

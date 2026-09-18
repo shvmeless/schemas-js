@@ -1,5 +1,9 @@
+// IMPORTS
+import { ValidationError } from '@/errors/ValidationError'
+
 // TYPE
-export type GenericValidations<TKeys extends string, TType> = Partial<Record<TKeys, (current: TType, initial: unknown) => undefined>>
+export type TestFunction<TType> = (current: TType) => (string | null)
+export type TestObject<TType> = Record<string, TestFunction<TType> | undefined>
 
 // INTERFACE
 export interface GenericConfig<TOutput> {
@@ -11,17 +15,19 @@ export abstract class GenericSchema<TType, TOutput = TType> {
 
   // ABSTRACT PROPERTIES
   protected abstract readonly _config: GenericConfig<TOutput>
-  protected abstract readonly _validations: GenericValidations<string, TType>
+  protected abstract readonly _tests: TestObject<TType>
 
   // ABSTRACT METHODS
   public abstract validate(input: unknown): TOutput
   public abstract fallback(value: TType): GenericSchema<TType, TOutput>
 
   // PROTECTED
-  protected _runValidations(initial: unknown, current: TType): void {
-    const values = Object.values(this._validations) as Array<((current: TType, initial: unknown) => undefined) | undefined>
-    for (const validation of values) {
-      if (typeof validation === 'function') validation(current, initial)
+  protected _runTests(initial: unknown, current: TType): void {
+    const tests = Object.values(this._tests)
+    for (const test of tests) {
+      if (test === undefined) continue
+      const result = test(current)
+      if (typeof result === 'string') throw new ValidationError(initial, result)
     }
   }
 
@@ -31,7 +37,7 @@ export abstract class GenericSchema<TType, TOutput = TType> {
 
       const output = fn(input)
 
-      this._runValidations(input, output)
+      this._runTests(input, output)
 
       return output as unknown as TOutput
 

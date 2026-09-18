@@ -19,7 +19,7 @@ interface ExpectSchemaResult {
 }
 
 // FUNCTION
-export function expectValidation(schema: GenericSchema<unknown>, input: unknown): ExpectSchemaResult {
+export function expectValidation<TType, TOutput>(schema: GenericSchema<TType, TOutput>, input: unknown): ExpectSchemaResult {
   return {
     toReturn(value: unknown): void {
       const result = schema.validate(input)
