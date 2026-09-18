@@ -1,23 +1,19 @@
 // IMPORTS
+import type { Optional, OptionalConfig } from '@/lib/OptionalSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import type { OptionalSchema, Optional } from '@/lib/GenericSchema'
-
-// INTERFACE
-interface NullConfig {
-  optional: boolean
-  default: null | undefined
-  fallback: null | undefined
-}
+import { OptionalSchema } from '@/lib/OptionalSchema'
 
 // CLASS
 export class NullSchema<TOptional extends boolean, TDefault extends boolean>
-implements OptionalSchema<null, TOptional, TDefault> {
+  extends OptionalSchema<null, TOptional, TDefault> {
 
   // PROPERTIES
-  private readonly _config: NullConfig
+  protected readonly _config: OptionalConfig<null>
+  protected readonly _validations = {}
 
   // CONSTRUCTOR
-  private constructor(config: NullConfig) {
+  private constructor(config: OptionalConfig<null>) {
+    super()
     this._config = config
   }
 
@@ -25,42 +21,26 @@ implements OptionalSchema<null, TOptional, TDefault> {
 
   // FACTORY
   public static create(): NullSchema<false, false> {
-    return new NullSchema({ optional: false, default: undefined, fallback: undefined })
+    return new NullSchema({
+      optional: false,
+      default: undefined,
+      fallback: undefined,
+    })
   }
 
   // --------------------------------------------------------------------------
 
-  // PRIVATE
-  private _resolveInput(input: unknown): null | undefined {
-
-    if (input === undefined && this._config.optional) {
-      return (this._config.default !== undefined) ? this._config.default : undefined
-    }
-
-    if (input !== null) {
-      throw new ValidationError(input, 'The value must be null.')
-    }
-
-    return input
-
-  }
-
   // VALIDATOR
   public validate(input: unknown): Optional<null, TOptional, TDefault> {
-    type Output = Optional<null, TOptional, TDefault>
-    try {
+    return this.validateSchema((current) => {
 
-      const resolved = this._resolveInput(input)
+      if (current !== null) {
+        throw new ValidationError(input, 'The value must be null.')
+      }
 
-      if (resolved === undefined) return undefined as Output
-      if (resolved === null) return null as Output
+      return current
 
-      return resolved as Output
-
-    } catch (error) {
-      if (this._config.fallback !== undefined) return this._config.fallback
-      throw error
-    }
+    }, input)
   }
 
   // --------------------------------------------------------------------------

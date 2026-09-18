@@ -1,6 +1,8 @@
 // IMPORTS
+import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
+import type { GenericSchema } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema, NullishSchema, Nullish } from '@/lib/GenericSchema'
+import { NullishSchema } from '@/lib/NullishSchema'
 
 // TYPE
 type InferShape<TTuple extends ReadonlyArray<unknown>> = {
@@ -8,24 +10,22 @@ type InferShape<TTuple extends ReadonlyArray<unknown>> = {
 }
 
 // INTERFACE
-interface TupleConfig<TTuple extends ReadonlyArray<unknown>> {
+interface TupleConfig<TTuple extends ReadonlyArray<unknown>> extends NullishConfig<TTuple> {
   shape: InferShape<TTuple>
   strip: boolean
-  optional: boolean
-  nullable: boolean
-  default: TTuple | null
-  fallback: TTuple | null
 }
 
 // CLASS
 export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements NullishSchema<TTuple, TOptional, TNullable, TDefault> {
+  extends NullishSchema<TTuple, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
-  private readonly _config: TupleConfig<TTuple>
+  protected readonly _config: TupleConfig<TTuple>
+  protected readonly _validations = {}
 
   // CONSTRUCTOR
   private constructor(config: TupleConfig<TTuple>) {
+    super()
     this._config = config
   }
 
@@ -38,42 +38,22 @@ implements NullishSchema<TTuple, TOptional, TNullable, TDefault> {
       strip: false,
       optional: false,
       nullable: false,
-      default: null,
-      fallback: null,
+      default: undefined,
+      fallback: undefined,
     })
   }
 
   // --------------------------------------------------------------------------
 
-  // PRIVATE
-  private _resolveInput(input: unknown): Array<unknown> | null | undefined {
-
-    if (input === undefined && this._config.optional) {
-      return (this._config.default !== null) ? this._config.default as unknown as Array<unknown> : undefined
-    }
-
-    if (input === null && this._config.nullable) {
-      return (this._config.default !== null) ? this._config.default as unknown as Array<unknown> : null
-    }
-
-    if (!Array.isArray(input)) {
-      throw new ValidationError(input, 'The value must be an array.')
-    }
-
-    return input as Array<unknown>
-
-  }
-
   // VALIDATOR
   public validate(input: unknown): Nullish<TTuple, TOptional, TNullable, TDefault> {
-    type Output = Nullish<TTuple, TOptional, TNullable, TDefault>
-    try {
+    return this.validateSchema((current) => {
 
-      const resolved = this._resolveInput(input)
+      if (!Array.isArray(current)) {
+        throw new ValidationError(input, 'The value must be an array.')
+      }
 
-      if (resolved === undefined) return undefined as Output
-      if (resolved === null) return null as Output
-
+      const resolved = current as Array<unknown>
       const result: Array<unknown> = []
       const errors = ValidationError.prepare()
 
@@ -106,12 +86,9 @@ implements NullishSchema<TTuple, TOptional, TNullable, TDefault> {
         errors.throw(input, message)
       }
 
-      return result as unknown as Output
+      return result as unknown as TTuple
 
-    } catch (error) {
-      if (this._config.fallback !== null) return this._config.fallback
-      throw error
-    }
+    }, input)
   }
 
   // --------------------------------------------------------------------------

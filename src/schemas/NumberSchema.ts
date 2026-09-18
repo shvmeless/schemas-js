@@ -1,30 +1,24 @@
 // IMPORTS
+import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
+import type { GenericValidations } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import type { NullishSchema, Nullish } from '@/lib/GenericSchema'
-import { runValidations, type GenericValidations } from '@/utils/validations'
+import { NullishSchema } from '@/lib/NullishSchema'
 import { stringify } from '@/utils/stringify'
 
 // TYPE
 type NumberValidations = GenericValidations<'min' | 'max' | 'integer' | 'finite' | 'safe', number>
 
-// INTERFACE
-interface NumberConfig {
-  optional: boolean
-  nullable: boolean
-  default: number | null
-  fallback: number | null
-}
-
 // CLASS
 export class NumberSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements NullishSchema<number, TOptional, TNullable, TDefault> {
+  extends NullishSchema<number, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
-  private readonly _config: NumberConfig
-  private readonly _validations: NumberValidations
+  protected readonly _config: NullishConfig<number>
+  protected readonly _validations: NumberValidations
 
   // CONSTRUCTOR
-  private constructor(config: NumberConfig, validations: NumberValidations) {
+  private constructor(config: NullishConfig<number>, validations: NumberValidations) {
+    super()
     this._config = config
     this._validations = validations
   }
@@ -33,7 +27,12 @@ implements NullishSchema<number, TOptional, TNullable, TDefault> {
 
   // FACTORY
   public static create(): NumberSchema<false, false, false> {
-    return new NumberSchema({ optional: false, nullable: false, default: null, fallback: null }, {})
+    return new NumberSchema({
+      optional: false,
+      nullable: false,
+      default: undefined,
+      fallback: undefined,
+    }, {})
   }
 
   // --------------------------------------------------------------------------
@@ -45,43 +44,17 @@ implements NullishSchema<number, TOptional, TNullable, TDefault> {
 
   // --------------------------------------------------------------------------
 
-  // PRIVATE
-  private _resolveInput(input: unknown): number | null | undefined {
-
-    if (input === undefined && this._config.optional) {
-      return (this._config.default !== null) ? this._config.default : undefined
-    }
-
-    if (input === null && this._config.nullable) {
-      return (this._config.default !== null) ? this._config.default : null
-    }
-
-    if (typeof input !== 'number') {
-      throw new ValidationError(input, 'The value must be a number.')
-    }
-
-    return input
-
-  }
-
   // VALIDATOR
   public validate(input: unknown): Nullish<number, TOptional, TNullable, TDefault> {
-    type Output = Nullish<number, TOptional, TNullable, TDefault>
-    try {
+    return this.validateSchema((current) => {
 
-      const resolved = this._resolveInput(input)
+      if (typeof current !== 'number') {
+        throw new ValidationError(input, 'The value must be a number.')
+      }
 
-      if (resolved === undefined) return undefined as Output
-      if (resolved === null) return null as Output
+      return current
 
-      runValidations(this._validations, input, resolved)
-
-      return resolved as Output
-
-    } catch (error) {
-      if (this._config.fallback !== null) return this._config.fallback
-      throw error
-    }
+    }, input)
   }
 
   // --------------------------------------------------------------------------

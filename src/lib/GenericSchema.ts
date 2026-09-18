@@ -1,47 +1,44 @@
-// ----------------------------------------------------------------------------
-
 // TYPE
-export type Optional<TType, TOptional extends boolean, TDefault extends boolean>
-  = TOptional extends true
-    ? TDefault extends true
-      ? TType
-      : TType | undefined
-    : TType
-
-// TYPE
-export type Nullable<TType, TNullable extends boolean, TDefault extends boolean>
-  = TNullable extends true
-    ? TDefault extends true
-      ? TType
-      : TType | null
-    : TType
-
-// TYPE
-export type Nullish<TType, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-  = Optional<Nullable<TType, TNullable, TDefault>, TOptional, TDefault>
-
-// ----------------------------------------------------------------------------
+export type GenericValidations<TKeys extends string, TType> = Partial<Record<TKeys, (current: TType, initial: unknown) => undefined>>
 
 // INTERFACE
-export interface GenericSchema<T> {
-  validate(input: unknown): T
+export interface GenericConfig<TOutput> {
+  fallback: TOutput | null | undefined
 }
 
-// INTERFACE
-export interface OptionalSchema<TType, TOptional extends boolean, TDefault extends boolean>
-  extends GenericSchema<Optional<TType, TOptional, TDefault>> {
-  optional(): OptionalSchema<TType, true, TDefault>
-}
+// CLASS
+export abstract class GenericSchema<TType, TOutput = TType> {
 
-// INTERFACE
-export interface NullableSchema<TType, TNullable extends boolean, TDefault extends boolean>
-  extends GenericSchema<Nullable<TType, TNullable, TDefault>> {
-  nullable(): NullableSchema<TType, true, TDefault>
-}
+  // ABSTRACT PROPERTIES
+  protected abstract readonly _config: GenericConfig<TOutput>
+  protected abstract readonly _validations: GenericValidations<string, TType>
 
-// INTERFACE
-export interface NullishSchema<TType, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-  extends GenericSchema<Nullish<TType, TOptional, TNullable, TDefault>> {
-  optional(): NullishSchema<TType, true, TNullable, TDefault>
-  nullable(): NullishSchema<TType, TOptional, true, TDefault>
+  // ABSTRACT METHODS
+  public abstract validate(input: unknown): TOutput
+  public abstract fallback(value: TType): GenericSchema<TType, TOutput>
+
+  // PROTECTED
+  protected runValidations(initial: unknown, current: TType): void {
+    const values = Object.values(this._validations) as Array<((current: TType, initial: unknown) => undefined) | undefined>
+    for (const validation of values) {
+      if (typeof validation === 'function') validation(current, initial)
+    }
+  }
+
+  // PROTECTED
+  protected validateSchema(fn: (current: unknown) => TType, input: unknown): TOutput {
+    try {
+
+      const output = fn(input)
+
+      this.runValidations(input, output)
+
+      return output as unknown as TOutput
+
+    } catch (error) {
+      if (this._config.fallback !== null && this._config.fallback !== undefined) return this._config.fallback
+      throw error
+    }
+  }
+
 }

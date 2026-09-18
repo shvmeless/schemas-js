@@ -1,32 +1,30 @@
 // IMPORTS
+import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
+import type { GenericSchema, GenericValidations } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema, NullishSchema, Nullish } from '@/lib/GenericSchema'
-import { runValidations, type GenericValidations } from '@/utils/validations'
+import { NullishSchema } from '@/lib/NullishSchema'
 import { stringify } from '@/utils/stringify'
 
 // TYPE
 type SetValidations<TValue> = GenericValidations<'size' | 'min' | 'max' | 'some' | 'every' | 'none', Set<TValue>>
 
 // INTERFACE
-interface SetConfig<TValue> {
+interface SetConfig<TValue> extends NullishConfig<Set<TValue>> {
   schema: GenericSchema<TValue>
   prune: boolean
-  optional: boolean
-  nullable: boolean
-  default: Set<TValue> | null
-  fallback: Set<TValue> | null
 }
 
 // CLASS
 export class SetSchema<TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements NullishSchema<Set<TValue>, TOptional, TNullable, TDefault> {
+  extends NullishSchema<Set<TValue>, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
-  private readonly _config: SetConfig<TValue>
-  private readonly _validations: SetValidations<TValue>
+  protected readonly _config: SetConfig<TValue>
+  protected readonly _validations: SetValidations<TValue>
 
   // CONSTRUCTOR
   private constructor(config: SetConfig<TValue>, validations: SetValidations<TValue>) {
+    super()
     this._config = config
     this._validations = validations
   }
@@ -40,8 +38,8 @@ implements NullishSchema<Set<TValue>, TOptional, TNullable, TDefault> {
       prune: false,
       optional: false,
       nullable: false,
-      default: null,
-      fallback: null,
+      default: undefined,
+      fallback: undefined,
     }, {})
   }
 
@@ -57,35 +55,15 @@ implements NullishSchema<Set<TValue>, TOptional, TNullable, TDefault> {
 
   // --------------------------------------------------------------------------
 
-  // PRIVATE
-  private _resolveInput(input: unknown): Set<unknown> | null | undefined {
-
-    if (input === undefined && this._config.optional) {
-      return (this._config.default !== null) ? this._config.default : undefined
-    }
-
-    if (input === null && this._config.nullable) {
-      return (this._config.default !== null) ? this._config.default : null
-    }
-
-    if (!(input instanceof Set)) {
-      throw new ValidationError(input, 'The value must be a Set.')
-    }
-
-    return input
-
-  }
-
   // VALIDATOR
   public validate(input: unknown): Nullish<Set<TValue>, TOptional, TNullable, TDefault> {
-    type Output = Nullish<Set<TValue>, TOptional, TNullable, TDefault>
-    try {
+    return this.validateSchema((current) => {
 
-      const resolved = this._resolveInput(input)
+      if (!(current instanceof Set)) {
+        throw new ValidationError(input, 'The value must be a Set.')
+      }
 
-      if (resolved === undefined) return undefined as Output
-      if (resolved === null) return null as Output
-
+      const resolved = current as Set<unknown>
       const result = new Set<TValue>()
       const errors = ValidationError.prepare()
 
@@ -105,14 +83,9 @@ implements NullishSchema<Set<TValue>, TOptional, TNullable, TDefault> {
         errors.throw(input, 'At least one element does not match the given schema.')
       }
 
-      runValidations(this._validations, input, result)
+      return result
 
-      return result as Output
-
-    } catch (error) {
-      if (this._config.fallback !== null) return this._config.fallback
-      throw error
-    }
+    }, input)
   }
 
   // --------------------------------------------------------------------------

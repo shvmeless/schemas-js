@@ -1,25 +1,24 @@
 // IMPORTS
+import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import type { NullishSchema, Nullish } from '@/lib/GenericSchema'
+import { NullishSchema } from '@/lib/NullishSchema'
 
 // INTERFACE
-interface EnumConfig<TValues extends string | number> {
+interface EnumConfig<TValues extends string | number> extends NullishConfig<TValues> {
   values: ReadonlyArray<TValues>
-  optional: boolean
-  nullable: boolean
-  default: TValues | null
-  fallback: TValues | null
 }
 
 // CLASS
 export class EnumSchema<TValues extends string | number, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements NullishSchema<TValues, TOptional, TNullable, TDefault> {
+  extends NullishSchema<TValues, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
-  private readonly _config: EnumConfig<TValues>
+  protected readonly _config: EnumConfig<TValues>
+  protected readonly _validations = {}
 
   // CONSTRUCTOR
   private constructor(config: EnumConfig<TValues>) {
+    super()
     this._config = config
     if (this._config.values.length === 0) {
       throw new Error('Must provide at least one literal value.')
@@ -30,46 +29,28 @@ implements NullishSchema<TValues, TOptional, TNullable, TDefault> {
 
   // FACTORY
   public static create<TValues extends string | number>(...values: ReadonlyArray<TValues>): EnumSchema<TValues, false, false, false> {
-    return new EnumSchema({ values, optional: false, nullable: false, default: null, fallback: null })
+    return new EnumSchema({
+      values,
+      optional: false,
+      nullable: false,
+      default: undefined,
+      fallback: undefined,
+    })
   }
 
   // --------------------------------------------------------------------------
 
-  // PRIVATE
-  private _resolveInput(input: unknown): TValues | null | undefined {
-
-    if (input === undefined && this._config.optional) {
-      return (this._config.default !== null) ? this._config.default : undefined
-    }
-
-    if (input === null && this._config.nullable) {
-      return (this._config.default !== null) ? this._config.default : null
-    }
-
-    if (!this._config.values.includes(input as TValues)) {
-      throw new ValidationError(input, 'The value must be match one of the allowed literal values.')
-    }
-
-    return input as TValues
-
-  }
-
   // VALIDATOR
   public validate(input: unknown): Nullish<TValues, TOptional, TNullable, TDefault> {
-    type Output = Nullish<TValues, TOptional, TNullable, TDefault>
-    try {
+    return this.validateSchema((current) => {
 
-      const resolved = this._resolveInput(input)
+      if (!this._config.values.includes(current as TValues)) {
+        throw new ValidationError(input, 'The value must be match one of the allowed literal values.')
+      }
 
-      if (resolved === undefined) return undefined as Output
-      if (resolved === null) return null as Output
+      return current as TValues
 
-      return resolved as Output
-
-    } catch (error) {
-      if (this._config.fallback !== null) return this._config.fallback
-      throw error
-    }
+    }, input)
   }
 
   // --------------------------------------------------------------------------

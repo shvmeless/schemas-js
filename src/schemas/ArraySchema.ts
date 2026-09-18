@@ -1,32 +1,30 @@
 // IMPORTS
+import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
+import type { GenericSchema, GenericValidations } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema, NullishSchema, Nullish } from '@/lib/GenericSchema'
-import { runValidations, type GenericValidations } from '@/utils/validations'
+import { NullishSchema } from '@/lib/NullishSchema'
 import { stringify } from '@/utils/stringify'
 
 // TYPE
 type ArrayValidations<TItem> = GenericValidations<'length' | 'min' | 'max' | 'some' | 'every' | 'none', Array<TItem>>
 
 // INTERFACE
-interface ArrayConfig<TItem> {
+interface ArrayConfig<TItem> extends NullishConfig<Array<TItem>> {
   schema: GenericSchema<TItem>
   prune: boolean
-  optional: boolean
-  nullable: boolean
-  default: Array<TItem> | null
-  fallback: Array<TItem> | null
 }
 
 // CLASS
 export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements NullishSchema<Array<TItem>, TOptional, TNullable, TDefault> {
+  extends NullishSchema<Array<TItem>, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
-  private readonly _config: ArrayConfig<TItem>
-  private readonly _validations: ArrayValidations<TItem>
+  protected readonly _config: ArrayConfig<TItem>
+  protected readonly _validations: ArrayValidations<TItem>
 
   // CONSTRUCTOR
   private constructor(config: ArrayConfig<TItem>, validations: ArrayValidations<TItem>) {
+    super()
     this._config = config
     this._validations = validations
   }
@@ -40,8 +38,8 @@ implements NullishSchema<Array<TItem>, TOptional, TNullable, TDefault> {
       prune: false,
       optional: false,
       nullable: false,
-      default: null,
-      fallback: null,
+      default: undefined,
+      fallback: undefined,
     }, {})
   }
 
@@ -57,35 +55,15 @@ implements NullishSchema<Array<TItem>, TOptional, TNullable, TDefault> {
 
   // --------------------------------------------------------------------------
 
-  // PRIVATE
-  private _resolveInput(input: unknown): Array<unknown> | null | undefined {
-
-    if (input === undefined && this._config.optional) {
-      return (this._config.default !== null) ? this._config.default : undefined
-    }
-
-    if (input === null && this._config.nullable) {
-      return (this._config.default !== null) ? this._config.default : null
-    }
-
-    if (!Array.isArray(input)) {
-      throw new ValidationError(input, 'The value must be an array.')
-    }
-
-    return input as Array<unknown>
-
-  }
-
   // VALIDATOR
   public validate(input: unknown): Nullish<Array<TItem>, TOptional, TNullable, TDefault> {
-    type Output = Nullish<Array<TItem>, TOptional, TNullable, TDefault>
-    try {
+    return this.validateSchema((current) => {
 
-      const resolved = this._resolveInput(input)
+      if (!Array.isArray(current)) {
+        throw new ValidationError(input, 'The value must be an array.')
+      }
 
-      if (resolved === undefined) return undefined as Output
-      if (resolved === null) return null as Output
-
+      const resolved = current as Array<unknown>
       const output: Array<TItem> = []
       const errors = ValidationError.prepare()
 
@@ -105,14 +83,9 @@ implements NullishSchema<Array<TItem>, TOptional, TNullable, TDefault> {
         errors.throw(input, 'At least one element does not match the given schema.')
       }
 
-      runValidations(this._validations, input, output)
+      return output
 
-      return output as Output
-
-    } catch (error) {
-      if (this._config.fallback !== null) return this._config.fallback
-      throw error
-    }
+    }, input)
   }
 
   // --------------------------------------------------------------------------

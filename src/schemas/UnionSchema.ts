@@ -1,29 +1,29 @@
 // IMPORTS
+import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
+import type { GenericSchema } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema, NullishSchema, Nullish } from '@/lib/GenericSchema'
+import { NullishSchema } from '@/lib/NullishSchema'
 
 // TYPES
 type InferSchemaType<I> = I extends GenericSchema<infer T> ? T : never
 type SchemaTypeUnion<A extends ReadonlyArray<GenericSchema<unknown>>> = InferSchemaType<A[number]>
 
 // INTERFACE
-interface UnionConfig<TSchemas> {
-  optional: boolean
-  nullable: boolean
-  default: TSchemas | null
-  fallback: TSchemas | null
+interface UnionConfig<TSchemas> extends NullishConfig<TSchemas> {
   schemas: ReadonlyArray<GenericSchema<TSchemas>>
 }
 
 // CLASS
 export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements NullishSchema<TSchemas, TOptional, TNullable, TDefault> {
+  extends NullishSchema<TSchemas, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
-  private readonly _config: UnionConfig<TSchemas>
+  protected readonly _config: UnionConfig<TSchemas>
+  protected readonly _validations = {}
 
   // CONSTRUCTOR
   private constructor(config: UnionConfig<TSchemas>) {
+    super()
     if (config.schemas.length < 2) throw new Error('Must provide at least two schemas.')
     this._config = config
   }
@@ -36,8 +36,8 @@ implements NullishSchema<TSchemas, TOptional, TNullable, TDefault> {
       schemas: schemas as ReadonlyArray<GenericSchema<SchemaTypeUnion<A>>>,
       optional: false,
       nullable: false,
-      default: null,
-      fallback: null,
+      default: undefined,
+      fallback: undefined,
     })
   }
 
@@ -45,20 +45,11 @@ implements NullishSchema<TSchemas, TOptional, TNullable, TDefault> {
 
   // VALIDATOR
   public validate(input: unknown): Nullish<TSchemas, TOptional, TNullable, TDefault> {
-    type Output = Nullish<TSchemas, TOptional, TNullable, TDefault>
-    try {
-
-      if (input === undefined && this._config.optional) {
-        return ((this._config.default !== null) ? this._config.default : undefined) as Output
-      }
-
-      if (input === null && this._config.nullable) {
-        return ((this._config.default !== null) ? this._config.default : null) as Output
-      }
+    return this.validateSchema((current) => {
 
       for (const schema of this._config.schemas) {
         try {
-          return schema.validate(input) as Output
+          return schema.validate(current) as TSchemas
         } catch (error) {
           if (error instanceof ValidationError) continue
           else throw error
@@ -67,10 +58,7 @@ implements NullishSchema<TSchemas, TOptional, TNullable, TDefault> {
 
       throw new ValidationError(input, 'The value does not match any of the given schemas.')
 
-    } catch (error) {
-      if (this._config.fallback !== null) return this._config.fallback
-      throw error
-    }
+    }, input)
   }
 
   // --------------------------------------------------------------------------

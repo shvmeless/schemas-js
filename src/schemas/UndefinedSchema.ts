@@ -1,23 +1,19 @@
 // IMPORTS
+import type { Nullable, NullableConfig } from '@/lib/NullableSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import type { NullableSchema, Nullable } from '@/lib/GenericSchema'
-
-// INTERFACE
-interface UndefinedConfig {
-  nullable: boolean
-  default: undefined | null
-  fallback: undefined | null
-}
+import { NullableSchema } from '@/lib/NullableSchema'
 
 // CLASS
 export class UndefinedSchema<TNullable extends boolean, TDefault extends boolean>
-implements NullableSchema<undefined, TNullable, TDefault> {
+  extends NullableSchema<undefined, TNullable, TDefault> {
 
   // PROPERTIES
-  private readonly _config: UndefinedConfig
+  protected readonly _config: NullableConfig<undefined>
+  protected readonly _validations = {}
 
   // CONSTRUCTOR
-  private constructor(config: UndefinedConfig) {
+  private constructor(config: NullableConfig<undefined>) {
+    super()
     this._config = config
   }
 
@@ -25,42 +21,26 @@ implements NullableSchema<undefined, TNullable, TDefault> {
 
   // FACTORY
   public static create(): UndefinedSchema<false, false> {
-    return new UndefinedSchema({ nullable: false, default: null, fallback: null })
+    return new UndefinedSchema({
+      nullable: false,
+      default: null,
+      fallback: null,
+    })
   }
 
   // --------------------------------------------------------------------------
 
-  // PRIVATE
-  private _resolveInput(input: unknown): undefined | null {
-
-    if (input === null && this._config.nullable) {
-      return (this._config.default !== null) ? this._config.default : null
-    }
-
-    if (input !== undefined) {
-      throw new ValidationError(input, 'The value must be undefined.')
-    }
-
-    return (this._config.default !== null) ? this._config.default : undefined
-
-  }
-
   // VALIDATOR
   public validate(input: unknown): Nullable<undefined, TNullable, TDefault> {
-    type Output = Nullable<undefined, TNullable, TDefault>
-    try {
+    return this.validateSchema((current) => {
 
-      const resolved = this._resolveInput(input)
+      if (current !== undefined) {
+        throw new ValidationError(input, 'The value must be undefined.')
+      }
 
-      if (resolved === undefined) return undefined as Output
-      if (resolved === null) return null as Output
+      return current
 
-      return resolved as Output
-
-    } catch (error) {
-      if (this._config.fallback !== null) return this._config.fallback
-      throw error
-    }
+    }, input)
   }
 
   // --------------------------------------------------------------------------

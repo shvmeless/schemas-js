@@ -1,6 +1,8 @@
 // IMPORTS
+import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
+import type { GenericSchema } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema, NullishSchema, Nullish } from '@/lib/GenericSchema'
+import { NullishSchema } from '@/lib/NullishSchema'
 
 // TYPE
 type InferShape<TObject> = {
@@ -8,24 +10,22 @@ type InferShape<TObject> = {
 }
 
 // INTERFACE
-interface ObjectConfig<TObject> {
+interface ObjectConfig<TObject> extends NullishConfig<TObject> {
   schema: InferShape<TObject>
   strip: boolean
-  optional: boolean
-  nullable: boolean
-  default: TObject | null
-  fallback: TObject | null
 }
 
 // CLASS
 export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements NullishSchema<TObject, TOptional, TNullable, TDefault> {
+  extends NullishSchema<TObject, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
-  private readonly _config: ObjectConfig<TObject>
+  protected readonly _config: ObjectConfig<TObject>
+  protected readonly _validations = {}
 
   // CONSTRUCTOR
   private constructor(config: ObjectConfig<TObject>) {
+    super()
     this._config = config
   }
 
@@ -38,42 +38,22 @@ implements NullishSchema<TObject, TOptional, TNullable, TDefault> {
       strip: false,
       optional: false,
       nullable: false,
-      default: null,
-      fallback: null,
+      default: undefined,
+      fallback: undefined,
     })
   }
 
   // --------------------------------------------------------------------------
 
-  // PRIVATE
-  private _resolveInput(input: unknown): Record<string, unknown> | null | undefined {
-
-    if (input === undefined && this._config.optional) {
-      return (this._config.default !== null) ? this._config.default as unknown as Record<string, unknown> : undefined
-    }
-
-    if (input === null && this._config.nullable) {
-      return (this._config.default !== null) ? this._config.default as unknown as Record<string, unknown> : null
-    }
-
-    if (typeof input !== 'object' || input === null || Array.isArray(input) || (Object.getPrototypeOf(input) !== Object.prototype && Object.getPrototypeOf(input) !== null)) {
-      throw new ValidationError(input, 'The value must be an object.')
-    }
-
-    return input as Record<string, unknown>
-
-  }
-
   // VALIDATOR
   public validate(input: unknown): Nullish<TObject, TOptional, TNullable, TDefault> {
-    type Output = Nullish<TObject, TOptional, TNullable, TDefault>
-    try {
+    return this.validateSchema((current) => {
 
-      const resolved = this._resolveInput(input)
+      if (typeof current !== 'object' || current === null || Array.isArray(current) || (Object.getPrototypeOf(current) !== Object.prototype && Object.getPrototypeOf(current) !== null)) {
+        throw new ValidationError(input, 'The value must be an object.')
+      }
 
-      if (resolved === undefined) return undefined as Output
-      if (resolved === null) return null as Output
-
+      const resolved = current as Record<string, unknown>
       const result: Record<string, unknown> = {}
       const errors = ValidationError.prepare()
 
@@ -106,12 +86,9 @@ implements NullishSchema<TObject, TOptional, TNullable, TDefault> {
         errors.throw(input, message)
       }
 
-      return result as Output
+      return result as TObject
 
-    } catch (error) {
-      if (this._config.fallback !== null) return this._config.fallback
-      throw error
-    }
+    }, input)
   }
 
   // --------------------------------------------------------------------------

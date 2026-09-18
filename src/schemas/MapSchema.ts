@@ -1,33 +1,31 @@
 // IMPORTS
+import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
+import type { GenericSchema, GenericValidations } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema, NullishSchema, Nullish } from '@/lib/GenericSchema'
-import { runValidations, type GenericValidations } from '@/utils/validations'
+import { NullishSchema } from '@/lib/NullishSchema'
 import { stringify } from '@/utils/stringify'
 
 // TYPE
 type MapValidations<TKey, TValue> = GenericValidations<'size' | 'min' | 'max' | 'some' | 'every' | 'none', Map<TKey, TValue>>
 
 // INTERFACE
-interface MapConfig<TKey, TValue> {
+interface MapConfig<TKey, TValue> extends NullishConfig<Map<TKey, TValue>> {
   keySchema: GenericSchema<TKey>
   valueSchema: GenericSchema<TValue>
   prune: boolean
-  optional: boolean
-  nullable: boolean
-  default: Map<TKey, TValue> | null
-  fallback: Map<TKey, TValue> | null
 }
 
 // CLASS
 export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements NullishSchema<Map<TKey, TValue>, TOptional, TNullable, TDefault> {
+  extends NullishSchema<Map<TKey, TValue>, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
-  private readonly _config: MapConfig<TKey, TValue>
-  private readonly _validations: MapValidations<TKey, TValue>
+  protected readonly _config: MapConfig<TKey, TValue>
+  protected readonly _validations: MapValidations<TKey, TValue>
 
   // CONSTRUCTOR
   private constructor(config: MapConfig<TKey, TValue>, validations: MapValidations<TKey, TValue>) {
+    super()
     this._config = config
     this._validations = validations
   }
@@ -42,8 +40,8 @@ implements NullishSchema<Map<TKey, TValue>, TOptional, TNullable, TDefault> {
       prune: false,
       optional: false,
       nullable: false,
-      default: null,
-      fallback: null,
+      default: undefined,
+      fallback: undefined,
     }, {})
   }
 
@@ -59,35 +57,15 @@ implements NullishSchema<Map<TKey, TValue>, TOptional, TNullable, TDefault> {
 
   // --------------------------------------------------------------------------
 
-  // PRIVATE
-  private _resolveInput(input: unknown): Map<unknown, unknown> | null | undefined {
-
-    if (input === undefined && this._config.optional) {
-      return (this._config.default !== null) ? this._config.default : undefined
-    }
-
-    if (input === null && this._config.nullable) {
-      return (this._config.default !== null) ? this._config.default : null
-    }
-
-    if (!(input instanceof Map)) {
-      throw new ValidationError(input, 'The value must be a Map.')
-    }
-
-    return input
-
-  }
-
   // VALIDATOR
   public validate(input: unknown): Nullish<Map<TKey, TValue>, TOptional, TNullable, TDefault> {
-    type Output = Nullish<Map<TKey, TValue>, TOptional, TNullable, TDefault>
-    try {
+    return this.validateSchema((current) => {
 
-      const resolved = this._resolveInput(input)
+      if (!(current instanceof Map)) {
+        throw new ValidationError(input, 'The value must be a Map.')
+      }
 
-      if (resolved === undefined) return undefined as Output
-      if (resolved === null) return null as Output
-
+      const resolved = current as Map<unknown, unknown>
       const result = new Map<TKey, TValue>()
       const errors = ValidationError.prepare()
 
@@ -108,14 +86,9 @@ implements NullishSchema<Map<TKey, TValue>, TOptional, TNullable, TDefault> {
         errors.throw(input, 'At least one entry does not match the given schema.')
       }
 
-      runValidations(this._validations, input, result)
+      return result
 
-      return result as Output
-
-    } catch (error) {
-      if (this._config.fallback !== null) return this._config.fallback
-      throw error
-    }
+    }, input)
   }
 
   // --------------------------------------------------------------------------

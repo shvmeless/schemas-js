@@ -1,32 +1,30 @@
 // IMPORTS
+import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
+import type { GenericSchema, GenericValidations } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema, NullishSchema, Nullish } from '@/lib/GenericSchema'
-import { runValidations, type GenericValidations } from '@/utils/validations'
+import { NullishSchema } from '@/lib/NullishSchema'
 import { stringify } from '@/utils/stringify'
 
 // TYPE
 type RecordValidations<TValue> = GenericValidations<'length' | 'min' | 'max' | 'some' | 'every' | 'none', Record<string, TValue>>
 
 // INTERFACE
-interface RecordConfig<TValue> {
+interface RecordConfig<TValue> extends NullishConfig<Record<string, TValue>> {
   schema: GenericSchema<TValue>
   prune: boolean
-  optional: boolean
-  nullable: boolean
-  default: Record<string, TValue> | null
-  fallback: Record<string, TValue> | null
 }
 
 // CLASS
 export class RecordSchema<TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements NullishSchema<Record<string, TValue>, TOptional, TNullable, TDefault> {
+  extends NullishSchema<Record<string, TValue>, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
-  private readonly _config: RecordConfig<TValue>
-  private readonly _validations: RecordValidations<TValue>
+  protected readonly _config: RecordConfig<TValue>
+  protected readonly _validations: RecordValidations<TValue>
 
   // CONSTRUCTOR
   private constructor(config: RecordConfig<TValue>, validations: RecordValidations<TValue>) {
+    super()
     this._config = config
     this._validations = validations
   }
@@ -40,8 +38,8 @@ implements NullishSchema<Record<string, TValue>, TOptional, TNullable, TDefault>
       prune: false,
       optional: false,
       nullable: false,
-      default: null,
-      fallback: null,
+      default: undefined,
+      fallback: undefined,
     }, {})
   }
 
@@ -57,35 +55,15 @@ implements NullishSchema<Record<string, TValue>, TOptional, TNullable, TDefault>
 
   // --------------------------------------------------------------------------
 
-  // PRIVATE
-  private _resolveInput(input: unknown): Record<string, unknown> | null | undefined {
-
-    if (input === undefined && this._config.optional) {
-      return (this._config.default !== null) ? this._config.default : undefined
-    }
-
-    if (input === null && this._config.nullable) {
-      return (this._config.default !== null) ? this._config.default : null
-    }
-
-    if (typeof input !== 'object' || input === null || Array.isArray(input) || (Object.getPrototypeOf(input) !== Object.prototype && Object.getPrototypeOf(input) !== null)) {
-      throw new ValidationError(input, 'The value must be an object.')
-    }
-
-    return input as Record<string, unknown>
-
-  }
-
   // VALIDATOR
   public validate(input: unknown): Nullish<Record<string, TValue>, TOptional, TNullable, TDefault> {
-    type Output = Nullish<Record<string, TValue>, TOptional, TNullable, TDefault>
-    try {
+    return this.validateSchema((current) => {
 
-      const resolved = this._resolveInput(input)
+      if (typeof current !== 'object' || current === null || Array.isArray(current) || (Object.getPrototypeOf(current) !== Object.prototype && Object.getPrototypeOf(current) !== null)) {
+        throw new ValidationError(input, 'The value must be an object.')
+      }
 
-      if (resolved === undefined) return undefined as Output
-      if (resolved === null) return null as Output
-
+      const resolved = current as Record<string, unknown>
       const result: Record<string, TValue> = {}
       const errors = ValidationError.prepare()
 
@@ -104,14 +82,9 @@ implements NullishSchema<Record<string, TValue>, TOptional, TNullable, TDefault>
         errors.throw(input, 'At least one entry does not match the given schema.')
       }
 
-      runValidations(this._validations, input, result)
+      return result
 
-      return result as Output
-
-    } catch (error) {
-      if (this._config.fallback !== null) return this._config.fallback
-      throw error
-    }
+    }, input)
   }
 
   // --------------------------------------------------------------------------

@@ -1,25 +1,24 @@
 // IMPORTS
+import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import type { NullishSchema, Nullish } from '@/lib/GenericSchema'
+import { NullishSchema } from '@/lib/NullishSchema'
 
 // INTERFACE
-interface LiteralConfig<TValue extends string | number | boolean> {
+interface LiteralConfig<TValue extends string | number | boolean> extends NullishConfig<TValue> {
   literal: TValue
-  optional: boolean
-  nullable: boolean
-  default: TValue | null
-  fallback: TValue | null
 }
 
 // CLASS
 export class LiteralSchema<TValue extends string | number | boolean, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements NullishSchema<TValue, TOptional, TNullable, TDefault> {
+  extends NullishSchema<TValue, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
-  private readonly _config: LiteralConfig<TValue>
+  protected readonly _config: LiteralConfig<TValue>
+  protected readonly _validations = {}
 
   // CONSTRUCTOR
   private constructor(config: LiteralConfig<TValue>) {
+    super()
     this._config = config
   }
 
@@ -27,46 +26,28 @@ implements NullishSchema<TValue, TOptional, TNullable, TDefault> {
 
   // FACTORY
   public static create<TValue extends string | number | boolean>(literal: TValue): LiteralSchema<TValue, false, false, false> {
-    return new LiteralSchema({ literal, optional: false, nullable: false, default: null, fallback: null })
+    return new LiteralSchema({
+      literal,
+      optional: false,
+      nullable: false,
+      default: undefined,
+      fallback: undefined,
+    })
   }
 
   // --------------------------------------------------------------------------
 
-  // PRIVATE
-  private _resolveInput(input: unknown): TValue | null | undefined {
-
-    if (input === undefined && this._config.optional) {
-      return (this._config.default !== null) ? this._config.default : undefined
-    }
-
-    if (input === null && this._config.nullable) {
-      return (this._config.default !== null) ? this._config.default : null
-    }
-
-    if (input !== this._config.literal) {
-      throw new ValidationError(input, 'The value must match the literal value.')
-    }
-
-    return this._config.literal
-
-  }
-
   // VALIDATOR
   public validate(input: unknown): Nullish<TValue, TOptional, TNullable, TDefault> {
-    type Output = Nullish<TValue, TOptional, TNullable, TDefault>
-    try {
+    return this.validateSchema((current) => {
 
-      const resolved = this._resolveInput(input)
+      if (current !== this._config.literal) {
+        throw new ValidationError(input, 'The value must match the literal value.')
+      }
 
-      if (resolved === undefined) return undefined as Output
-      if (resolved === null) return null as Output
+      return current as TValue
 
-      return resolved as Output
-
-    } catch (error) {
-      if (this._config.fallback !== null) return this._config.fallback
-      throw error
-    }
+    }, input)
   }
 
   // --------------------------------------------------------------------------

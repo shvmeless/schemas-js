@@ -1,24 +1,19 @@
 // IMPORTS
+import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import type { NullishSchema, Nullish } from '@/lib/GenericSchema'
-
-// INTERFACE
-interface BooleanConfig {
-  optional: boolean
-  nullable: boolean
-  default: boolean | null
-  fallback: boolean | null
-}
+import { NullishSchema } from '@/lib/NullishSchema'
 
 // CLASS
 export class BooleanSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements NullishSchema<boolean, TOptional, TNullable, TDefault> {
+  extends NullishSchema<boolean, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
-  private readonly _config: BooleanConfig
+  protected readonly _config: NullishConfig<boolean>
+  protected readonly _validations = {}
 
   // CONSTRUCTOR
-  private constructor(config: BooleanConfig) {
+  private constructor(config: NullishConfig<boolean>) {
+    super()
     this._config = config
   }
 
@@ -26,46 +21,27 @@ implements NullishSchema<boolean, TOptional, TNullable, TDefault> {
 
   // FACTORY
   public static create(): BooleanSchema<false, false, false> {
-    return new BooleanSchema({ optional: false, nullable: false, default: null, fallback: null })
+    return new BooleanSchema({
+      optional: false,
+      nullable: false,
+      default: undefined,
+      fallback: undefined,
+    })
   }
 
   // --------------------------------------------------------------------------
 
-  // PRIVATE
-  private _resolveInput(input: unknown): boolean | null | undefined {
-
-    if (input === undefined && this._config.optional) {
-      return (this._config.default !== null) ? this._config.default : undefined
-    }
-
-    if (input === null && this._config.nullable) {
-      return (this._config.default !== null) ? this._config.default : null
-    }
-
-    if (typeof input !== 'boolean') {
-      throw new ValidationError(input, 'The value must be a boolean.')
-    }
-
-    return input
-
-  }
-
   // VALIDATOR
   public validate(input: unknown): Nullish<boolean, TOptional, TNullable, TDefault> {
-    type Output = Nullish<boolean, TOptional, TNullable, TDefault>
-    try {
+    return this.validateSchema((current) => {
 
-      const resolved = this._resolveInput(input)
+      if (typeof current !== 'boolean') {
+        throw new ValidationError(input, 'The value must be a boolean.')
+      }
 
-      if (resolved === undefined) return undefined as Output
-      if (resolved === null) return null as Output
+      return current
 
-      return resolved as Output
-
-    } catch (error) {
-      if (this._config.fallback !== null) return this._config.fallback
-      throw error
-    }
+    }, input)
   }
 
   // --------------------------------------------------------------------------

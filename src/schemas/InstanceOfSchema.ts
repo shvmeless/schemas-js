@@ -1,29 +1,28 @@
 // IMPORTS
+import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import type { NullishSchema, Nullish } from '@/lib/GenericSchema'
+import { NullishSchema } from '@/lib/NullishSchema'
 
 // TYPE
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyConstructor<T = unknown> = abstract new (...args: Array<any>) => T
 
 // INTERFACE
-interface InstanceOfConfig<TConstructor extends AnyConstructor> {
+interface InstanceOfConfig<TConstructor extends AnyConstructor> extends NullishConfig<InstanceType<TConstructor>> {
   constructor: TConstructor
-  optional: boolean
-  nullable: boolean
-  default: InstanceType<TConstructor> | null
-  fallback: InstanceType<TConstructor> | null
 }
 
 // CLASS
 export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements NullishSchema<InstanceType<TConstructor>, TOptional, TNullable, TDefault> {
+  extends NullishSchema<InstanceType<TConstructor>, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
-  private readonly _config: InstanceOfConfig<TConstructor>
+  protected readonly _config: InstanceOfConfig<TConstructor>
+  protected readonly _validations = {}
 
   // CONSTRUCTOR
   private constructor(config: InstanceOfConfig<TConstructor>) {
+    super()
     this._config = config
   }
 
@@ -31,46 +30,28 @@ implements NullishSchema<InstanceType<TConstructor>, TOptional, TNullable, TDefa
 
   // FACTORY
   public static create<TConstructor extends AnyConstructor>(constructor: TConstructor): InstanceOfSchema<TConstructor, false, false, false> {
-    return new InstanceOfSchema({ constructor, optional: false, nullable: false, default: null, fallback: null })
+    return new InstanceOfSchema({
+      constructor,
+      optional: false,
+      nullable: false,
+      default: undefined,
+      fallback: undefined,
+    })
   }
 
   // --------------------------------------------------------------------------
 
-  // PRIVATE
-  private _resolveInput(input: unknown): InstanceType<TConstructor> | null | undefined {
-
-    if (input === undefined && this._config.optional) {
-      return (this._config.default !== null) ? this._config.default : undefined
-    }
-
-    if (input === null && this._config.nullable) {
-      return (this._config.default !== null) ? this._config.default : null
-    }
-
-    if (!(input instanceof this._config.constructor)) {
-      throw new ValidationError(input, `Expected instance of ${this._config.constructor.name}.`)
-    }
-
-    return input as InstanceType<TConstructor>
-
-  }
-
   // VALIDATOR
   public validate(input: unknown): Nullish<InstanceType<TConstructor>, TOptional, TNullable, TDefault> {
-    type Output = Nullish<InstanceType<TConstructor>, TOptional, TNullable, TDefault>
-    try {
+    return this.validateSchema((current) => {
 
-      const resolved = this._resolveInput(input)
+      if (!(current instanceof this._config.constructor)) {
+        throw new ValidationError(input, `Expected instance of ${this._config.constructor.name}.`)
+      }
 
-      if (resolved === undefined) return undefined as Output
-      if (resolved === null) return null as Output
+      return current as InstanceType<TConstructor>
 
-      return resolved as Output
-
-    } catch (error) {
-      if (this._config.fallback !== null) return this._config.fallback
-      throw error
-    }
+    }, input)
   }
 
   // --------------------------------------------------------------------------

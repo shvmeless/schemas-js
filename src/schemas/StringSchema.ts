@@ -1,30 +1,24 @@
 // IMPORTS
+import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
+import type { GenericValidations } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import type { NullishSchema, Nullish } from '@/lib/GenericSchema'
-import { runValidations, type GenericValidations } from '@/utils/validations'
+import { NullishSchema } from '@/lib/NullishSchema'
 import { stringify } from '@/utils/stringify'
 
 // TYPE
 type StringValidations = GenericValidations<'length' | 'min' | 'max' | 'casing' | 'trim' | 'prefix' | 'suffix' | 'includes' | 'excludes' | 'pattern', string>
 
-// INTERFACE
-interface StringConfig {
-  optional: boolean
-  nullable: boolean
-  default: string | null
-  fallback: string | null
-}
-
 // CLASS
 export class StringSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements NullishSchema<string, TOptional, TNullable, TDefault> {
+  extends NullishSchema<string, TOptional, TNullable, TDefault> {
 
   // PROPERTIES
-  private readonly _config: StringConfig
-  private readonly _validations: StringValidations
+  protected readonly _config: NullishConfig<string>
+  protected readonly _validations: StringValidations
 
   // CONSTRUCTOR
-  private constructor(config: StringConfig, validations: StringValidations) {
+  private constructor(config: NullishConfig<string>, validations: StringValidations) {
+    super()
     this._config = config
     this._validations = validations
   }
@@ -33,7 +27,12 @@ implements NullishSchema<string, TOptional, TNullable, TDefault> {
 
   // FACTORY
   public static create(): StringSchema<false, false, false> {
-    return new StringSchema({ optional: false, nullable: false, default: null, fallback: null }, {})
+    return new StringSchema({
+      optional: false,
+      nullable: false,
+      default: undefined,
+      fallback: undefined,
+    }, {})
   }
 
   // --------------------------------------------------------------------------
@@ -45,43 +44,17 @@ implements NullishSchema<string, TOptional, TNullable, TDefault> {
 
   // --------------------------------------------------------------------------
 
-  // PRIVATE
-  private _resolveInput(input: unknown): string | null | undefined {
-
-    if (input === undefined && this._config.optional) {
-      return (this._config.default !== null) ? this._config.default : undefined
-    }
-
-    if (input === null && this._config.nullable) {
-      return (this._config.default !== null) ? this._config.default : null
-    }
-
-    if (typeof input !== 'string') {
-      throw new ValidationError(input, 'The value must be a string.')
-    }
-
-    return input
-
-  }
-
   // VALIDATOR
   public validate(input: unknown): Nullish<string, TOptional, TNullable, TDefault> {
-    type Output = Nullish<string, TOptional, TNullable, TDefault>
-    try {
+    return this.validateSchema((current) => {
 
-      const resolved = this._resolveInput(input)
+      if (typeof current !== 'string') {
+        throw new ValidationError(input, 'The value must be a string.')
+      }
 
-      if (resolved === undefined) return undefined as Output
-      if (resolved === null) return null as Output
+      return current
 
-      runValidations(this._validations, input, resolved)
-
-      return resolved as Output
-
-    } catch (error) {
-      if (this._config.fallback !== null) return this._config.fallback
-      throw error
-    }
+    }, input)
   }
 
   // --------------------------------------------------------------------------
