@@ -30,9 +30,18 @@ export class UnknownSchema<TOptional extends boolean, TNullable extends boolean,
 
   // --------------------------------------------------------------------------
 
+  // UPDATER
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(config: Partial<NullishConfig<unknown>>): UnknownSchema<TOptional, TNullable, TDefault> {
+    return new UnknownSchema(
+      { ...this._config, ...config },
+    )
+  }
+
+  // --------------------------------------------------------------------------
+
   // VALIDATOR
   public validate(input: unknown): Nullish<unknown, TOptional, TNullable, TDefault> {
-    return this.validateSchema((current) => {
+    return this._runSchema((current) => {
       return current
     }, input)
   }
@@ -41,34 +50,22 @@ export class UnknownSchema<TOptional extends boolean, TNullable extends boolean,
 
   // CONFIG
   public optional(): UnknownSchema<true, TNullable, TDefault> {
-    return new UnknownSchema({
-      ...this._config,
-      optional: true,
-    })
+    return this._updateConfig({ optional: true })
   }
 
   // CONFIG
   public nullable(): UnknownSchema<TOptional, true, TDefault> {
-    return new UnknownSchema({
-      ...this._config,
-      nullable: true,
-    })
+    return this._updateConfig({ nullable: true })
   }
 
   // CONFIG
   public default(value: unknown): UnknownSchema<TOptional, TNullable, true> {
-    return new UnknownSchema({
-      ...this._config,
-      default: value,
-    })
+    return this._updateConfig({ default: value })
   }
 
   // CONFIG
   public fallback(value: unknown): UnknownSchema<TOptional, TNullable, TDefault> {
-    return new UnknownSchema({
-      ...this._config,
-      fallback: value,
-    })
+    return this._updateConfig({ fallback: value })
   }
 
 }

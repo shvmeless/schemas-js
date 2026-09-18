@@ -37,9 +37,18 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
 
   // --------------------------------------------------------------------------
 
+  // UPDATER
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(config: Partial<LiteralConfig<TValue>>): LiteralSchema<TValue, TOptional, TNullable, TDefault> {
+    return new LiteralSchema(
+      { ...this._config, ...config },
+    )
+  }
+
+  // --------------------------------------------------------------------------
+
   // VALIDATOR
   public validate(input: unknown): Nullish<TValue, TOptional, TNullable, TDefault> {
-    return this.validateSchema((current) => {
+    return this._runSchema((current) => {
 
       if (current !== this._config.literal) {
         throw new ValidationError(input, 'The value must match the literal value.')
@@ -54,34 +63,22 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
 
   // CONFIG
   public optional(): LiteralSchema<TValue, true, TNullable, TDefault> {
-    return new LiteralSchema({
-      ...this._config,
-      optional: true,
-    })
+    return this._updateConfig({ optional: true })
   }
 
   // CONFIG
   public nullable(): LiteralSchema<TValue, TOptional, true, TDefault> {
-    return new LiteralSchema({
-      ...this._config,
-      nullable: true,
-    })
+    return this._updateConfig({ nullable: true })
   }
 
   // CONFIG
   public default(value: TValue): LiteralSchema<TValue, TOptional, TNullable, true> {
-    return new LiteralSchema({
-      ...this._config,
-      default: value,
-    })
+    return this._updateConfig({ default: value })
   }
 
   // CONFIG
   public fallback(value: TValue): LiteralSchema<TValue, TOptional, TNullable, TDefault> {
-    return new LiteralSchema({
-      ...this._config,
-      fallback: value,
-    })
+    return this._updateConfig({ fallback: value })
   }
 
 }

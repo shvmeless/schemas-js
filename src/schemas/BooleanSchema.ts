@@ -31,9 +31,18 @@ export class BooleanSchema<TOptional extends boolean, TNullable extends boolean,
 
   // --------------------------------------------------------------------------
 
+  // UPDATER
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(config: Partial<NullishConfig<boolean>>): BooleanSchema<TOptional, TNullable, TDefault> {
+    return new BooleanSchema(
+      { ...this._config, ...config },
+    )
+  }
+
+  // --------------------------------------------------------------------------
+
   // VALIDATOR
   public validate(input: unknown): Nullish<boolean, TOptional, TNullable, TDefault> {
-    return this.validateSchema((current) => {
+    return this._runSchema((current) => {
 
       if (typeof current !== 'boolean') {
         throw new ValidationError(input, 'The value must be a boolean.')
@@ -48,34 +57,22 @@ export class BooleanSchema<TOptional extends boolean, TNullable extends boolean,
 
   // CONFIG
   public optional(): BooleanSchema<true, TNullable, TDefault> {
-    return new BooleanSchema({
-      ...this._config,
-      optional: true,
-    })
+    return this._updateConfig({ optional: true })
   }
 
   // CONFIG
   public nullable(): BooleanSchema<TOptional, true, TDefault> {
-    return new BooleanSchema({
-      ...this._config,
-      nullable: true,
-    })
+    return this._updateConfig({ nullable: true })
   }
 
   // CONFIG
   public default(value: boolean): BooleanSchema<TOptional, TNullable, true> {
-    return new BooleanSchema({
-      ...this._config,
-      default: value,
-    })
+    return this._updateConfig({ default: value })
   }
 
   // CONFIG
   public fallback(value: boolean): BooleanSchema<TOptional, TNullable, TDefault> {
-    return new BooleanSchema({
-      ...this._config,
-      fallback: value,
-    })
+    return this._updateConfig({ fallback: value })
   }
 
 }

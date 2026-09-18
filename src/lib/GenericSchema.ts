@@ -18,7 +18,7 @@ export abstract class GenericSchema<TType, TOutput = TType> {
   public abstract fallback(value: TType): GenericSchema<TType, TOutput>
 
   // PROTECTED
-  protected runValidations(initial: unknown, current: TType): void {
+  protected _runValidations(initial: unknown, current: TType): void {
     const values = Object.values(this._validations) as Array<((current: TType, initial: unknown) => undefined) | undefined>
     for (const validation of values) {
       if (typeof validation === 'function') validation(current, initial)
@@ -26,12 +26,12 @@ export abstract class GenericSchema<TType, TOutput = TType> {
   }
 
   // PROTECTED
-  protected validateSchema(fn: (current: unknown) => TType, input: unknown): TOutput {
+  protected _runSchema(fn: (current: unknown) => TType, input: unknown): TOutput {
     try {
 
       const output = fn(input)
 
-      this.runValidations(input, output)
+      this._runValidations(input, output)
 
       return output as unknown as TOutput
 

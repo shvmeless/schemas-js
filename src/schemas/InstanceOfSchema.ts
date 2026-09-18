@@ -41,9 +41,18 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
 
   // --------------------------------------------------------------------------
 
+  // UPDATER
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(config: Partial<Omit<InstanceOfConfig<TConstructor>, 'constructor'>>): InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault> {
+    return new InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault>(
+      { ...this._config, ...config },
+    )
+  }
+
+  // --------------------------------------------------------------------------
+
   // VALIDATOR
   public validate(input: unknown): Nullish<InstanceType<TConstructor>, TOptional, TNullable, TDefault> {
-    return this.validateSchema((current) => {
+    return this._runSchema((current) => {
 
       if (!(current instanceof this._config.constructor)) {
         throw new ValidationError(input, `Expected instance of ${this._config.constructor.name}.`)
@@ -58,34 +67,22 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
 
   // CONFIG
   public optional(): InstanceOfSchema<TConstructor, true, TNullable, TDefault> {
-    return new InstanceOfSchema({
-      ...this._config,
-      optional: true,
-    })
+    return this._updateConfig({ optional: true })
   }
 
   // CONFIG
   public nullable(): InstanceOfSchema<TConstructor, TOptional, true, TDefault> {
-    return new InstanceOfSchema({
-      ...this._config,
-      nullable: true,
-    })
+    return this._updateConfig({ nullable: true })
   }
 
   // CONFIG
   public default(value: InstanceType<TConstructor>): InstanceOfSchema<TConstructor, TOptional, TNullable, true> {
-    return new InstanceOfSchema({
-      ...this._config,
-      default: value,
-    })
+    return this._updateConfig({ default: value })
   }
 
   // CONFIG
   public fallback(value: InstanceType<TConstructor>): InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault> {
-    return new InstanceOfSchema({
-      ...this._config,
-      fallback: value,
-    })
+    return this._updateConfig({ fallback: value })
   }
 
 }

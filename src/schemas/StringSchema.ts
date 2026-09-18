@@ -38,15 +38,26 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private updateValidation(validations: StringValidations): StringSchema<TOptional, TNullable, TDefault> {
-    return new StringSchema(this._config, { ...this._validations, ...validations })
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(config: Partial<NullishConfig<string>>): StringSchema<TOptional, TNullable, TDefault> {
+    return new StringSchema(
+      { ...this._config, ...config },
+      this._validations,
+    )
+  }
+
+  // UPDATER
+  private _updateValidation(validations: StringValidations): StringSchema<TOptional, TNullable, TDefault> {
+    return new StringSchema(
+      this._config,
+      { ...this._validations, ...validations },
+    )
   }
 
   // --------------------------------------------------------------------------
 
   // VALIDATOR
   public validate(input: unknown): Nullish<string, TOptional, TNullable, TDefault> {
-    return this.validateSchema((current) => {
+    return this._runSchema((current) => {
 
       if (typeof current !== 'string') {
         throw new ValidationError(input, 'The value must be a string.')
@@ -61,34 +72,22 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
 
   // CONFIG
   public optional(): StringSchema<true, TNullable, TDefault> {
-    return new StringSchema({
-      ...this._config,
-      optional: true,
-    }, this._validations)
+    return this._updateConfig({ optional: true })
   }
 
   // CONFIG
   public nullable(): StringSchema<TOptional, true, TDefault> {
-    return new StringSchema({
-      ...this._config,
-      nullable: true,
-    }, this._validations)
+    return this._updateConfig({ nullable: true })
   }
 
   // CONFIG
   public default(value: string): StringSchema<TOptional, TNullable, true> {
-    return new StringSchema({
-      ...this._config,
-      default: value,
-    }, this._validations)
+    return this._updateConfig({ default: value })
   }
 
   // CONFIG
   public fallback(value: string): StringSchema<TOptional, TNullable, TDefault> {
-    return new StringSchema({
-      ...this._config,
-      fallback: value,
-    }, this._validations)
+    return this._updateConfig({ fallback: value })
   }
 
   // --------------------------------------------------------------------------
@@ -96,7 +95,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   // METHOD
   public length(length: number): StringSchema<TOptional, TNullable, TDefault> {
     if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
-    return this.updateValidation({
+    return this._updateValidation({
       min: undefined,
       max: undefined,
       length: (current, initial) => {
@@ -109,7 +108,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   // METHOD
   public min(length: number): StringSchema<TOptional, TNullable, TDefault> {
     if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
-    return this.updateValidation({
+    return this._updateValidation({
       min: (current, initial) => {
         if (current.length >= length) return
         throw new ValidationError(initial, `The value must be at least ${stringify(length)} characters long.`)
@@ -120,7 +119,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   // METHOD
   public max(length: number): StringSchema<TOptional, TNullable, TDefault> {
     if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
-    return this.updateValidation({
+    return this._updateValidation({
       max: (current, initial) => {
         if (current.length <= length) return
         throw new ValidationError(initial, `The value must be at most ${stringify(length)} characters long.`)
@@ -130,7 +129,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
 
   // METHOD
   public lowercase(): StringSchema<TOptional, TNullable, TDefault> {
-    return this.updateValidation({
+    return this._updateValidation({
       casing: (current, initial) => {
         if (current.toLowerCase() === current) return
         throw new ValidationError(initial, 'The value must be lowercase.')
@@ -141,7 +140,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
 
   // METHOD
   public uppercase(): StringSchema<TOptional, TNullable, TDefault> {
-    return this.updateValidation({
+    return this._updateValidation({
       casing: (current, initial) => {
         if (current.toUpperCase() === current) return
         throw new ValidationError(initial, 'The value must be uppercase.')
@@ -152,7 +151,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
 
   // METHOD
   public trim(): StringSchema<TOptional, TNullable, TDefault> {
-    return this.updateValidation({
+    return this._updateValidation({
       trim: (current, initial) => {
         if (current.trim() === current) return
         throw new ValidationError(initial, 'The value must be trimmed.')
@@ -162,7 +161,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
 
   // METHOD
   public startsWith(prefix: string): StringSchema<TOptional, TNullable, TDefault> {
-    return this.updateValidation({
+    return this._updateValidation({
       prefix: (current, initial) => {
         if (current.startsWith(prefix)) return
         throw new ValidationError(initial, `The value must start with ${stringify(prefix)}.`)
@@ -172,7 +171,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
 
   // METHOD
   public endsWith(suffix: string): StringSchema<TOptional, TNullable, TDefault> {
-    return this.updateValidation({
+    return this._updateValidation({
       suffix: (current, initial) => {
         if (current.endsWith(suffix)) return
         throw new ValidationError(initial, `The value must end with ${stringify(suffix)}.`)
@@ -182,7 +181,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
 
   // METHOD
   public includes(search: string): StringSchema<TOptional, TNullable, TDefault> {
-    return this.updateValidation({
+    return this._updateValidation({
       includes: (current, initial) => {
         if (current.includes(search)) return
         throw new ValidationError(initial, `The value must include ${stringify(search)}.`)
@@ -192,7 +191,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
 
   // METHOD
   public excludes(search: string): StringSchema<TOptional, TNullable, TDefault> {
-    return this.updateValidation({
+    return this._updateValidation({
       excludes: (current, initial) => {
         if (!current.includes(search)) return
         throw new ValidationError(initial, `The value must not include ${stringify(search)}.`)
@@ -202,7 +201,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
 
   // METHOD
   public match(pattern: RegExp): StringSchema<TOptional, TNullable, TDefault> {
-    return this.updateValidation({
+    return this._updateValidation({
       pattern: (current, initial) => {
         if (pattern.test(current)) return
         throw new ValidationError(initial, `The value must match the pattern ${stringify(pattern)}.`)

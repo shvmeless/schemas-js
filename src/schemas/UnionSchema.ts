@@ -43,9 +43,18 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
 
   // --------------------------------------------------------------------------
 
+  // UPDATER
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(config: Partial<UnionConfig<TSchemas>>): UnionSchema<TSchemas, TOptional, TNullable, TDefault> {
+    return new UnionSchema(
+      { ...this._config, ...config },
+    )
+  }
+
+  // --------------------------------------------------------------------------
+
   // VALIDATOR
   public validate(input: unknown): Nullish<TSchemas, TOptional, TNullable, TDefault> {
-    return this.validateSchema((current) => {
+    return this._runSchema((current) => {
 
       for (const schema of this._config.schemas) {
         try {
@@ -65,34 +74,22 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
 
   // CONFIG
   public optional(): UnionSchema<TSchemas, true, TNullable, TDefault> {
-    return new UnionSchema({
-      ...this._config,
-      optional: true,
-    })
+    return this._updateConfig({ optional: true })
   }
 
   // CONFIG
   public nullable(): UnionSchema<TSchemas, TOptional, true, TDefault> {
-    return new UnionSchema({
-      ...this._config,
-      nullable: true,
-    })
+    return this._updateConfig({ nullable: true })
   }
 
   // CONFIG
   public default(value: TSchemas): UnionSchema<TSchemas, TOptional, TNullable, true> {
-    return new UnionSchema({
-      ...this._config,
-      default: value,
-    })
+    return this._updateConfig({ default: value })
   }
 
   // CONFIG
   public fallback(value: TSchemas): UnionSchema<TSchemas, TOptional, TNullable, TDefault> {
-    return new UnionSchema({
-      ...this._config,
-      fallback: value,
-    })
+    return this._updateConfig({ fallback: value })
   }
 
 }

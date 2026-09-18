@@ -40,9 +40,18 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
 
   // --------------------------------------------------------------------------
 
+  // UPDATER
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(config: Partial<EnumConfig<TValues>>): EnumSchema<TValues, TOptional, TNullable, TDefault> {
+    return new EnumSchema(
+      { ...this._config, ...config },
+    )
+  }
+
+  // --------------------------------------------------------------------------
+
   // VALIDATOR
   public validate(input: unknown): Nullish<TValues, TOptional, TNullable, TDefault> {
-    return this.validateSchema((current) => {
+    return this._runSchema((current) => {
 
       if (!this._config.values.includes(current as TValues)) {
         throw new ValidationError(input, 'The value must be match one of the allowed literal values.')
@@ -57,34 +66,22 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
 
   // CONFIG
   public optional(): EnumSchema<TValues, true, TNullable, TDefault> {
-    return new EnumSchema({
-      ...this._config,
-      optional: true,
-    })
+    return this._updateConfig({ optional: true })
   }
 
   // CONFIG
   public nullable(): EnumSchema<TValues, TOptional, true, TDefault> {
-    return new EnumSchema({
-      ...this._config,
-      nullable: true,
-    })
+    return this._updateConfig({ nullable: true })
   }
 
   // CONFIG
   public default(value: TValues): EnumSchema<TValues, TOptional, TNullable, true> {
-    return new EnumSchema({
-      ...this._config,
-      default: value,
-    })
+    return this._updateConfig({ default: value })
   }
 
   // CONFIG
   public fallback(value: TValues): EnumSchema<TValues, TOptional, TNullable, TDefault> {
-    return new EnumSchema({
-      ...this._config,
-      fallback: value,
-    })
+    return this._updateConfig({ fallback: value })
   }
 
 }

@@ -48,7 +48,15 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private updateValidation(validations: MapValidations<TKey, TValue>): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(config: Partial<MapConfig<TKey, TValue>>): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
+    return new MapSchema(
+      { ...this._config, ...config },
+      this._validations,
+    )
+  }
+
+  // UPDATER
+  private _updateValidation(validations: MapValidations<TKey, TValue>): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     return new MapSchema<TKey, TValue, TOptional, TNullable, TDefault>(
       this._config,
       { ...this._validations, ...validations },
@@ -59,7 +67,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
 
   // VALIDATOR
   public validate(input: unknown): Nullish<Map<TKey, TValue>, TOptional, TNullable, TDefault> {
-    return this.validateSchema((current) => {
+    return this._runSchema((current) => {
 
       if (!(current instanceof Map)) {
         throw new ValidationError(input, 'The value must be a Map.')
@@ -95,42 +103,27 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
 
   // CONFIG
   public prune(): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
-    return new MapSchema({
-      ...this._config,
-      prune: true,
-    }, this._validations)
+    return this._updateConfig({ prune: true })
   }
 
   // CONFIG
   public optional(): MapSchema<TKey, TValue, true, TNullable, TDefault> {
-    return new MapSchema({
-      ...this._config,
-      optional: true,
-    }, this._validations)
+    return this._updateConfig({ optional: true })
   }
 
   // CONFIG
   public nullable(): MapSchema<TKey, TValue, TOptional, true, TDefault> {
-    return new MapSchema({
-      ...this._config,
-      nullable: true,
-    }, this._validations)
+    return this._updateConfig({ nullable: true })
   }
 
   // CONFIG
   public default(value: Map<TKey, TValue>): MapSchema<TKey, TValue, TOptional, TNullable, true> {
-    return new MapSchema({
-      ...this._config,
-      default: value,
-    }, this._validations)
+    return this._updateConfig({ default: value })
   }
 
   // CONFIG
   public fallback(value: Map<TKey, TValue>): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
-    return new MapSchema({
-      ...this._config,
-      fallback: value,
-    }, this._validations)
+    return this._updateConfig({ fallback: value })
   }
 
   // --------------------------------------------------------------------------
@@ -139,7 +132,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   public size(length: number): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this.updateValidation({
+    return this._updateValidation({
       min: undefined,
       max: undefined,
       size: (current, initial) => {
@@ -153,7 +146,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   public min(length: number): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this.updateValidation({
+    return this._updateValidation({
       min: (current, initial) => {
         if (current.size >= length) return
         throw new ValidationError(initial, `The value must be at least ${stringify(length)} entries long.`)
@@ -165,7 +158,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   public max(length: number): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this.updateValidation({
+    return this._updateValidation({
       max: (current, initial) => {
         if (current.size <= length) return
         throw new ValidationError(initial, `The value must be at most ${stringify(length)} entries long.`)
@@ -175,7 +168,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
 
   // METHOD
   public some(callback: (value: TValue, key: TKey, map: Map<TKey, TValue>) => boolean): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
-    return this.updateValidation({
+    return this._updateValidation({
       some: (current, initial) => {
         for (const [key, value] of current) {
           if (callback(value, key, current)) return
@@ -187,7 +180,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
 
   // METHOD
   public every(callback: (value: TValue, key: TKey, map: Map<TKey, TValue>) => boolean): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
-    return this.updateValidation({
+    return this._updateValidation({
       every: (current, initial) => {
         for (const [key, value] of current) {
           if (!callback(value, key, current)) throw new ValidationError(initial, 'At least one entry does not satisfy the given validation function.')
@@ -198,7 +191,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
 
   // METHOD
   public none(callback: (value: TValue, key: TKey, map: Map<TKey, TValue>) => boolean): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
-    return this.updateValidation({
+    return this._updateValidation({
       none: (current, initial) => {
         for (const [key, value] of current) {
           if (callback(value, key, current)) throw new ValidationError(initial, 'At least one entry satisfies the given validation function.')

@@ -45,9 +45,18 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
 
   // --------------------------------------------------------------------------
 
+  // UPDATER
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(config: Partial<ObjectConfig<TObject>>): ObjectSchema<TObject, TOptional, TNullable, TDefault> {
+    return new ObjectSchema(
+      { ...this._config, ...config },
+    )
+  }
+
+  // --------------------------------------------------------------------------
+
   // VALIDATOR
   public validate(input: unknown): Nullish<TObject, TOptional, TNullable, TDefault> {
-    return this.validateSchema((current) => {
+    return this._runSchema((current) => {
 
       if (typeof current !== 'object' || current === null || Array.isArray(current) || (Object.getPrototypeOf(current) !== Object.prototype && Object.getPrototypeOf(current) !== null)) {
         throw new ValidationError(input, 'The value must be an object.')
@@ -95,42 +104,27 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
 
   // CONFIG
   public strip(): ObjectSchema<TObject, TOptional, TNullable, TDefault> {
-    return new ObjectSchema({
-      ...this._config,
-      strip: true,
-    })
+    return this._updateConfig({ strip: true })
   }
 
   // CONFIG
   public optional(): ObjectSchema<TObject, true, TNullable, TDefault> {
-    return new ObjectSchema({
-      ...this._config,
-      optional: true,
-    })
+    return this._updateConfig({ optional: true })
   }
 
   // CONFIG
   public nullable(): ObjectSchema<TObject, TOptional, true, TDefault> {
-    return new ObjectSchema({
-      ...this._config,
-      nullable: true,
-    })
+    return this._updateConfig({ nullable: true })
   }
 
   // CONFIG
   public default(value: TObject): ObjectSchema<TObject, TOptional, TNullable, true> {
-    return new ObjectSchema({
-      ...this._config,
-      default: value,
-    })
+    return this._updateConfig({ default: value })
   }
 
   // CONFIG
   public fallback(value: TObject): ObjectSchema<TObject, TOptional, TNullable, TDefault> {
-    return new ObjectSchema({
-      ...this._config,
-      fallback: value,
-    })
+    return this._updateConfig({ fallback: value })
   }
 
 }

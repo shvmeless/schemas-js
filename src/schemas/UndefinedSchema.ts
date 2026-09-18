@@ -30,9 +30,18 @@ export class UndefinedSchema<TNullable extends boolean, TDefault extends boolean
 
   // --------------------------------------------------------------------------
 
+  // UPDATER
+  private _updateConfig<TNullable extends boolean, TDefault extends boolean>(config: Partial<NullableConfig<undefined>>): UndefinedSchema<TNullable, TDefault> {
+    return new UndefinedSchema(
+      { ...this._config, ...config },
+    )
+  }
+
+  // --------------------------------------------------------------------------
+
   // VALIDATOR
   public validate(input: unknown): Nullable<undefined, TNullable, TDefault> {
-    return this.validateSchema((current) => {
+    return this._runSchema((current) => {
 
       if (current !== undefined) {
         throw new ValidationError(input, 'The value must be undefined.')
@@ -47,26 +56,17 @@ export class UndefinedSchema<TNullable extends boolean, TDefault extends boolean
 
   // CONFIG
   public nullable(): UndefinedSchema<true, TDefault> {
-    return new UndefinedSchema({
-      ...this._config,
-      nullable: true,
-    })
+    return this._updateConfig({ nullable: true })
   }
 
   // CONFIG
   public default(value: undefined): UndefinedSchema<TNullable, true> {
-    return new UndefinedSchema({
-      ...this._config,
-      default: value,
-    })
+    return this._updateConfig({ default: value })
   }
 
   // CONFIG
   public fallback(value: undefined): UndefinedSchema<TNullable, TDefault> {
-    return new UndefinedSchema({
-      ...this._config,
-      fallback: value,
-    })
+    return this._updateConfig({ fallback: value })
   }
 
 }

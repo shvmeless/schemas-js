@@ -26,7 +26,7 @@ export abstract class OptionalSchema<TType, TOptional extends boolean, TDefault 
   public abstract default(value: TType): OptionalSchema<TType, TOptional, true>
 
   // PROTECTED
-  protected override validateSchema(fn: (current: unknown) => TType, input: unknown): Optional<TType, TOptional, TDefault> {
+  protected override _runSchema(fn: (current: unknown) => TType, input: unknown): Optional<TType, TOptional, TDefault> {
     type Output = Optional<TType, TOptional, TDefault>
     try {
 
@@ -39,7 +39,7 @@ export abstract class OptionalSchema<TType, TOptional extends boolean, TDefault 
 
       const output = fn(resolved)
 
-      this.runValidations(input, output)
+      this._runValidations(input, output)
 
       return output
 

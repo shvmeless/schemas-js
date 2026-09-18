@@ -46,7 +46,15 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   // --------------------------------------------------------------------------
 
   // UPDATER
-  private updateValidation(validations: ArrayValidations<TItem>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(config: Partial<ArrayConfig<TItem>>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+    return new ArraySchema(
+      { ...this._config, ...config },
+      this._validations,
+    )
+  }
+
+  // UPDATER
+  private _updateValidation(validations: ArrayValidations<TItem>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
     return new ArraySchema(
       this._config,
       { ...this._validations, ...validations },
@@ -57,7 +65,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
 
   // VALIDATOR
   public validate(input: unknown): Nullish<Array<TItem>, TOptional, TNullable, TDefault> {
-    return this.validateSchema((current) => {
+    return this._runSchema((current) => {
 
       if (!Array.isArray(current)) {
         throw new ValidationError(input, 'The value must be an array.')
@@ -92,42 +100,27 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
 
   // CONFIG
   public prune(): ArraySchema<TItem, TOptional, TNullable, TDefault> {
-    return new ArraySchema({
-      ...this._config,
-      prune: true,
-    }, this._validations)
+    return this._updateConfig({ prune: true })
   }
 
   // CONFIG
   public optional(): ArraySchema<TItem, true, TNullable, TDefault> {
-    return new ArraySchema({
-      ...this._config,
-      optional: true,
-    }, this._validations)
+    return this._updateConfig({ optional: true })
   }
 
   // CONFIG
   public nullable(): ArraySchema<TItem, TOptional, true, TDefault> {
-    return new ArraySchema({
-      ...this._config,
-      nullable: true,
-    }, this._validations)
+    return this._updateConfig({ nullable: true })
   }
 
   // CONFIG
   public default(value: Array<TItem>): ArraySchema<TItem, TOptional, TNullable, true> {
-    return new ArraySchema({
-      ...this._config,
-      default: value,
-    }, this._validations)
+    return this._updateConfig({ default: value })
   }
 
   // CONFIG
   public fallback(value: Array<TItem>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
-    return new ArraySchema({
-      ...this._config,
-      fallback: value,
-    }, this._validations)
+    return this._updateConfig({ fallback: value })
   }
 
   // --------------------------------------------------------------------------
@@ -136,7 +129,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   public length(length: number): ArraySchema<TItem, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this.updateValidation({
+    return this._updateValidation({
       min: undefined,
       max: undefined,
       length: (current, initial) => {
@@ -150,7 +143,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   public min(length: number): ArraySchema<TItem, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this.updateValidation({
+    return this._updateValidation({
       min: (current, initial) => {
         if (current.length >= length) return
         throw new ValidationError(initial, `The value must be at least ${stringify(length)} elements long.`)
@@ -162,7 +155,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   public max(length: number): ArraySchema<TItem, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this.updateValidation({
+    return this._updateValidation({
       max: (current, initial) => {
         if (current.length <= length) return
         throw new ValidationError(initial, `The value must be at most ${stringify(length)} elements long.`)
@@ -172,7 +165,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
 
   // METHOD
   public some(callback: (value: TItem, index: number, array: Array<TItem>) => boolean): ArraySchema<TItem, TOptional, TNullable, TDefault> {
-    return this.updateValidation({
+    return this._updateValidation({
       some: (current, initial) => {
         for (let index = 0; index < current.length; index++) {
           const value = current[index] as TItem
@@ -185,7 +178,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
 
   // METHOD
   public every(callback: (value: TItem, index: number, array: Array<TItem>) => boolean): ArraySchema<TItem, TOptional, TNullable, TDefault> {
-    return this.updateValidation({
+    return this._updateValidation({
       every: (current, initial) => {
         for (let index = 0; index < current.length; index++) {
           const value = current[index] as TItem
@@ -197,7 +190,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
 
   // METHOD
   public none(callback: (value: TItem, index: number, array: Array<TItem>) => boolean): ArraySchema<TItem, TOptional, TNullable, TDefault> {
-    return this.updateValidation({
+    return this._updateValidation({
       none: (current, initial) => {
         for (let index = 0; index < current.length; index++) {
           const value = current[index] as TItem

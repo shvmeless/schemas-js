@@ -26,7 +26,7 @@ export abstract class NullableSchema<TType, TNullable extends boolean, TDefault 
   public abstract default(value: TType): NullableSchema<TType, TNullable, true>
 
   // PROTECTED
-  protected override validateSchema(fn: (current: unknown) => TType, input: unknown): Nullable<TType, TNullable, TDefault> {
+  protected override _runSchema(fn: (current: unknown) => TType, input: unknown): Nullable<TType, TNullable, TDefault> {
     type Output = Nullable<TType, TNullable, TDefault>
     try {
 
@@ -39,7 +39,7 @@ export abstract class NullableSchema<TType, TNullable extends boolean, TDefault 
 
       const output = fn(resolved)
 
-      this.runValidations(input, output)
+      this._runValidations(input, output)
 
       return output
 

@@ -33,9 +33,18 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
 
   // --------------------------------------------------------------------------
 
+  // UPDATER
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(config: Partial<NullishConfig<any>>): AnySchema<TOptional, TNullable, TDefault> {
+    return new AnySchema(
+      { ...this._config, ...config },
+    )
+  }
+
+  // --------------------------------------------------------------------------
+
   // VALIDATOR
   public validate(input: any): Nullish<any, TOptional, TNullable, TDefault> {
-    return this.validateSchema((current) => {
+    return this._runSchema((current) => {
       return current
     }, input)
   }
@@ -44,34 +53,22 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
 
   // CONFIG
   public optional(): AnySchema<true, TNullable, TDefault> {
-    return new AnySchema({
-      ...this._config,
-      optional: true,
-    })
+    return this._updateConfig({ optional: true })
   }
 
   // CONFIG
   public nullable(): AnySchema<TOptional, true, TDefault> {
-    return new AnySchema({
-      ...this._config,
-      nullable: true,
-    })
+    return this._updateConfig({ nullable: true })
   }
 
   // CONFIG
   public default(value: unknown): AnySchema<TOptional, TNullable, true> {
-    return new AnySchema({
-      ...this._config,
-      default: value,
-    })
+    return this._updateConfig({ default: value })
   }
 
   // CONFIG
   public fallback(value: unknown): AnySchema<TOptional, TNullable, TDefault> {
-    return new AnySchema({
-      ...this._config,
-      fallback: value,
-    })
+    return this._updateConfig({ fallback: value })
   }
 
 }

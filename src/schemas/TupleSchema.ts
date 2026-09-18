@@ -45,9 +45,18 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
 
   // --------------------------------------------------------------------------
 
+  // UPDATER
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(config: Partial<TupleConfig<TTuple>>): TupleSchema<TTuple, TOptional, TNullable, TDefault> {
+    return new TupleSchema(
+      { ...this._config, ...config },
+    )
+  }
+
+  // --------------------------------------------------------------------------
+
   // VALIDATOR
   public validate(input: unknown): Nullish<TTuple, TOptional, TNullable, TDefault> {
-    return this.validateSchema((current) => {
+    return this._runSchema((current) => {
 
       if (!Array.isArray(current)) {
         throw new ValidationError(input, 'The value must be an array.')
@@ -95,42 +104,27 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
 
   // METHOD
   public strip(): TupleSchema<TTuple, TOptional, TNullable, TDefault> {
-    return new TupleSchema({
-      ...this._config,
-      strip: true,
-    })
+    return this._updateConfig({ strip: true })
   }
 
   // CONFIG
   public optional(): TupleSchema<TTuple, true, TNullable, TDefault> {
-    return new TupleSchema({
-      ...this._config,
-      optional: true,
-    })
+    return this._updateConfig({ optional: true })
   }
 
   // CONFIG
   public nullable(): TupleSchema<TTuple, TOptional, true, TDefault> {
-    return new TupleSchema({
-      ...this._config,
-      nullable: true,
-    })
+    return this._updateConfig({ nullable: true })
   }
 
   // CONFIG
   public default(value: TTuple): TupleSchema<TTuple, TOptional, TNullable, true> {
-    return new TupleSchema({
-      ...this._config,
-      default: value,
-    })
+    return this._updateConfig({ default: value })
   }
 
   // CONFIG
   public fallback(value: TTuple): TupleSchema<TTuple, TOptional, TNullable, TDefault> {
-    return new TupleSchema({
-      ...this._config,
-      fallback: value,
-    })
+    return this._updateConfig({ fallback: value })
   }
 
 }

@@ -30,9 +30,18 @@ export class NullSchema<TOptional extends boolean, TDefault extends boolean>
 
   // --------------------------------------------------------------------------
 
+  // UPDATER
+  private _updateConfig<TOptional extends boolean, TDefault extends boolean>(config: Partial<OptionalConfig<null>>): NullSchema<TOptional, TDefault> {
+    return new NullSchema(
+      { ...this._config, ...config },
+    )
+  }
+
+  // --------------------------------------------------------------------------
+
   // VALIDATOR
   public validate(input: unknown): Optional<null, TOptional, TDefault> {
-    return this.validateSchema((current) => {
+    return this._runSchema((current) => {
 
       if (current !== null) {
         throw new ValidationError(input, 'The value must be null.')
@@ -47,26 +56,17 @@ export class NullSchema<TOptional extends boolean, TDefault extends boolean>
 
   // CONFIG
   public optional(): NullSchema<true, TDefault> {
-    return new NullSchema({
-      ...this._config,
-      optional: true,
-    })
+    return this._updateConfig({ optional: true })
   }
 
   // CONFIG
   public default(value: null): NullSchema<TOptional, true> {
-    return new NullSchema({
-      ...this._config,
-      default: value,
-    })
+    return this._updateConfig({ default: value })
   }
 
   // CONFIG
   public fallback(value: null): NullSchema<TOptional, TDefault> {
-    return new NullSchema({
-      ...this._config,
-      fallback: value,
-    })
+    return this._updateConfig({ fallback: value })
   }
 
 }
