@@ -2,6 +2,7 @@
 import type { Optional, OptionalConfig } from '@/lib/OptionalSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { OptionalSchema } from '@/lib/OptionalSchema'
+import { UNSET } from '@/utils/unset'
 
 // CLASS
 export class NullSchema<TOptional extends boolean, TDefault extends boolean>
@@ -23,8 +24,8 @@ export class NullSchema<TOptional extends boolean, TDefault extends boolean>
   public static create(): NullSchema<false, false> {
     return new NullSchema({
       optional: false,
-      default: undefined,
-      fallback: undefined,
+      default: UNSET,
+      fallback: UNSET,
     })
   }
 

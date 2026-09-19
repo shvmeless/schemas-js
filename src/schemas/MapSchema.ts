@@ -4,6 +4,7 @@ import type { GenericSchema, TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { NullishSchema } from '@/lib/NullishSchema'
 import { stringify } from '@/utils/stringify'
+import { UNSET } from '@/utils/unset'
 
 // INTERFACE
 interface MapConfig<TKey, TValue> extends NullishConfig<Map<TKey, TValue>> {
@@ -37,8 +38,8 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
       prune: false,
       optional: false,
       nullable: false,
-      default: undefined,
-      fallback: undefined,
+      default: UNSET,
+      fallback: UNSET,
     }, {})
   }
 

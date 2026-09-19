@@ -1,5 +1,6 @@
 // IMPORTS
 import { ValidationError } from '@/errors/ValidationError'
+import { type Unset, UNSET } from '@/utils/unset'
 
 // TYPE
 export type TestFunction<TType> = (current: TType) => (string | null)
@@ -7,7 +8,7 @@ export type TestObject<TType> = Record<string, TestFunction<TType> | undefined>
 
 // INTERFACE
 export interface GenericConfig<TOutput> {
-  fallback: TOutput | null | undefined
+  fallback: TOutput | Unset
 }
 
 // CLASS
@@ -42,8 +43,8 @@ export abstract class GenericSchema<TType, TOutput = TType> {
       return output as unknown as TOutput
 
     } catch (error) {
-      if (this._config.fallback !== null && this._config.fallback !== undefined) return this._config.fallback
-      throw error
+      if (this._config.fallback === UNSET) throw error
+      return this._config.fallback as unknown as TOutput
     }
   }
 

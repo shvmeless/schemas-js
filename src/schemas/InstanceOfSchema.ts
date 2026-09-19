@@ -2,6 +2,7 @@
 import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { NullishSchema } from '@/lib/NullishSchema'
+import { UNSET } from '@/utils/unset'
 
 // TYPE
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -34,8 +35,8 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
       constructor,
       optional: false,
       nullable: false,
-      default: undefined,
-      fallback: undefined,
+      default: UNSET,
+      fallback: UNSET,
     })
   }
 

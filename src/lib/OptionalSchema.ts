@@ -1,6 +1,7 @@
 // IMPORTS
 import type { TestObject } from '@/lib/GenericSchema'
 import { GenericSchema } from '@/lib/GenericSchema'
+import { type Unset, UNSET } from '@/utils/unset'
 
 // TYPE
 export type Optional<TType, TOptional extends boolean, TDefault extends boolean>
@@ -9,8 +10,8 @@ export type Optional<TType, TOptional extends boolean, TDefault extends boolean>
 // INTERFACE
 export interface OptionalConfig<TType> {
   optional: boolean
-  default: TType | undefined
-  fallback: TType | undefined
+  default: TType | Unset
+  fallback: TType | Unset
 }
 
 // CLASS
@@ -33,7 +34,7 @@ export abstract class OptionalSchema<TType, TOptional extends boolean, TDefault 
       let resolved = input
 
       if (input === undefined && this._config.optional) {
-        if (this._config.default === undefined) return undefined as Output
+        if (this._config.default === UNSET) return undefined as Output
         resolved = this._config.default
       }
 
@@ -44,7 +45,7 @@ export abstract class OptionalSchema<TType, TOptional extends boolean, TDefault 
       return output
 
     } catch (error) {
-      if (this._config.fallback === undefined) throw error
+      if (this._config.fallback === UNSET) throw error
       return this._config.fallback as Output
     }
   }

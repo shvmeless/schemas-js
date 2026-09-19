@@ -5,6 +5,7 @@ import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
 import type { GenericSchema } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { NullishSchema } from '@/lib/NullishSchema'
+import { UNSET } from '@/utils/unset'
 
 // TYPES
 type InferSchemaType<I> = I extends GenericSchema<infer T> ? T : never
@@ -38,8 +39,8 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
       schemas: schemas as ReadonlyArray<GenericSchema<SchemaTypeUnion<A>>>,
       optional: false,
       nullable: false,
-      default: undefined,
-      fallback: undefined,
+      default: UNSET,
+      fallback: UNSET,
     })
   }
 

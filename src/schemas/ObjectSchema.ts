@@ -3,6 +3,7 @@ import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
 import type { GenericSchema } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { NullishSchema } from '@/lib/NullishSchema'
+import { UNSET } from '@/utils/unset'
 
 // TYPE
 type InferShape<TObject> = {
@@ -38,8 +39,8 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
       strip: false,
       optional: false,
       nullable: false,
-      default: undefined,
-      fallback: undefined,
+      default: UNSET,
+      fallback: UNSET,
     })
   }
 

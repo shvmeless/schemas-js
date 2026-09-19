@@ -2,6 +2,7 @@
 import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { NullishSchema } from '@/lib/NullishSchema'
+import { UNSET } from '@/utils/unset'
 
 // INTERFACE
 interface EnumConfig<TValues extends string | number> extends NullishConfig<TValues> {
@@ -33,8 +34,8 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
       values,
       optional: false,
       nullable: false,
-      default: undefined,
-      fallback: undefined,
+      default: UNSET,
+      fallback: UNSET,
     })
   }
 

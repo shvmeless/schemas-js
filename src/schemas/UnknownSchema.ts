@@ -1,6 +1,7 @@
 // IMPORTS
 import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
 import { NullishSchema } from '@/lib/NullishSchema'
+import { UNSET } from '@/utils/unset'
 
 // CLASS
 export class UnknownSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
@@ -23,8 +24,8 @@ export class UnknownSchema<TOptional extends boolean, TNullable extends boolean,
     return new UnknownSchema({
       optional: false,
       nullable: false,
-      default: undefined,
-      fallback: undefined,
+      default: UNSET,
+      fallback: UNSET,
     })
   }
 

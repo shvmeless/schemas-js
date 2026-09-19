@@ -3,6 +3,7 @@ import type { TestObject } from '@/lib/GenericSchema'
 import { GenericSchema } from '@/lib/GenericSchema'
 import type { Nullable } from '@/lib/NullableSchema'
 import type { Optional } from '@/lib/OptionalSchema'
+import { type Unset, UNSET } from '@/utils/unset'
 
 // TYPE
 export type Nullish<TType, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
@@ -12,8 +13,8 @@ export type Nullish<TType, TOptional extends boolean, TNullable extends boolean,
 export interface NullishConfig<TType> {
   optional: boolean
   nullable: boolean
-  default: TType | undefined
-  fallback: TType | undefined
+  default: TType | Unset
+  fallback: TType | Unset
 }
 
 // CLASS
@@ -37,12 +38,12 @@ export abstract class NullishSchema<TType, TOptional extends boolean, TNullable 
       let resolved = input
 
       if (input === null && this._config.nullable) {
-        if (this._config.default === undefined) return null as Output
+        if (this._config.default === UNSET) return null as Output
         resolved = this._config.default
       }
 
       if (input === undefined && this._config.optional) {
-        if (this._config.default === undefined) return undefined as Output
+        if (this._config.default === UNSET) return undefined as Output
         resolved = this._config.default
       }
 
@@ -53,7 +54,7 @@ export abstract class NullishSchema<TType, TOptional extends boolean, TNullable 
       return output
 
     } catch (error) {
-      if (this._config.fallback === undefined) throw error
+      if (this._config.fallback === UNSET) throw error
       return this._config.fallback as Output
     }
   }

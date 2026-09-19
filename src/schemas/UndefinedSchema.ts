@@ -2,6 +2,7 @@
 import type { Nullable, NullableConfig } from '@/lib/NullableSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { NullableSchema } from '@/lib/NullableSchema'
+import { UNSET } from '@/utils/unset'
 
 // CLASS
 export class UndefinedSchema<TNullable extends boolean, TDefault extends boolean>
@@ -23,8 +24,8 @@ export class UndefinedSchema<TNullable extends boolean, TDefault extends boolean
   public static create(): UndefinedSchema<false, false> {
     return new UndefinedSchema({
       nullable: false,
-      default: null,
-      fallback: null,
+      default: UNSET,
+      fallback: UNSET,
     })
   }
 

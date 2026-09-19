@@ -4,6 +4,7 @@ import type { GenericSchema, TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { NullishSchema } from '@/lib/NullishSchema'
 import { stringify } from '@/utils/stringify'
+import { UNSET } from '@/utils/unset'
 
 // INTERFACE
 interface ArrayConfig<TItem> extends NullishConfig<Array<TItem>> {
@@ -35,8 +36,8 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
       prune: false,
       optional: false,
       nullable: false,
-      default: undefined,
-      fallback: undefined,
+      default: UNSET,
+      fallback: UNSET,
     }, {})
   }
 

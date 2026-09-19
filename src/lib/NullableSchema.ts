@@ -1,6 +1,7 @@
 // IMPORTS
 import type { TestObject } from '@/lib/GenericSchema'
 import { GenericSchema } from '@/lib/GenericSchema'
+import { type Unset, UNSET } from '@/utils/unset'
 
 // TYPE
 export type Nullable<TType, TNullable extends boolean, TDefault extends boolean>
@@ -9,8 +10,8 @@ export type Nullable<TType, TNullable extends boolean, TDefault extends boolean>
 // INTERFACE
 export interface NullableConfig<TType> {
   nullable: boolean
-  default: TType | null
-  fallback: TType | null
+  default: TType | Unset
+  fallback: TType | Unset
 }
 
 // CLASS
@@ -33,7 +34,7 @@ export abstract class NullableSchema<TType, TNullable extends boolean, TDefault 
       let resolved = input
 
       if (input === null && this._config.nullable) {
-        if (this._config.default === null) return null as Output
+        if (this._config.default === UNSET) return null as Output
         resolved = this._config.default
       }
 
@@ -44,7 +45,7 @@ export abstract class NullableSchema<TType, TNullable extends boolean, TDefault 
       return output
 
     } catch (error) {
-      if (this._config.fallback === null) throw error
+      if (this._config.fallback === UNSET) throw error
       return this._config.fallback as Output
     }
   }

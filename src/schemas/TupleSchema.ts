@@ -3,6 +3,7 @@ import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
 import type { GenericSchema } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { NullishSchema } from '@/lib/NullishSchema'
+import { UNSET } from '@/utils/unset'
 
 // TYPE
 type InferShape<TTuple extends ReadonlyArray<unknown>> = {
@@ -38,8 +39,8 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
       strip: false,
       optional: false,
       nullable: false,
-      default: undefined,
-      fallback: undefined,
+      default: UNSET,
+      fallback: UNSET,
     })
   }
 

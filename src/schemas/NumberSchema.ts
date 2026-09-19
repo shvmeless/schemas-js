@@ -4,6 +4,7 @@ import type { TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { NullishSchema } from '@/lib/NullishSchema'
 import { stringify } from '@/utils/stringify'
+import { UNSET } from '@/utils/unset'
 
 // CLASS
 export class NumberSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
@@ -27,8 +28,8 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
     return new NumberSchema({
       optional: false,
       nullable: false,
-      default: undefined,
-      fallback: undefined,
+      default: UNSET,
+      fallback: UNSET,
     }, {})
   }
 

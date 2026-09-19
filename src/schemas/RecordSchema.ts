@@ -4,6 +4,7 @@ import type { GenericSchema, TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { NullishSchema } from '@/lib/NullishSchema'
 import { stringify } from '@/utils/stringify'
+import { UNSET } from '@/utils/unset'
 
 // INTERFACE
 interface RecordConfig<TValue> extends NullishConfig<Record<string, TValue>> {
@@ -35,8 +36,8 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
       prune: false,
       optional: false,
       nullable: false,
-      default: undefined,
-      fallback: undefined,
+      default: UNSET,
+      fallback: UNSET,
     }, {})
   }
 
