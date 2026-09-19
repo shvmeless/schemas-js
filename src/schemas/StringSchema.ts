@@ -1,23 +1,39 @@
 // IMPORTS
-import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
+import type { Nullish } from '@/lib/NullishSchema'
 import type { TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { NullishSchema } from '@/lib/NullishSchema'
 import { stringify } from '@/utils/stringify'
-import { UNSET } from '@/utils/unset'
+import { type Unset, UNSET } from '@/utils/unset'
+
+// INTERFACE
+interface StringConfig {
+  optional: boolean
+  nullable: boolean
+  default: string | Unset
+  fallback: string | Unset
+}
 
 // CLASS
 export class StringSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
   extends NullishSchema<string, TOptional, TNullable, TDefault> {
 
-  // PROPERTIES
-  protected readonly _config: NullishConfig<string>
+  // CONFIG
+  protected readonly _optional: boolean
+  protected readonly _nullable: boolean
+  protected readonly _default: string | Unset
+  protected readonly _fallback: string | Unset
+
+  // PIPELINE
   protected readonly _tests: TestObject<string>
 
   // CONSTRUCTOR
-  private constructor(config: NullishConfig<string>, tests: TestObject<string>) {
+  private constructor(config: StringConfig, tests: TestObject<string>) {
     super()
-    this._config = config
+    this._optional = config.optional
+    this._nullable = config.nullable
+    this._default = config.default
+    this._fallback = config.fallback
     this._tests = tests
   }
 
@@ -35,20 +51,30 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
 
   // --------------------------------------------------------------------------
 
-  // UPDATER
-  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(config: Partial<NullishConfig<string>>): StringSchema<TOptional, TNullable, TDefault> {
-    return new StringSchema(
-      { ...this._config, ...config },
-      this._tests,
-    )
+  // UTILITY
+  private get _configuration(): StringConfig {
+    return {
+      optional: this._optional,
+      nullable: this._nullable,
+      default: this._default,
+      fallback: this._fallback,
+    }
   }
 
   // UPDATER
-  private _updateTests(tests: Partial<TestObject<string>>): StringSchema<TOptional, TNullable, TDefault> {
-    return new StringSchema(
-      this._config,
-      { ...this._tests, ...tests },
-    )
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<StringConfig>): StringSchema<TOptional, TNullable, TDefault> {
+    return new StringSchema({
+      ...this._configuration,
+      ...configuration,
+    }, this._tests)
+  }
+
+  // UPDATER
+  private _updateTests(tests: TestObject<string>): StringSchema<TOptional, TNullable, TDefault> {
+    return new StringSchema(this._configuration, {
+      ...this._tests,
+      ...tests,
+    })
   }
 
   // --------------------------------------------------------------------------

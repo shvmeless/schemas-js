@@ -1,9 +1,9 @@
 // IMPORTS
-import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
+import type { Nullish } from '@/lib/NullishSchema'
 import type { GenericSchema } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { NullishSchema } from '@/lib/NullishSchema'
-import { UNSET } from '@/utils/unset'
+import { type Unset, UNSET } from '@/utils/unset'
 
 // TYPE
 type InferShape<TObject> = {
@@ -11,23 +11,39 @@ type InferShape<TObject> = {
 }
 
 // INTERFACE
-interface ObjectConfig<TObject> extends NullishConfig<TObject> {
+interface ObjectConfig<TObject> {
   schema: InferShape<TObject>
   strip: boolean
+  optional: boolean
+  nullable: boolean
+  default: TObject | Unset
+  fallback: TObject | Unset
 }
 
 // CLASS
 export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
   extends NullishSchema<TObject, TOptional, TNullable, TDefault> {
 
-  // PROPERTIES
-  protected readonly _config: ObjectConfig<TObject>
+  // CONFIG
+  protected readonly _schema: InferShape<TObject>
+  protected readonly _strip: boolean
+  protected readonly _optional: boolean
+  protected readonly _nullable: boolean
+  protected readonly _default: TObject | Unset
+  protected readonly _fallback: TObject | Unset
+
+  // PIPELINE
   protected readonly _tests = {}
 
   // CONSTRUCTOR
   private constructor(config: ObjectConfig<TObject>) {
     super()
-    this._config = config
+    this._schema = config.schema
+    this._strip = config.strip
+    this._optional = config.optional
+    this._nullable = config.nullable
+    this._default = config.default
+    this._fallback = config.fallback
   }
 
   // --------------------------------------------------------------------------
@@ -46,11 +62,24 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
 
   // --------------------------------------------------------------------------
 
+  // UTILITY
+  private get _configuration(): ObjectConfig<TObject> {
+    return {
+      schema: this._schema,
+      strip: this._strip,
+      optional: this._optional,
+      nullable: this._nullable,
+      default: this._default,
+      fallback: this._fallback,
+    }
+  }
+
   // UPDATER
-  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(config: Partial<ObjectConfig<TObject>>): ObjectSchema<TObject, TOptional, TNullable, TDefault> {
-    return new ObjectSchema(
-      { ...this._config, ...config },
-    )
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<ObjectConfig<TObject>>): ObjectSchema<TObject, TOptional, TNullable, TDefault> {
+    return new ObjectSchema({
+      ...this._configuration,
+      ...configuration,
+    })
   }
 
   // --------------------------------------------------------------------------
@@ -67,15 +96,15 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
       const result: Record<string, unknown> = {}
       const errors = ValidationError.prepare()
 
-      const keys = new Set([...Object.keys(this._config.schema), ...Object.keys(resolved)])
+      const keys = new Set([...Object.keys(this._schema), ...Object.keys(resolved)])
       for (const key of keys) {
         try {
 
           const value = resolved[key]
-          const schema = this._config.schema[key as keyof TObject]
+          const schema = this._schema[key as keyof TObject]
 
           if (schema === undefined) {
-            if (this._config.strip) continue
+            if (this._strip) continue
             throw new ValidationError(value, 'Unexpected property.')
           }
 
@@ -88,8 +117,8 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
       }
 
       if (errors.size > 0) {
-        const message = (Object.keys(resolved as object).length !== Object.keys(this._config.schema).length)
-          ? (Object.keys(resolved as object).length < Object.keys(this._config.schema).length)
+        const message = (Object.keys(resolved as object).length !== Object.keys(this._schema).length)
+          ? (Object.keys(resolved as object).length < Object.keys(this._schema).length)
               ? 'The object is missing one or more required properties.'
               : 'The object contains one or more unexpected properties.'
           : 'At least one property does not match the given schema.'

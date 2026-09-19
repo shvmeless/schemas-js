@@ -1,29 +1,45 @@
 // IMPORTS
-import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
+import type { Nullish } from '@/lib/NullishSchema'
 import type { GenericSchema, TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { NullishSchema } from '@/lib/NullishSchema'
 import { stringify } from '@/utils/stringify'
-import { UNSET } from '@/utils/unset'
+import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
-interface SetConfig<TValue> extends NullishConfig<Set<TValue>> {
+interface SetConfig<TValue> {
   schema: GenericSchema<TValue>
   prune: boolean
+  optional: boolean
+  nullable: boolean
+  default: Set<TValue> | Unset
+  fallback: Set<TValue> | Unset
 }
 
 // CLASS
 export class SetSchema<TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
   extends NullishSchema<Set<TValue>, TOptional, TNullable, TDefault> {
 
-  // PROPERTIES
-  protected readonly _config: SetConfig<TValue>
+  // CONFIG
+  protected readonly _schema: GenericSchema<TValue>
+  protected readonly _prune: boolean
+  protected readonly _optional: boolean
+  protected readonly _nullable: boolean
+  protected readonly _default: Set<TValue> | Unset
+  protected readonly _fallback: Set<TValue> | Unset
+
+  // PIPELINE
   protected readonly _tests: TestObject<Set<TValue>>
 
   // CONSTRUCTOR
   private constructor(config: SetConfig<TValue>, tests: TestObject<Set<TValue>>) {
     super()
-    this._config = config
+    this._schema = config.schema
+    this._prune = config.prune
+    this._optional = config.optional
+    this._nullable = config.nullable
+    this._default = config.default
+    this._fallback = config.fallback
     this._tests = tests
   }
 
@@ -43,20 +59,32 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
 
   // --------------------------------------------------------------------------
 
-  // UPDATER
-  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(config: Partial<SetConfig<TValue>>): SetSchema<TValue, TOptional, TNullable, TDefault> {
-    return new SetSchema(
-      { ...this._config, ...config },
-      this._tests,
-    )
+  // UTILITY
+  private get _configuration(): SetConfig<TValue> {
+    return {
+      schema: this._schema,
+      prune: this._prune,
+      optional: this._optional,
+      nullable: this._nullable,
+      default: this._default,
+      fallback: this._fallback,
+    }
   }
 
   // UPDATER
-  private _updateTests(tests: Partial<TestObject<Set<TValue>>>): SetSchema<TValue, TOptional, TNullable, TDefault> {
-    return new SetSchema<TValue, TOptional, TNullable, TDefault>(
-      this._config,
-      { ...this._tests, ...tests },
-    )
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<SetConfig<TValue>>): SetSchema<TValue, TOptional, TNullable, TDefault> {
+    return new SetSchema({
+      ...this._configuration,
+      ...configuration,
+    }, this._tests)
+  }
+
+  // UPDATER
+  private _updateTests(tests: TestObject<Set<TValue>>): SetSchema<TValue, TOptional, TNullable, TDefault> {
+    return new SetSchema<TValue, TOptional, TNullable, TDefault>(this._configuration, {
+      ...this._tests,
+      ...tests,
+    })
   }
 
   // --------------------------------------------------------------------------
@@ -75,11 +103,11 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
 
       for (const element of resolved) {
         try {
-          const value = this._config.schema.validate(element)
+          const value = this._schema.validate(element)
           result.add(value)
         } catch (error) {
           if (error instanceof ValidationError) {
-            if (this._config.prune) continue
+            if (this._prune) continue
             errors.add(element, error)
           } else throw error
         }

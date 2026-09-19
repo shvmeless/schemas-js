@@ -6,16 +6,11 @@ import { type Unset, UNSET } from '@/utils/unset'
 export type TestFunction<TType> = (current: TType) => (string | null)
 export type TestObject<TType> = Record<string, TestFunction<TType> | undefined>
 
-// INTERFACE
-export interface GenericConfig<TOutput> {
-  fallback: TOutput | Unset
-}
-
 // CLASS
 export abstract class GenericSchema<TType, TOutput = TType> {
 
   // ABSTRACT PROPERTIES
-  protected abstract readonly _config: GenericConfig<TOutput>
+  protected abstract readonly _fallback: TType | Unset
   protected abstract readonly _tests: TestObject<TType>
 
   // ABSTRACT METHODS
@@ -43,8 +38,8 @@ export abstract class GenericSchema<TType, TOutput = TType> {
       return output as unknown as TOutput
 
     } catch (error) {
-      if (this._config.fallback === UNSET) throw error
-      return this._config.fallback as unknown as TOutput
+      if (this._fallback === UNSET) throw error
+      return this._fallback as unknown as TOutput
     }
   }
 

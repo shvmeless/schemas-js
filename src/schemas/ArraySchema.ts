@@ -1,29 +1,45 @@
 // IMPORTS
-import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
+import type { Nullish } from '@/lib/NullishSchema'
 import type { GenericSchema, TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { NullishSchema } from '@/lib/NullishSchema'
 import { stringify } from '@/utils/stringify'
-import { UNSET } from '@/utils/unset'
+import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
-interface ArrayConfig<TItem> extends NullishConfig<Array<TItem>> {
+interface ArrayConfig<TItem> {
   schema: GenericSchema<TItem>
   prune: boolean
+  optional: boolean
+  nullable: boolean
+  default: Array<TItem> | Unset
+  fallback: Array<TItem> | Unset
 }
 
 // CLASS
 export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
   extends NullishSchema<Array<TItem>, TOptional, TNullable, TDefault> {
 
-  // PROPERTIES
-  protected readonly _config: ArrayConfig<TItem>
+  // CONFIG
+  protected readonly _schema: GenericSchema<TItem>
+  protected readonly _prune: boolean
+  protected readonly _optional: boolean
+  protected readonly _nullable: boolean
+  protected readonly _default: Array<TItem> | Unset
+  protected readonly _fallback: Array<TItem> | Unset
+
+  // PIPELINE
   protected readonly _tests: TestObject<Array<TItem>>
 
   // CONSTRUCTOR
   private constructor(config: ArrayConfig<TItem>, tests: TestObject<Array<TItem>>) {
     super()
-    this._config = config
+    this._schema = config.schema
+    this._prune = config.prune
+    this._optional = config.optional
+    this._nullable = config.nullable
+    this._default = config.default
+    this._fallback = config.fallback
     this._tests = tests
   }
 
@@ -43,20 +59,32 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
 
   // --------------------------------------------------------------------------
 
+  // UTILITY
+  private get _configuration(): ArrayConfig<TItem> {
+    return {
+      schema: this._schema,
+      prune: this._prune,
+      optional: this._optional,
+      nullable: this._nullable,
+      default: this._default,
+      fallback: this._fallback,
+    }
+  }
+
   // UPDATER
-  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(config: Partial<ArrayConfig<TItem>>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
-    return new ArraySchema(
-      { ...this._config, ...config },
-      this._tests,
-    )
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<ArrayConfig<TItem>>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+    return new ArraySchema({
+      ...this._configuration,
+      ...configuration,
+    }, this._tests)
   }
 
   // UPDATER
   private _updateTests(tests: TestObject<Array<TItem>>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
-    return new ArraySchema(
-      this._config,
-      { ...this._tests, ...tests },
-    )
+    return new ArraySchema(this._configuration, {
+      ...this._tests,
+      ...tests,
+    })
   }
 
   // --------------------------------------------------------------------------
@@ -75,11 +103,11 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
 
       resolved.forEach((element, index) => {
         try {
-          const value = this._config.schema.validate(element)
+          const value = this._schema.validate(element)
           output.push(value)
         } catch (error) {
           if (error instanceof ValidationError) {
-            if (this._config.prune) return
+            if (this._prune) return
             errors.add(index, error)
           } else throw error
         }

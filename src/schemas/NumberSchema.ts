@@ -1,23 +1,39 @@
 // IMPORTS
-import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
+import type { Nullish } from '@/lib/NullishSchema'
 import type { TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { NullishSchema } from '@/lib/NullishSchema'
 import { stringify } from '@/utils/stringify'
-import { UNSET } from '@/utils/unset'
+import { type Unset, UNSET } from '@/utils/unset'
+
+// INTERFACE
+interface NumberConfig {
+  optional: boolean
+  nullable: boolean
+  default: number | Unset
+  fallback: number | Unset
+}
 
 // CLASS
 export class NumberSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
   extends NullishSchema<number, TOptional, TNullable, TDefault> {
 
-  // PROPERTIES
-  protected readonly _config: NullishConfig<number>
+  // CONFIG
+  protected readonly _optional: boolean
+  protected readonly _nullable: boolean
+  protected readonly _default: number | Unset
+  protected readonly _fallback: number | Unset
+
+  // PIPELINE
   protected readonly _tests: TestObject<number>
 
   // CONSTRUCTOR
-  private constructor(config: NullishConfig<number>, tests: TestObject<number>) {
+  private constructor(config: NumberConfig, tests: TestObject<number>) {
     super()
-    this._config = config
+    this._optional = config.optional
+    this._nullable = config.nullable
+    this._default = config.default
+    this._fallback = config.fallback
     this._tests = tests
   }
 
@@ -35,20 +51,30 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
 
   // --------------------------------------------------------------------------
 
+  // UTILITY
+  private get _configuration(): NumberConfig {
+    return {
+      optional: this._optional,
+      nullable: this._nullable,
+      default: this._default,
+      fallback: this._fallback,
+    }
+  }
+
   // UPDATER
-  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(config: Partial<NullishConfig<number>>): NumberSchema<TOptional, TNullable, TDefault> {
-    return new NumberSchema(
-      { ...this._config, ...config },
-      this._tests,
-    )
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<NumberConfig>): NumberSchema<TOptional, TNullable, TDefault> {
+    return new NumberSchema({
+      ...this._configuration,
+      ...configuration,
+    }, this._tests)
   }
 
   // UPDATER
   private _updateTests(tests: TestObject<number>): NumberSchema<TOptional, TNullable, TDefault> {
-    return new NumberSchema(
-      this._config,
-      { ...this._tests, ...tests },
-    )
+    return new NumberSchema(this._configuration, {
+      ...this._tests,
+      ...tests,
+    })
   }
 
   // --------------------------------------------------------------------------

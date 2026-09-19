@@ -1,30 +1,48 @@
 // IMPORTS
-import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
+import type { Nullish } from '@/lib/NullishSchema'
 import type { GenericSchema, TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { NullishSchema } from '@/lib/NullishSchema'
 import { stringify } from '@/utils/stringify'
-import { UNSET } from '@/utils/unset'
+import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
-interface MapConfig<TKey, TValue> extends NullishConfig<Map<TKey, TValue>> {
+interface MapConfig<TKey, TValue> {
   keySchema: GenericSchema<TKey>
   valueSchema: GenericSchema<TValue>
   prune: boolean
+  optional: boolean
+  nullable: boolean
+  default: Map<TKey, TValue> | Unset
+  fallback: Map<TKey, TValue> | Unset
 }
 
 // CLASS
 export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
   extends NullishSchema<Map<TKey, TValue>, TOptional, TNullable, TDefault> {
 
-  // PROPERTIES
-  protected readonly _config: MapConfig<TKey, TValue>
+  // CONFIG
+  protected readonly _keySchema: GenericSchema<TKey>
+  protected readonly _valueSchema: GenericSchema<TValue>
+  protected readonly _prune: boolean
+  protected readonly _optional: boolean
+  protected readonly _nullable: boolean
+  protected readonly _default: Map<TKey, TValue> | Unset
+  protected readonly _fallback: Map<TKey, TValue> | Unset
+
+  // PIPELINE
   protected readonly _tests: TestObject<Map<TKey, TValue>>
 
   // CONSTRUCTOR
   private constructor(config: MapConfig<TKey, TValue>, tests: TestObject<Map<TKey, TValue>>) {
     super()
-    this._config = config
+    this._keySchema = config.keySchema
+    this._valueSchema = config.valueSchema
+    this._prune = config.prune
+    this._optional = config.optional
+    this._nullable = config.nullable
+    this._default = config.default
+    this._fallback = config.fallback
     this._tests = tests
   }
 
@@ -45,20 +63,33 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
 
   // --------------------------------------------------------------------------
 
+  // UTILITY
+  private get _configuration(): MapConfig<TKey, TValue> {
+    return {
+      keySchema: this._keySchema,
+      valueSchema: this._valueSchema,
+      prune: this._prune,
+      optional: this._optional,
+      nullable: this._nullable,
+      default: this._default,
+      fallback: this._fallback,
+    }
+  }
+
   // UPDATER
-  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(config: Partial<MapConfig<TKey, TValue>>): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
-    return new MapSchema(
-      { ...this._config, ...config },
-      this._tests,
-    )
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<MapConfig<TKey, TValue>>): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
+    return new MapSchema({
+      ...this._configuration,
+      ...configuration,
+    }, this._tests)
   }
 
   // UPDATER
   private _updateTests(tests: TestObject<Map<TKey, TValue>>): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
-    return new MapSchema<TKey, TValue, TOptional, TNullable, TDefault>(
-      this._config,
-      { ...this._tests, ...tests },
-    )
+    return new MapSchema<TKey, TValue, TOptional, TNullable, TDefault>(this._configuration, {
+      ...this._tests,
+      ...tests,
+    })
   }
 
   // --------------------------------------------------------------------------
@@ -77,12 +108,12 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
 
       resolved.forEach((value: unknown, key: unknown) => {
         try {
-          const validatedKey = this._config.keySchema.validate(key)
-          const validatedValue = this._config.valueSchema.validate(value)
+          const validatedKey = this._keySchema.validate(key)
+          const validatedValue = this._valueSchema.validate(value)
           result.set(validatedKey, validatedValue)
         } catch (error) {
           if (error instanceof ValidationError) {
-            if (this._config.prune) return
+            if (this._prune) return
             errors.add(key, error)
           } else throw error
         }

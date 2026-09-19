@@ -1,26 +1,40 @@
 // IMPORTS
-import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
+import type { Nullish } from '@/lib/NullishSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { NullishSchema } from '@/lib/NullishSchema'
-import { UNSET } from '@/utils/unset'
+import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
-interface LiteralConfig<TValue extends string | number | boolean> extends NullishConfig<TValue> {
+interface LiteralConfig<TValue extends string | number | boolean> {
   literal: TValue
+  optional: boolean
+  nullable: boolean
+  default: TValue | Unset
+  fallback: TValue | Unset
 }
 
 // CLASS
 export class LiteralSchema<TValue extends string | number | boolean, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
   extends NullishSchema<TValue, TOptional, TNullable, TDefault> {
 
-  // PROPERTIES
-  protected readonly _config: LiteralConfig<TValue>
+  // CONFIG
+  protected readonly _literal: TValue
+  protected readonly _optional: boolean
+  protected readonly _nullable: boolean
+  protected readonly _default: TValue | Unset
+  protected readonly _fallback: TValue | Unset
+
+  // PIPELINE
   protected readonly _tests = {}
 
   // CONSTRUCTOR
   private constructor(config: LiteralConfig<TValue>) {
     super()
-    this._config = config
+    this._literal = config.literal
+    this._optional = config.optional
+    this._nullable = config.nullable
+    this._default = config.default
+    this._fallback = config.fallback
   }
 
   // --------------------------------------------------------------------------
@@ -38,11 +52,23 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
 
   // --------------------------------------------------------------------------
 
+  // UTILITY
+  private get _configuration(): LiteralConfig<TValue> {
+    return {
+      literal: this._literal,
+      optional: this._optional,
+      nullable: this._nullable,
+      default: this._default,
+      fallback: this._fallback,
+    }
+  }
+
   // UPDATER
-  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(config: Partial<LiteralConfig<TValue>>): LiteralSchema<TValue, TOptional, TNullable, TDefault> {
-    return new LiteralSchema(
-      { ...this._config, ...config },
-    )
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<LiteralConfig<TValue>>): LiteralSchema<TValue, TOptional, TNullable, TDefault> {
+    return new LiteralSchema({
+      ...this._configuration,
+      ...configuration,
+    })
   }
 
   // --------------------------------------------------------------------------
@@ -51,7 +77,7 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
   public validate(input: unknown): Nullish<TValue, TOptional, TNullable, TDefault> {
     return this._runSchema((current) => {
 
-      if (current !== this._config.literal) {
+      if (current !== this._literal) {
         throw new ValidationError(input, 'The value must match the literal value.')
       }
 

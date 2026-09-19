@@ -1,23 +1,40 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
 // IMPORTS
-import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
+import type { Nullish } from '@/lib/NullishSchema'
 import { NullishSchema } from '@/lib/NullishSchema'
-import { UNSET } from '@/utils/unset'
+import { type Unset, UNSET } from '@/utils/unset'
+
+// INTERFACE
+interface AnyConfig {
+  optional: boolean
+  nullable: boolean
+  default: any | Unset
+  fallback: any | Unset
+}
 
 // CLASS
 export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
   extends NullishSchema<any, TOptional, TNullable, TDefault> {
 
-  // PROPERTIES
-  protected readonly _config: NullishConfig<any>
+  // CONFIG
+  protected readonly _optional: boolean
+  protected readonly _nullable: boolean
+  protected readonly _default: any | Unset
+  protected readonly _fallback: any | Unset
+
+  // PIPELINE
   protected readonly _tests = {}
 
   // CONSTRUCTOR
-  private constructor(config: NullishConfig<any>) {
+  private constructor(config: AnyConfig) {
     super()
-    this._config = config
+    this._optional = config.optional
+    this._nullable = config.nullable
+    this._default = config.default
+    this._fallback = config.fallback
   }
 
   // --------------------------------------------------------------------------
@@ -34,11 +51,22 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
 
   // --------------------------------------------------------------------------
 
+  // UTILITY
+  private get _configuration(): AnyConfig {
+    return {
+      optional: this._optional,
+      nullable: this._nullable,
+      default: this._default,
+      fallback: this._fallback,
+    }
+  }
+
   // UPDATER
-  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(config: Partial<NullishConfig<any>>): AnySchema<TOptional, TNullable, TDefault> {
-    return new AnySchema(
-      { ...this._config, ...config },
-    )
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<AnyConfig>): AnySchema<TOptional, TNullable, TDefault> {
+    return new AnySchema({
+      ...this._configuration,
+      ...configuration,
+    })
   }
 
   // --------------------------------------------------------------------------

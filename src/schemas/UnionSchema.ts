@@ -1,34 +1,48 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // IMPORTS
-import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
+import type { Nullish } from '@/lib/NullishSchema'
 import type { GenericSchema } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { NullishSchema } from '@/lib/NullishSchema'
-import { UNSET } from '@/utils/unset'
+import { type Unset, UNSET } from '@/utils/unset'
 
 // TYPES
 type InferSchemaType<I> = I extends GenericSchema<infer T> ? T : never
 type SchemaTypeUnion<A extends ReadonlyArray<GenericSchema<any>>> = InferSchemaType<A[number]>
 
 // INTERFACE
-interface UnionConfig<TSchemas> extends NullishConfig<TSchemas> {
+interface UnionConfig<TSchemas> {
   schemas: ReadonlyArray<GenericSchema<TSchemas>>
+  optional: boolean
+  nullable: boolean
+  default: TSchemas | Unset
+  fallback: TSchemas | Unset
 }
 
 // CLASS
 export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
   extends NullishSchema<TSchemas, TOptional, TNullable, TDefault> {
 
-  // PROPERTIES
-  protected readonly _config: UnionConfig<TSchemas>
+  // CONFIG
+  protected readonly _schemas: ReadonlyArray<GenericSchema<TSchemas>>
+  protected readonly _optional: boolean
+  protected readonly _nullable: boolean
+  protected readonly _default: TSchemas | Unset
+  protected readonly _fallback: TSchemas | Unset
+
+  // PIPELINE
   protected readonly _tests = {}
 
   // CONSTRUCTOR
   private constructor(config: UnionConfig<TSchemas>) {
     super()
-    if (config.schemas.length < 2) throw new Error('Must provide at least two schemas.')
-    this._config = config
+    this._schemas = config.schemas
+    this._optional = config.optional
+    this._nullable = config.nullable
+    this._default = config.default
+    this._fallback = config.fallback
+    if (this._schemas.length < 2) throw new Error('Must provide at least two schemas.')
   }
 
   // --------------------------------------------------------------------------
@@ -46,11 +60,23 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
 
   // --------------------------------------------------------------------------
 
+  // UTILITY
+  private get _configuration(): UnionConfig<TSchemas> {
+    return {
+      schemas: this._schemas,
+      optional: this._optional,
+      nullable: this._nullable,
+      default: this._default,
+      fallback: this._fallback,
+    }
+  }
+
   // UPDATER
-  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(config: Partial<UnionConfig<TSchemas>>): UnionSchema<TSchemas, TOptional, TNullable, TDefault> {
-    return new UnionSchema(
-      { ...this._config, ...config },
-    )
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<UnionConfig<TSchemas>>): UnionSchema<TSchemas, TOptional, TNullable, TDefault> {
+    return new UnionSchema({
+      ...this._configuration,
+      ...configuration,
+    })
   }
 
   // --------------------------------------------------------------------------
@@ -59,7 +85,7 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
   public validate(input: unknown): Nullish<TSchemas, TOptional, TNullable, TDefault> {
     return this._runSchema((current) => {
 
-      for (const schema of this._config.schemas) {
+      for (const schema of this._schemas) {
         try {
           return schema.validate(current) as TSchemas
         } catch (error) {

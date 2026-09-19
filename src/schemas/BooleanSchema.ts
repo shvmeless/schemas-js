@@ -1,21 +1,37 @@
 // IMPORTS
-import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
+import type { Nullish } from '@/lib/NullishSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { NullishSchema } from '@/lib/NullishSchema'
-import { UNSET } from '@/utils/unset'
+import { type Unset, UNSET } from '@/utils/unset'
+
+// INTERFACE
+interface BooleanConfig {
+  optional: boolean
+  nullable: boolean
+  default: boolean | Unset
+  fallback: boolean | Unset
+}
 
 // CLASS
 export class BooleanSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
   extends NullishSchema<boolean, TOptional, TNullable, TDefault> {
 
-  // PROPERTIES
-  protected readonly _config: NullishConfig<boolean>
+  // CONFIG
+  protected readonly _optional: boolean
+  protected readonly _nullable: boolean
+  protected readonly _default: boolean | Unset
+  protected readonly _fallback: boolean | Unset
+
+  // PIPELINE
   protected readonly _tests = {}
 
   // CONSTRUCTOR
-  private constructor(config: NullishConfig<boolean>) {
+  private constructor(config: BooleanConfig) {
     super()
-    this._config = config
+    this._optional = config.optional
+    this._nullable = config.nullable
+    this._default = config.default
+    this._fallback = config.fallback
   }
 
   // --------------------------------------------------------------------------
@@ -32,11 +48,22 @@ export class BooleanSchema<TOptional extends boolean, TNullable extends boolean,
 
   // --------------------------------------------------------------------------
 
+  // UTILITY
+  private get _configuration(): BooleanConfig {
+    return {
+      optional: this._optional,
+      nullable: this._nullable,
+      default: this._default,
+      fallback: this._fallback,
+    }
+  }
+
   // UPDATER
-  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(config: Partial<NullishConfig<boolean>>): BooleanSchema<TOptional, TNullable, TDefault> {
-    return new BooleanSchema(
-      { ...this._config, ...config },
-    )
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<BooleanConfig>): BooleanSchema<TOptional, TNullable, TDefault> {
+    return new BooleanSchema({
+      ...this._configuration,
+      ...configuration,
+    })
   }
 
   // --------------------------------------------------------------------------

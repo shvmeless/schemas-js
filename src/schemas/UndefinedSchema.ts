@@ -1,21 +1,34 @@
 // IMPORTS
-import type { Nullable, NullableConfig } from '@/lib/NullableSchema'
+import type { Nullable } from '@/lib/NullableSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { NullableSchema } from '@/lib/NullableSchema'
-import { UNSET } from '@/utils/unset'
+import { type Unset, UNSET } from '@/utils/unset'
+
+// INTERFACE
+interface UndefinedConfig {
+  nullable: boolean
+  default: undefined | Unset
+  fallback: undefined | Unset
+}
 
 // CLASS
 export class UndefinedSchema<TNullable extends boolean, TDefault extends boolean>
   extends NullableSchema<undefined, TNullable, TDefault> {
 
-  // PROPERTIES
-  protected readonly _config: NullableConfig<undefined>
+  // CONFIG
+  protected readonly _nullable: boolean
+  protected readonly _default: undefined | Unset
+  protected readonly _fallback: undefined | Unset
+
+  // PIPELINE
   protected readonly _tests = {}
 
   // CONSTRUCTOR
-  private constructor(config: NullableConfig<undefined>) {
+  private constructor(config: UndefinedConfig) {
     super()
-    this._config = config
+    this._nullable = config.nullable
+    this._default = config.default
+    this._fallback = config.fallback
   }
 
   // --------------------------------------------------------------------------
@@ -31,11 +44,21 @@ export class UndefinedSchema<TNullable extends boolean, TDefault extends boolean
 
   // --------------------------------------------------------------------------
 
+  // UTILITY
+  private get _configuration(): UndefinedConfig {
+    return {
+      nullable: this._nullable,
+      default: this._default,
+      fallback: this._fallback,
+    }
+  }
+
   // UPDATER
-  private _updateConfig<TNullable extends boolean, TDefault extends boolean>(config: Partial<NullableConfig<undefined>>): UndefinedSchema<TNullable, TDefault> {
-    return new UndefinedSchema(
-      { ...this._config, ...config },
-    )
+  private _updateConfig<TNullable extends boolean, TDefault extends boolean>(configuration: Partial<UndefinedConfig>): UndefinedSchema<TNullable, TDefault> {
+    return new UndefinedSchema({
+      ...this._configuration,
+      ...configuration,
+    })
   }
 
   // --------------------------------------------------------------------------

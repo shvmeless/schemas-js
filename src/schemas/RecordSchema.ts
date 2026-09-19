@@ -1,29 +1,45 @@
 // IMPORTS
-import type { Nullish, NullishConfig } from '@/lib/NullishSchema'
+import type { Nullish } from '@/lib/NullishSchema'
 import type { GenericSchema, TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { NullishSchema } from '@/lib/NullishSchema'
 import { stringify } from '@/utils/stringify'
-import { UNSET } from '@/utils/unset'
+import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
-interface RecordConfig<TValue> extends NullishConfig<Record<string, TValue>> {
+interface RecordConfig<TValue> {
   schema: GenericSchema<TValue>
   prune: boolean
+  optional: boolean
+  nullable: boolean
+  default: Record<string, TValue> | Unset
+  fallback: Record<string, TValue> | Unset
 }
 
 // CLASS
 export class RecordSchema<TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
   extends NullishSchema<Record<string, TValue>, TOptional, TNullable, TDefault> {
 
-  // PROPERTIES
-  protected readonly _config: RecordConfig<TValue>
+  // CONFIG
+  protected readonly _schema: GenericSchema<TValue>
+  protected readonly _prune: boolean
+  protected readonly _optional: boolean
+  protected readonly _nullable: boolean
+  protected readonly _default: Record<string, TValue> | Unset
+  protected readonly _fallback: Record<string, TValue> | Unset
+
+  // PIPELINE
   protected readonly _tests: TestObject<Record<string, TValue>>
 
   // CONSTRUCTOR
   private constructor(config: RecordConfig<TValue>, tests: TestObject<Record<string, TValue>>) {
     super()
-    this._config = config
+    this._schema = config.schema
+    this._prune = config.prune
+    this._optional = config.optional
+    this._nullable = config.nullable
+    this._default = config.default
+    this._fallback = config.fallback
     this._tests = tests
   }
 
@@ -43,20 +59,32 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
 
   // --------------------------------------------------------------------------
 
-  // UPDATER
-  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(config: Partial<RecordConfig<TValue>>): RecordSchema<TValue, TOptional, TNullable, TDefault> {
-    return new RecordSchema(
-      { ...this._config, ...config },
-      this._tests,
-    )
+  // UTILITY
+  private get _configuration(): RecordConfig<TValue> {
+    return {
+      schema: this._schema,
+      prune: this._prune,
+      optional: this._optional,
+      nullable: this._nullable,
+      default: this._default,
+      fallback: this._fallback,
+    }
   }
 
   // UPDATER
-  private _updateTests(tests: Partial<TestObject<Record<string, TValue>>>): RecordSchema<TValue, TOptional, TNullable, TDefault> {
-    return new RecordSchema<TValue, TOptional, TNullable, TDefault>(
-      this._config,
-      { ...this._tests, ...tests },
-    )
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<RecordConfig<TValue>>): RecordSchema<TValue, TOptional, TNullable, TDefault> {
+    return new RecordSchema({
+      ...this._configuration,
+      ...configuration,
+    }, this._tests)
+  }
+
+  // UPDATER
+  private _updateTests(tests: TestObject<Record<string, TValue>>): RecordSchema<TValue, TOptional, TNullable, TDefault> {
+    return new RecordSchema<TValue, TOptional, TNullable, TDefault>(this._configuration, {
+      ...this._tests,
+      ...tests,
+    })
   }
 
   // --------------------------------------------------------------------------
@@ -75,10 +103,10 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
 
       for (const [key, value] of Object.entries(resolved)) {
         try {
-          result[key] = this._config.schema.validate(value)
+          result[key] = this._schema.validate(value)
         } catch (error) {
           if (error instanceof ValidationError) {
-            if (this._config.prune) continue
+            if (this._prune) continue
             errors.add(key, error)
           } else throw error
         }

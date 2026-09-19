@@ -1,21 +1,34 @@
 // IMPORTS
-import type { Optional, OptionalConfig } from '@/lib/OptionalSchema'
+import type { Optional } from '@/lib/OptionalSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { OptionalSchema } from '@/lib/OptionalSchema'
-import { UNSET } from '@/utils/unset'
+import { type Unset, UNSET } from '@/utils/unset'
+
+// INTERFACE
+interface NullConfig {
+  optional: boolean
+  default: null | Unset
+  fallback: null | Unset
+}
 
 // CLASS
 export class NullSchema<TOptional extends boolean, TDefault extends boolean>
   extends OptionalSchema<null, TOptional, TDefault> {
 
-  // PROPERTIES
-  protected readonly _config: OptionalConfig<null>
+  // CONFIG
+  protected readonly _optional: boolean
+  protected readonly _default: null | Unset
+  protected readonly _fallback: null | Unset
+
+  // PIPELINE
   protected readonly _tests = {}
 
   // CONSTRUCTOR
-  private constructor(config: OptionalConfig<null>) {
+  private constructor(config: NullConfig) {
     super()
-    this._config = config
+    this._optional = config.optional
+    this._default = config.default
+    this._fallback = config.fallback
   }
 
   // --------------------------------------------------------------------------
@@ -31,11 +44,21 @@ export class NullSchema<TOptional extends boolean, TDefault extends boolean>
 
   // --------------------------------------------------------------------------
 
+  // UTILITY
+  private get _configuration(): NullConfig {
+    return {
+      optional: this._optional,
+      default: this._default,
+      fallback: this._fallback,
+    }
+  }
+
   // UPDATER
-  private _updateConfig<TOptional extends boolean, TDefault extends boolean>(config: Partial<OptionalConfig<null>>): NullSchema<TOptional, TDefault> {
-    return new NullSchema(
-      { ...this._config, ...config },
-    )
+  private _updateConfig<TOptional extends boolean, TDefault extends boolean>(configuration: Partial<NullConfig>): NullSchema<TOptional, TDefault> {
+    return new NullSchema({
+      ...this._configuration,
+      ...configuration,
+    })
   }
 
   // --------------------------------------------------------------------------
