@@ -168,7 +168,7 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
 
   // --------------------------------------------------------------------------
 
-  // METHOD
+  // TEST
   public strip(): TupleSchema<TTuple, TOptional, TNullable, TDefault> {
     return this._updateConfig({ strip: true })
   }

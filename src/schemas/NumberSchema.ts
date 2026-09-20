@@ -161,7 +161,7 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
 
   // --------------------------------------------------------------------------
 
-  // METHOD
+  // TEST
   public lessThan(target: number): NumberSchema<TOptional, TNullable, TDefault> {
     if (Number.isNaN(target)) throw new Error('The `target` parameter cannot be NaN.')
     return this._updateTests({
@@ -172,7 +172,7 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
     })
   }
 
-  // METHOD
+  // TEST
   public lessThanOrEqual(target: number): NumberSchema<TOptional, TNullable, TDefault> {
     if (Number.isNaN(target)) throw new Error('The `target` parameter cannot be NaN.')
     return this._updateTests({
@@ -183,7 +183,7 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
     })
   }
 
-  // METHOD
+  // TEST
   public greaterThan(target: number): NumberSchema<TOptional, TNullable, TDefault> {
     if (Number.isNaN(target)) throw new Error('The `target` parameter cannot be NaN.')
     return this._updateTests({
@@ -194,7 +194,7 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
     })
   }
 
-  // METHOD
+  // TEST
   public greaterThanOrEqual(target: number): NumberSchema<TOptional, TNullable, TDefault> {
     if (Number.isNaN(target)) throw new Error('The `target` parameter cannot be NaN.')
     return this._updateTests({
@@ -205,7 +205,7 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
     })
   }
 
-  // METHOD
+  // TEST
   public negative(): NumberSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
       min: (current) => {
@@ -215,7 +215,7 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
     })
   }
 
-  // METHOD
+  // TEST
   public positive(): NumberSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
       max: (current) => {
@@ -225,7 +225,7 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
     })
   }
 
-  // METHOD
+  // TEST
   public integer(): NumberSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
       integer: (current) => {
@@ -235,7 +235,7 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
     })
   }
 
-  // METHOD
+  // TEST
   public finite(): NumberSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
       finite: (current) => {
@@ -245,7 +245,7 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
     })
   }
 
-  // METHOD
+  // TEST
   public safe(): NumberSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
       safe: (current) => {

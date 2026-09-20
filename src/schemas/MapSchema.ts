@@ -206,45 +206,45 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
 
   // --------------------------------------------------------------------------
 
-  // METHOD
-  public size(length: number): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
-    if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
-    if (length < 0) throw new Error('The length value must be zero or positive.')
+  // TEST
+  public size(size: number): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
+    if (Number.isNaN(size)) throw new Error('The size value must be zero or positive.')
+    if (size < 0) throw new Error('The size value must be zero or positive.')
     return this._updateTests({
       min: undefined,
       max: undefined,
       size: (current) => {
-        if (current.size !== length) return `The value must be ${stringify(length)} entries long.`
+        if (current.size !== size) return `The value must be ${stringify(size)} entries long.`
         return null
       },
     })
   }
 
-  // METHOD
-  public min(length: number): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
-    if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
-    if (length < 0) throw new Error('The length value must be zero or positive.')
+  // TEST
+  public min(size: number): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
+    if (Number.isNaN(size)) throw new Error('The size value must be zero or positive.')
+    if (size < 0) throw new Error('The size value must be zero or positive.')
     return this._updateTests({
       min: (current) => {
-        if (current.size < length) return `The value must be at least ${stringify(length)} entries long.`
+        if (current.size < size) return `The value must be at least ${stringify(size)} entries long.`
         return null
       },
     })
   }
 
-  // METHOD
-  public max(length: number): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
-    if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
-    if (length < 0) throw new Error('The length value must be zero or positive.')
+  // TEST
+  public max(size: number): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
+    if (Number.isNaN(size)) throw new Error('The size value must be zero or positive.')
+    if (size < 0) throw new Error('The size value must be zero or positive.')
     return this._updateTests({
       max: (current) => {
-        if (current.size > length) return `The value must be at most ${stringify(length)} entries long.`
+        if (current.size > size) return `The value must be at most ${stringify(size)} entries long.`
         return null
       },
     })
   }
 
-  // METHOD
+  // TEST
   public some(callback: (value: TValue, key: TKey, map: Map<TKey, TValue>) => boolean): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({
       some: (current) => {
@@ -256,7 +256,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
     })
   }
 
-  // METHOD
+  // TEST
   public every(callback: (value: TValue, key: TKey, map: Map<TKey, TValue>) => boolean): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({
       every: (current) => {
@@ -268,7 +268,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
     })
   }
 
-  // METHOD
+  // TEST
   public none(callback: (value: TValue, key: TKey, map: Map<TKey, TValue>) => boolean): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({
       none: (current) => {

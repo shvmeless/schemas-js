@@ -1,4 +1,4 @@
-// GENEIRIC
+// GENERIC
 export type { GenericSchema } from '@/lib/GenericSchema'
 
 // BASIC

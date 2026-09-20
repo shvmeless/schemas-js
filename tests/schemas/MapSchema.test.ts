@@ -111,24 +111,24 @@ describe('.prune()', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
-describe('.size(length)', () => {
-  describe('when `length` is `NaN`', () => {
+describe('.size(size)', () => {
+  describe('when `size` is `NaN`', () => {
     it('throws when the schema is being built.', () => {
       expectError(() => {
         MapSchema.create(StringSchema.create(), NumberSchema.create()).size(NaN)
-      }).toHaveMessage('The length value must be zero or positive.')
+      }).toHaveMessage('The size value must be zero or positive.')
     })
   })
 
-  describe('when `length` is a negative number', () => {
+  describe('when `size` is a negative number', () => {
     it('throws when the schema is being built.', () => {
       expectError(() => {
         MapSchema.create(StringSchema.create(), NumberSchema.create()).size(-8)
-      }).toHaveMessage('The length value must be zero or positive.')
+      }).toHaveMessage('The size value must be zero or positive.')
     })
   })
 
-  describe('when `length` is zero', () => {
+  describe('when `size` is zero', () => {
 
     const base = MapSchema.create(StringSchema.create(), NumberSchema.create())
     const schema = base.size(0)
@@ -150,7 +150,7 @@ describe('.size(length)', () => {
     })
   })
 
-  describe('when `length` is a positive number', () => {
+  describe('when `size` is a positive number', () => {
 
     const base = MapSchema.create(StringSchema.create(), NumberSchema.create())
     const schema = base.size(5)
@@ -179,24 +179,24 @@ describe('.size(length)', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
-describe('.min(length)', () => {
-  describe('when `length` is `NaN`', () => {
+describe('.min(size)', () => {
+  describe('when `size` is `NaN`', () => {
     it('throws when the schema is being built.', () => {
       expectError(() => {
         MapSchema.create(StringSchema.create(), NumberSchema.create()).min(NaN)
-      }).toHaveMessage('The length value must be zero or positive.')
+      }).toHaveMessage('The size value must be zero or positive.')
     })
   })
 
-  describe('when `length` is a negative number', () => {
+  describe('when `size` is a negative number', () => {
     it('throws when the schema is being built.', () => {
       expectError(() => {
         MapSchema.create(StringSchema.create(), NumberSchema.create()).min(-8)
-      }).toHaveMessage('The length value must be zero or positive.')
+      }).toHaveMessage('The size value must be zero or positive.')
     })
   })
 
-  describe('when `length` is zero', () => {
+  describe('when `size` is zero', () => {
 
     const base = MapSchema.create(StringSchema.create(), NumberSchema.create())
     const schema = base.min(0)
@@ -219,7 +219,7 @@ describe('.min(length)', () => {
     })
   })
 
-  describe('when `length` is a positive number', () => {
+  describe('when `size` is a positive number', () => {
 
     const base = MapSchema.create(StringSchema.create(), NumberSchema.create())
     const schema = base.min(5)
@@ -249,24 +249,24 @@ describe('.min(length)', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
-describe('.max(length)', () => {
-  describe('when `length` is `NaN`', () => {
+describe('.max(size)', () => {
+  describe('when `size` is `NaN`', () => {
     it('throws when the schema is being built.', () => {
       expectError(() => {
         MapSchema.create(StringSchema.create(), NumberSchema.create()).max(NaN)
-      }).toHaveMessage('The length value must be zero or positive.')
+      }).toHaveMessage('The size value must be zero or positive.')
     })
   })
 
-  describe('when `length` is a negative number', () => {
+  describe('when `size` is a negative number', () => {
     it('throws when the schema is being built.', () => {
       expectError(() => {
         MapSchema.create(StringSchema.create(), NumberSchema.create()).max(-8)
-      }).toHaveMessage('The length value must be zero or positive.')
+      }).toHaveMessage('The size value must be zero or positive.')
     })
   })
 
-  describe('when `length` is zero', () => {
+  describe('when `size` is zero', () => {
 
     const base = MapSchema.create(StringSchema.create(), NumberSchema.create())
     const schema = base.max(0)
@@ -288,7 +288,7 @@ describe('.max(length)', () => {
     })
   })
 
-  describe('when `length` is a positive number', () => {
+  describe('when `size` is a positive number', () => {
 
     const base = MapSchema.create(StringSchema.create(), NumberSchema.create())
     const schema = base.max(5)

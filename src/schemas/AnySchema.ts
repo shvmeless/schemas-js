@@ -124,12 +124,12 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
   }
 
   // CONFIG
-  public default(value: unknown): AnySchema<TOptional, TNullable, true> {
+  public default(value: any): AnySchema<TOptional, TNullable, true> {
     return this._updateConfig({ default: value })
   }
 
   // CONFIG
-  public fallback(value: unknown): AnySchema<TOptional, TNullable, TDefault> {
+  public fallback(value: any): AnySchema<TOptional, TNullable, TDefault> {
     return this._updateConfig({ fallback: value })
   }
 

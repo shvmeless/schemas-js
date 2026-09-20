@@ -200,45 +200,45 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
 
   // --------------------------------------------------------------------------
 
-  // METHOD
-  public size(length: number): SetSchema<TValue, TOptional, TNullable, TDefault> {
-    if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
-    if (length < 0) throw new Error('The length value must be zero or positive.')
+  // TEST
+  public size(size: number): SetSchema<TValue, TOptional, TNullable, TDefault> {
+    if (Number.isNaN(size)) throw new Error('The size value must be zero or positive.')
+    if (size < 0) throw new Error('The size value must be zero or positive.')
     return this._updateTests({
       min: undefined,
       max: undefined,
       size: (current) => {
-        if (current.size !== length) return `The value must be ${stringify(length)} elements long.`
+        if (current.size !== size) return `The value must be ${stringify(size)} elements long.`
         return null
       },
     })
   }
 
-  // METHOD
-  public min(length: number): SetSchema<TValue, TOptional, TNullable, TDefault> {
-    if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
-    if (length < 0) throw new Error('The length value must be zero or positive.')
+  // TEST
+  public min(size: number): SetSchema<TValue, TOptional, TNullable, TDefault> {
+    if (Number.isNaN(size)) throw new Error('The size value must be zero or positive.')
+    if (size < 0) throw new Error('The size value must be zero or positive.')
     return this._updateTests({
       min: (current) => {
-        if (current.size < length) return `The value must be at least ${stringify(length)} elements long.`
+        if (current.size < size) return `The value must be at least ${stringify(size)} elements long.`
         return null
       },
     })
   }
 
-  // METHOD
-  public max(length: number): SetSchema<TValue, TOptional, TNullable, TDefault> {
-    if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
-    if (length < 0) throw new Error('The length value must be zero or positive.')
+  // TEST
+  public max(size: number): SetSchema<TValue, TOptional, TNullable, TDefault> {
+    if (Number.isNaN(size)) throw new Error('The size value must be zero or positive.')
+    if (size < 0) throw new Error('The size value must be zero or positive.')
     return this._updateTests({
       max: (current) => {
-        if (current.size > length) return `The value must be at most ${stringify(length)} elements long.`
+        if (current.size > size) return `The value must be at most ${stringify(size)} elements long.`
         return null
       },
     })
   }
 
-  // METHOD
+  // TEST
   public some(callback: (value: TValue, set: Set<TValue>) => boolean): SetSchema<TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({
       some: (current) => {
@@ -250,7 +250,7 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
     })
   }
 
-  // METHOD
+  // TEST
   public every(callback: (value: TValue, set: Set<TValue>) => boolean): SetSchema<TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({
       every: (current) => {
@@ -262,7 +262,7 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
     })
   }
 
-  // METHOD
+  // TEST
   public none(callback: (value: TValue, set: Set<TValue>) => boolean): SetSchema<TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({
       none: (current) => {

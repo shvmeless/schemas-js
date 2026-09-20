@@ -48,7 +48,7 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
   // FACTORY
   public static create<TValues extends string | number>(...values: ReadonlyArray<TValues>): EnumSchema<TValues, false, false, false> {
     return new EnumSchema({
-      values,
+      values: values,
       optional: false,
       nullable: false,
       default: UNSET,
@@ -118,7 +118,7 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
     return this._runSchema((current) => {
 
       if (!this._values.includes(current as TValues)) {
-        throw new ValidationError(input, 'The value must be match one of the allowed literal values.')
+        throw new ValidationError(input, 'The value must match one of the allowed literal values.')
       }
 
       return current as TValues

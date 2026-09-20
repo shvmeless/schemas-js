@@ -49,7 +49,7 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
   // FACTORY
   public static create<TConstructor extends AnyConstructor>(constructor: TConstructor): InstanceOfSchema<TConstructor, false, false, false> {
     return new InstanceOfSchema({
-      constructor,
+      constructor: constructor,
       optional: false,
       nullable: false,
       default: UNSET,

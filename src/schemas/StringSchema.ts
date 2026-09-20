@@ -160,7 +160,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
 
   // --------------------------------------------------------------------------
 
-  // METHOD
+  // TEST
   public length(length: number): StringSchema<TOptional, TNullable, TDefault> {
     if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
     return this._updateTests({
@@ -173,7 +173,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
     })
   }
 
-  // METHOD
+  // TEST
   public min(length: number): StringSchema<TOptional, TNullable, TDefault> {
     if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
     return this._updateTests({
@@ -184,7 +184,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
     })
   }
 
-  // METHOD
+  // TEST
   public max(length: number): StringSchema<TOptional, TNullable, TDefault> {
     if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
     return this._updateTests({
@@ -195,7 +195,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
     })
   }
 
-  // METHOD
+  // TEST
   public lowercase(): StringSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
       casing: (current) => {
@@ -206,7 +206,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
     })
   }
 
-  // METHOD
+  // TEST
   public uppercase(): StringSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
       casing: (current) => {
@@ -217,7 +217,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
     })
   }
 
-  // METHOD
+  // TEST
   public trim(): StringSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
       trim: (current) => {
@@ -227,7 +227,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
     })
   }
 
-  // METHOD
+  // TEST
   public startsWith(prefix: string): StringSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
       prefix: (current) => {
@@ -237,7 +237,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
     })
   }
 
-  // METHOD
+  // TEST
   public endsWith(suffix: string): StringSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
       suffix: (current) => {
@@ -247,7 +247,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
     })
   }
 
-  // METHOD
+  // TEST
   public includes(search: string): StringSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
       includes: (current) => {
@@ -257,7 +257,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
     })
   }
 
-  // METHOD
+  // TEST
   public excludes(search: string): StringSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
       excludes: (current) => {
@@ -267,7 +267,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
     })
   }
 
-  // METHOD
+  // TEST
   public match(pattern: RegExp): StringSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
       pattern: (current) => {

@@ -42,7 +42,7 @@ describe('.validate(input)', () => {
 
   it('throws when `input` is not a string.', () => {
     DataTypeGenerator.skip('strings').forEach((value) => {
-      expectValidation(schema, value).toThrow('The value must be match one of the allowed literal values.')
+      expectValidation(schema, value).toThrow('The value must match one of the allowed literal values.')
     })
   })
 
@@ -53,15 +53,14 @@ describe('.validate(input)', () => {
   })
 
   it('throws when `input` does not match any of the `literals`.', () => {
-    expectValidation(schema, 'WRONG').toThrow('The value must be match one of the allowed literal values.')
-    expectValidation(schema, 'TEXT').toThrow('The value must be match one of the allowed literal values.')
-    expectValidation(schema, 'STRING').toThrow('The value must be match one of the allowed literal values.')
+    expectValidation(schema, 'WRONG').toThrow('The value must match one of the allowed literal values.')
+    expectValidation(schema, 'TEXT').toThrow('The value must match one of the allowed literal values.')
+    expectValidation(schema, 'STRING').toThrow('The value must match one of the allowed literal values.')
   })
 
   it('throws when `input` does not match any of the `literals` (case-sensitive).', () => {
-    expectValidation(schema, 'Allowed').toThrow('The value must be match one of the allowed literal values.')
-    expectValidation(schema, 'literal').toThrow('The value must be match one of the allowed literal values.')
-    expectValidation(schema, 'ExAmPlE').toThrow('The value must be match one of the allowed literal values.')
+    expectValidation(schema, 'Allowed').toThrow('The value must match one of the allowed literal values.')
+    expectValidation(schema, 'literal').toThrow('The value must match one of the allowed literal values.')
+    expectValidation(schema, 'ExAmPlE').toThrow('The value must match one of the allowed literal values.')
   })
 })
-

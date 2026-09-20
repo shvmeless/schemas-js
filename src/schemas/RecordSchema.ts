@@ -199,7 +199,7 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
 
   // --------------------------------------------------------------------------
 
-  // METHOD
+  // TEST
   public length(length: number): RecordSchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
@@ -213,7 +213,7 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
     })
   }
 
-  // METHOD
+  // TEST
   public min(length: number): RecordSchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
@@ -225,7 +225,7 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
     })
   }
 
-  // METHOD
+  // TEST
   public max(length: number): RecordSchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
@@ -237,7 +237,7 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
     })
   }
 
-  // METHOD
+  // TEST
   public some(callback: (value: TValue, key: string, record: Record<string, TValue>) => boolean): RecordSchema<TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({
       some: (current) => {
@@ -249,7 +249,7 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
     })
   }
 
-  // METHOD
+  // TEST
   public every(callback: (value: TValue, key: string, record: Record<string, TValue>) => boolean): RecordSchema<TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({
       every: (current) => {
@@ -261,7 +261,7 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
     })
   }
 
-  // METHOD
+  // TEST
   public none(callback: (value: TValue, key: string, record: Record<string, TValue>) => boolean): RecordSchema<TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({
       none: (current) => {

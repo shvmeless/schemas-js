@@ -45,7 +45,7 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
   // FACTORY
   public static create<TValue extends string | number | boolean>(literal: TValue): LiteralSchema<TValue, false, false, false> {
     return new LiteralSchema({
-      literal,
+      literal: literal,
       optional: false,
       nullable: false,
       default: UNSET,

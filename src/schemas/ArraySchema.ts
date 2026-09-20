@@ -6,31 +6,31 @@ import { stringify } from '@/utils/stringify'
 import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
-interface ArrayConfig<TItem> extends GenericConfig<Array<TItem>> {
-  schema: GenericSchema<TItem, boolean, boolean, boolean>
+interface ArrayConfig<TValue> extends GenericConfig<Array<TValue>> {
+  schema: GenericSchema<TValue, boolean, boolean, boolean>
   prune: boolean
 }
 
 // CLASS
-export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-  extends GenericSchema<Array<TItem>, TOptional, TNullable, TDefault> {
+export class ArraySchema<TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
+  extends GenericSchema<Array<TValue>, TOptional, TNullable, TDefault> {
 
   // CONFIG
-  protected readonly _schema: GenericSchema<TItem, boolean, boolean, boolean>
+  protected readonly _schema: GenericSchema<TValue, boolean, boolean, boolean>
   protected readonly _prune: boolean
   protected readonly _optional: boolean
   protected readonly _nullable: boolean
-  protected readonly _default: Array<TItem> | Unset
-  protected readonly _fallback: Array<TItem> | Unset
+  protected readonly _default: Array<TValue> | Unset
+  protected readonly _fallback: Array<TValue> | Unset
 
   // PIPELINE
   protected readonly _parse: ParseFunction | null
-  protected readonly _prepare: Array<PrepareFunction<Array<TItem>>>
-  protected readonly _tests: TestObject<Array<TItem>>
-  protected readonly _refine: Array<RefineFunction<Array<TItem>>>
+  protected readonly _prepare: Array<PrepareFunction<Array<TValue>>>
+  protected readonly _tests: TestObject<Array<TValue>>
+  protected readonly _refine: Array<RefineFunction<Array<TValue>>>
 
   // CONSTRUCTOR
-  private constructor(config: ArrayConfig<TItem>, pipeline: GenericPipeline<Array<TItem>>) {
+  private constructor(config: ArrayConfig<TValue>, pipeline: GenericPipeline<Array<TValue>>) {
     super()
 
     this._schema = config.schema
@@ -49,7 +49,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TItem>(schema: GenericSchema<TItem, boolean, boolean, boolean>): ArraySchema<TItem, false, false, false> {
+  public static create<TValue>(schema: GenericSchema<TValue, boolean, boolean, boolean>): ArraySchema<TValue, false, false, false> {
     return new ArraySchema({
       schema: schema,
       prune: false,
@@ -68,7 +68,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   // --------------------------------------------------------------------------
 
   // UTILITY
-  private get _configuration(): ArrayConfig<TItem> {
+  private get _configuration(): ArrayConfig<TValue> {
     return {
       schema: this._schema,
       prune: this._prune,
@@ -80,7 +80,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   }
 
   // UTILITY
-  private get _pipeline(): GenericPipeline<Array<TItem>> {
+  private get _pipeline(): GenericPipeline<Array<TValue>> {
     return {
       parse: this._parse,
       prepare: this._prepare,
@@ -90,7 +90,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   }
 
   // UPDATER
-  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<ArrayConfig<TItem>>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<ArrayConfig<TValue>>): ArraySchema<TValue, TOptional, TNullable, TDefault> {
     return new ArraySchema({
       ...this._configuration,
       ...configuration,
@@ -98,7 +98,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   }
 
   // UPDATER
-  private _updateTests(tests: TestObject<Array<TItem>>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+  private _updateTests(tests: TestObject<Array<TValue>>): ArraySchema<TValue, TOptional, TNullable, TDefault> {
     return new ArraySchema(this._configuration, {
       ...this._pipeline,
       tests: {
@@ -109,7 +109,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   }
 
   // UPDATER
-  private _updatePipeline(pipeline: Partial<GenericPipeline<Array<TItem>>>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+  private _updatePipeline(pipeline: Partial<GenericPipeline<Array<TValue>>>): ArraySchema<TValue, TOptional, TNullable, TDefault> {
     return new ArraySchema(this._configuration, {
       ...this._pipeline,
       ...pipeline,
@@ -119,7 +119,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   // --------------------------------------------------------------------------
 
   // VALIDATOR
-  public validate(input: unknown): Nullish<Array<TItem>, TOptional, TNullable, TDefault> {
+  public validate(input: unknown): Nullish<Array<TValue>, TOptional, TNullable, TDefault> {
     return this._runSchema((current) => {
 
       if (!Array.isArray(current)) {
@@ -127,13 +127,13 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
       }
 
       const resolved = current as Array<unknown>
-      const output: Array<TItem> = []
+      const output: Array<TValue> = []
       const errors = ValidationError.prepare()
 
       resolved.forEach((element, index) => {
         try {
           const value = this._schema.validate(element)
-          output.push(value as TItem)
+          output.push(value as TValue)
         } catch (error) {
           if (error instanceof ValidationError) {
             if (this._prune) return
@@ -154,56 +154,56 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   // --------------------------------------------------------------------------
 
   // CONFIG
-  public prune(): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+  public prune(): ArraySchema<TValue, TOptional, TNullable, TDefault> {
     return this._updateConfig({ prune: true })
   }
 
   // CONFIG
-  public optional(): ArraySchema<TItem, true, TNullable, TDefault> {
+  public optional(): ArraySchema<TValue, true, TNullable, TDefault> {
     return this._updateConfig({ optional: true })
   }
 
   // CONFIG
-  public nullable(): ArraySchema<TItem, TOptional, true, TDefault> {
+  public nullable(): ArraySchema<TValue, TOptional, true, TDefault> {
     return this._updateConfig({ nullable: true })
   }
 
   // CONFIG
-  public default(value: Array<TItem>): ArraySchema<TItem, TOptional, TNullable, true> {
+  public default(value: Array<TValue>): ArraySchema<TValue, TOptional, TNullable, true> {
     return this._updateConfig({ default: value })
   }
 
   // CONFIG
-  public fallback(value: Array<TItem>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+  public fallback(value: Array<TValue>): ArraySchema<TValue, TOptional, TNullable, TDefault> {
     return this._updateConfig({ fallback: value })
   }
 
   // --------------------------------------------------------------------------
 
   // PIPELINE
-  public parse(fn: ParseFunction): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+  public parse(fn: ParseFunction): ArraySchema<TValue, TOptional, TNullable, TDefault> {
     return this._updatePipeline({ parse: fn })
   }
 
   // PIPELINE
-  public prepare(fn: PrepareFunction<Array<TItem>>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+  public prepare(fn: PrepareFunction<Array<TValue>>): ArraySchema<TValue, TOptional, TNullable, TDefault> {
     return this._updatePipeline({ prepare: [...this._prepare, fn] })
   }
 
   // PIPELINE
-  public test(id: string, test: TestFunction<Array<TItem>>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+  public test(id: string, test: TestFunction<Array<TValue>>): ArraySchema<TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({ [`_${id}`]: test })
   }
 
   // PIPELINE
-  public refine(fn: RefineFunction<Array<TItem>>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+  public refine(fn: RefineFunction<Array<TValue>>): ArraySchema<TValue, TOptional, TNullable, TDefault> {
     return this._updatePipeline({ refine: [...this._refine, fn] })
   }
 
   // --------------------------------------------------------------------------
 
   // TEST
-  public length(length: number): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+  public length(length: number): ArraySchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
     return this._updateTests({
@@ -217,7 +217,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   }
 
   // TEST
-  public min(length: number): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+  public min(length: number): ArraySchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
     return this._updateTests({
@@ -229,7 +229,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   }
 
   // TEST
-  public max(length: number): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+  public max(length: number): ArraySchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
     return this._updateTests({
@@ -241,11 +241,11 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   }
 
   // TEST
-  public some(callback: (value: TItem, index: number, array: Array<TItem>) => boolean): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+  public some(callback: (value: TValue, index: number, array: Array<TValue>) => boolean): ArraySchema<TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({
       some: (current) => {
         for (let index = 0; index < current.length; index++) {
-          const value = current[index] as TItem
+          const value = current[index] as TValue
           if (callback(value, index, current)) return null
         }
         return 'No element satisfies the given validation function.'
@@ -254,11 +254,11 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   }
 
   // TEST
-  public every(callback: (value: TItem, index: number, array: Array<TItem>) => boolean): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+  public every(callback: (value: TValue, index: number, array: Array<TValue>) => boolean): ArraySchema<TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({
       every: (current) => {
         for (let index = 0; index < current.length; index++) {
-          const value = current[index] as TItem
+          const value = current[index] as TValue
           if (!callback(value, index, current)) return 'At least one element does not satisfy the given validation function.'
         }
         return null
@@ -267,11 +267,11 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   }
 
   // TEST
-  public none(callback: (value: TItem, index: number, array: Array<TItem>) => boolean): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+  public none(callback: (value: TValue, index: number, array: Array<TValue>) => boolean): ArraySchema<TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({
       none: (current) => {
         for (let index = 0; index < current.length; index++) {
-          const value = current[index] as TItem
+          const value = current[index] as TValue
           if (callback(value, index, current)) return 'At least one element satisfies the given validation function.'
         }
         return null
