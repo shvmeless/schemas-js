@@ -1,8 +1,6 @@
 // IMPORTS
-import type { Nullish } from '@/lib/NullishSchema'
-import type { TestObject } from '@/lib/GenericSchema'
+import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import { NullishSchema } from '@/lib/NullishSchema'
 import { stringify } from '@/utils/stringify'
 import { type Unset, UNSET } from '@/utils/unset'
 
@@ -16,7 +14,7 @@ interface NumberConfig {
 
 // CLASS
 export class NumberSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-  extends NullishSchema<number, TOptional, TNullable, TDefault> {
+  extends GenericSchema<number, TOptional, TNullable, TDefault> {
 
   // CONFIG
   protected readonly _optional: boolean

@@ -1,15 +1,13 @@
 // IMPORTS
-import type { Nullish } from '@/lib/NullishSchema'
-import type { GenericSchema, TestObject } from '@/lib/GenericSchema'
+import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import { NullishSchema } from '@/lib/NullishSchema'
 import { stringify } from '@/utils/stringify'
 import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
 interface MapConfig<TKey, TValue> {
-  keySchema: GenericSchema<TKey>
-  valueSchema: GenericSchema<TValue>
+  keySchema: GenericSchema<TKey, boolean, boolean, boolean>
+  valueSchema: GenericSchema<TValue, boolean, boolean, boolean>
   prune: boolean
   optional: boolean
   nullable: boolean
@@ -19,11 +17,11 @@ interface MapConfig<TKey, TValue> {
 
 // CLASS
 export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-  extends NullishSchema<Map<TKey, TValue>, TOptional, TNullable, TDefault> {
+  extends GenericSchema<Map<TKey, TValue>, TOptional, TNullable, TDefault> {
 
   // CONFIG
-  protected readonly _keySchema: GenericSchema<TKey>
-  protected readonly _valueSchema: GenericSchema<TValue>
+  protected readonly _keySchema: GenericSchema<TKey, boolean, boolean, boolean>
+  protected readonly _valueSchema: GenericSchema<TValue, boolean, boolean, boolean>
   protected readonly _prune: boolean
   protected readonly _optional: boolean
   protected readonly _nullable: boolean
@@ -49,7 +47,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TKey, TValue>(keySchema: GenericSchema<TKey>, valueSchema: GenericSchema<TValue>): MapSchema<TKey, TValue, false, false, false> {
+  public static create<TKey, TValue>(keySchema: GenericSchema<TKey, boolean, boolean, boolean>, valueSchema: GenericSchema<TValue, boolean, boolean, boolean>): MapSchema<TKey, TValue, false, false, false> {
     return new MapSchema<TKey, TValue, false, false, false>({
       keySchema: keySchema,
       valueSchema: valueSchema,
@@ -110,7 +108,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
         try {
           const validatedKey = this._keySchema.validate(key)
           const validatedValue = this._valueSchema.validate(value)
-          result.set(validatedKey, validatedValue)
+          result.set(validatedKey as TKey, validatedValue as TValue)
         } catch (error) {
           if (error instanceof ValidationError) {
             if (this._prune) return

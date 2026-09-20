@@ -1,14 +1,12 @@
 // IMPORTS
-import type { Nullish } from '@/lib/NullishSchema'
-import type { GenericSchema, TestObject } from '@/lib/GenericSchema'
+import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import { NullishSchema } from '@/lib/NullishSchema'
 import { stringify } from '@/utils/stringify'
 import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
 interface RecordConfig<TValue> {
-  schema: GenericSchema<TValue>
+  schema: GenericSchema<TValue, boolean, boolean, boolean>
   prune: boolean
   optional: boolean
   nullable: boolean
@@ -18,10 +16,10 @@ interface RecordConfig<TValue> {
 
 // CLASS
 export class RecordSchema<TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-  extends NullishSchema<Record<string, TValue>, TOptional, TNullable, TDefault> {
+  extends GenericSchema<Record<string, TValue>, TOptional, TNullable, TDefault> {
 
   // CONFIG
-  protected readonly _schema: GenericSchema<TValue>
+  protected readonly _schema: GenericSchema<TValue, boolean, boolean, boolean>
   protected readonly _prune: boolean
   protected readonly _optional: boolean
   protected readonly _nullable: boolean
@@ -46,7 +44,7 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TValue>(schema: GenericSchema<TValue>): RecordSchema<TValue, false, false, false> {
+  public static create<TValue>(schema: GenericSchema<TValue, boolean, boolean, boolean>): RecordSchema<TValue, false, false, false> {
     return new RecordSchema<TValue, false, false, false>({
       schema: schema,
       prune: false,
@@ -103,7 +101,7 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
 
       for (const [key, value] of Object.entries(resolved)) {
         try {
-          result[key] = this._schema.validate(value)
+          result[key] = this._schema.validate(value) as TValue
         } catch (error) {
           if (error instanceof ValidationError) {
             if (this._prune) continue

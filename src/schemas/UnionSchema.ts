@@ -1,19 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // IMPORTS
-import type { Nullish } from '@/lib/NullishSchema'
-import type { GenericSchema } from '@/lib/GenericSchema'
+import { GenericSchema, type Nullish } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import { NullishSchema } from '@/lib/NullishSchema'
 import { type Unset, UNSET } from '@/utils/unset'
 
 // TYPES
-type InferSchemaType<I> = I extends GenericSchema<infer T> ? T : never
-type SchemaTypeUnion<A extends ReadonlyArray<GenericSchema<any>>> = InferSchemaType<A[number]>
+type InferSchemaType<I> = I extends GenericSchema<infer T, any, any, any> ? T : never
+type SchemaTypeUnion<A extends ReadonlyArray<GenericSchema<any, any, any, any>>> = InferSchemaType<A[number]>
 
 // INTERFACE
 interface UnionConfig<TSchemas> {
-  schemas: ReadonlyArray<GenericSchema<TSchemas>>
+  schemas: ReadonlyArray<GenericSchema<TSchemas, boolean, boolean, boolean>>
   optional: boolean
   nullable: boolean
   default: TSchemas | Unset
@@ -22,10 +20,10 @@ interface UnionConfig<TSchemas> {
 
 // CLASS
 export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-  extends NullishSchema<TSchemas, TOptional, TNullable, TDefault> {
+  extends GenericSchema<TSchemas, TOptional, TNullable, TDefault> {
 
   // CONFIG
-  protected readonly _schemas: ReadonlyArray<GenericSchema<TSchemas>>
+  protected readonly _schemas: ReadonlyArray<GenericSchema<TSchemas, boolean, boolean, boolean>>
   protected readonly _optional: boolean
   protected readonly _nullable: boolean
   protected readonly _default: TSchemas | Unset
@@ -48,9 +46,9 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<A extends ReadonlyArray<GenericSchema<any>>>(...schemas: A): UnionSchema<SchemaTypeUnion<A>, false, false, false> {
+  public static create<A extends ReadonlyArray<GenericSchema<any, any, any, any>>>(...schemas: A): UnionSchema<SchemaTypeUnion<A>, false, false, false> {
     return new UnionSchema<SchemaTypeUnion<A>, false, false, false>({
-      schemas: schemas as ReadonlyArray<GenericSchema<SchemaTypeUnion<A>>>,
+      schemas: schemas as ReadonlyArray<GenericSchema<SchemaTypeUnion<A>, boolean, boolean, boolean>>,
       optional: false,
       nullable: false,
       default: UNSET,

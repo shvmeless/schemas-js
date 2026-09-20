@@ -1,13 +1,11 @@
 // IMPORTS
-import type { Nullish } from '@/lib/NullishSchema'
-import type { GenericSchema } from '@/lib/GenericSchema'
+import { GenericSchema, type Nullish } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import { NullishSchema } from '@/lib/NullishSchema'
 import { type Unset, UNSET } from '@/utils/unset'
 
 // TYPE
 type InferShape<TObject> = {
-  [K in keyof TObject]: GenericSchema<TObject[K]>
+  [K in keyof TObject]: GenericSchema<TObject[K], boolean, boolean, boolean>
 }
 
 // INTERFACE
@@ -22,7 +20,7 @@ interface ObjectConfig<TObject> {
 
 // CLASS
 export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-  extends NullishSchema<TObject, TOptional, TNullable, TDefault> {
+  extends GenericSchema<TObject, TOptional, TNullable, TDefault> {
 
   // CONFIG
   protected readonly _schema: InferShape<TObject>

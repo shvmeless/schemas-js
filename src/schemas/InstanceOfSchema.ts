@@ -1,7 +1,6 @@
 // IMPORTS
-import type { Nullish } from '@/lib/NullishSchema'
+import { GenericSchema, type Nullish } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import { NullishSchema } from '@/lib/NullishSchema'
 import { type Unset, UNSET } from '@/utils/unset'
 
 // TYPE
@@ -19,7 +18,7 @@ interface InstanceOfConfig<TConstructor extends AnyConstructor> {
 
 // CLASS
 export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-  extends NullishSchema<InstanceType<TConstructor>, TOptional, TNullable, TDefault> {
+  extends GenericSchema<InstanceType<TConstructor>, TOptional, TNullable, TDefault> {
 
   // CONFIG
   protected readonly _constructor: TConstructor

@@ -1,7 +1,6 @@
 // IMPORTS
-import type { Nullish } from '@/lib/NullishSchema'
+import { GenericSchema, type Nullish } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import { NullishSchema } from '@/lib/NullishSchema'
 import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
@@ -15,7 +14,7 @@ interface EnumConfig<TValues extends string | number> {
 
 // CLASS
 export class EnumSchema<TValues extends string | number, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-  extends NullishSchema<TValues, TOptional, TNullable, TDefault> {
+  extends GenericSchema<TValues, TOptional, TNullable, TDefault> {
 
   // CONFIG
   protected readonly _values: ReadonlyArray<TValues>

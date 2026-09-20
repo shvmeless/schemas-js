@@ -1,14 +1,12 @@
 // IMPORTS
-import type { Nullish } from '@/lib/NullishSchema'
-import type { GenericSchema, TestObject } from '@/lib/GenericSchema'
+import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import { NullishSchema } from '@/lib/NullishSchema'
 import { stringify } from '@/utils/stringify'
 import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
 interface ArrayConfig<TItem> {
-  schema: GenericSchema<TItem>
+  schema: GenericSchema<TItem, boolean, boolean, boolean>
   prune: boolean
   optional: boolean
   nullable: boolean
@@ -18,10 +16,10 @@ interface ArrayConfig<TItem> {
 
 // CLASS
 export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-  extends NullishSchema<Array<TItem>, TOptional, TNullable, TDefault> {
+  extends GenericSchema<Array<TItem>, TOptional, TNullable, TDefault> {
 
   // CONFIG
-  protected readonly _schema: GenericSchema<TItem>
+  protected readonly _schema: GenericSchema<TItem, boolean, boolean, boolean>
   protected readonly _prune: boolean
   protected readonly _optional: boolean
   protected readonly _nullable: boolean
@@ -46,7 +44,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TItem>(schema: GenericSchema<TItem>): ArraySchema<TItem, false, false, false> {
+  public static create<TItem>(schema: GenericSchema<TItem, boolean, boolean, boolean>): ArraySchema<TItem, false, false, false> {
     return new ArraySchema({
       schema: schema,
       prune: false,
@@ -104,7 +102,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
       resolved.forEach((element, index) => {
         try {
           const value = this._schema.validate(element)
-          output.push(value)
+          output.push(value as TItem)
         } catch (error) {
           if (error instanceof ValidationError) {
             if (this._prune) return

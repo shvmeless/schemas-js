@@ -1,7 +1,6 @@
 // IMPORTS
-import type { Nullish } from '@/lib/NullishSchema'
+import { GenericSchema, type Nullish } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import { NullishSchema } from '@/lib/NullishSchema'
 import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
@@ -15,7 +14,7 @@ interface LiteralConfig<TValue extends string | number | boolean> {
 
 // CLASS
 export class LiteralSchema<TValue extends string | number | boolean, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-  extends NullishSchema<TValue, TOptional, TNullable, TDefault> {
+  extends GenericSchema<TValue, TOptional, TNullable, TDefault> {
 
   // CONFIG
   protected readonly _literal: TValue

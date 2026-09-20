@@ -1,13 +1,11 @@
 // IMPORTS
-import type { Nullish } from '@/lib/NullishSchema'
-import type { GenericSchema } from '@/lib/GenericSchema'
+import { GenericSchema, type Nullish } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import { NullishSchema } from '@/lib/NullishSchema'
 import { type Unset, UNSET } from '@/utils/unset'
 
 // TYPE
 type InferShape<TTuple extends ReadonlyArray<unknown>> = {
-  [K in keyof TTuple]: GenericSchema<TTuple[K]>
+  [K in keyof TTuple]: GenericSchema<TTuple[K], boolean, boolean, boolean>
 }
 
 // INTERFACE
@@ -22,7 +20,7 @@ interface TupleConfig<TTuple extends ReadonlyArray<unknown>> {
 
 // CLASS
 export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-  extends NullishSchema<TTuple, TOptional, TNullable, TDefault> {
+  extends GenericSchema<TTuple, TOptional, TNullable, TDefault> {
 
   // CONFIG
   protected readonly _shape: InferShape<TTuple>

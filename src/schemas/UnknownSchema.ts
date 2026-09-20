@@ -1,6 +1,5 @@
 // IMPORTS
-import type { Nullish } from '@/lib/NullishSchema'
-import { NullishSchema } from '@/lib/NullishSchema'
+import { GenericSchema, type Nullish } from '@/lib/GenericSchema'
 import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
@@ -13,7 +12,7 @@ interface UnknownConfig {
 
 // CLASS
 export class UnknownSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-  extends NullishSchema<unknown, TOptional, TNullable, TDefault> {
+  extends GenericSchema<unknown, TOptional, TNullable, TDefault> {
 
   // CONFIG
   protected readonly _optional: boolean

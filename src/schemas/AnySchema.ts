@@ -3,8 +3,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
 // IMPORTS
-import type { Nullish } from '@/lib/NullishSchema'
-import { NullishSchema } from '@/lib/NullishSchema'
+import { GenericSchema, type Nullish } from '@/lib/GenericSchema'
 import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
@@ -17,7 +16,7 @@ interface AnyConfig {
 
 // CLASS
 export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-  extends NullishSchema<any, TOptional, TNullable, TDefault> {
+  extends GenericSchema<any, TOptional, TNullable, TDefault> {
 
   // CONFIG
   protected readonly _optional: boolean

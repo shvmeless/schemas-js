@@ -1,21 +1,22 @@
 // IMPORTS
-import type { Nullable } from '@/lib/NullableSchema'
+import { GenericSchema, type Nullish } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import { NullableSchema } from '@/lib/NullableSchema'
 import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
 interface UndefinedConfig {
+  optional: boolean
   nullable: boolean
   default: undefined | Unset
   fallback: undefined | Unset
 }
 
 // CLASS
-export class UndefinedSchema<TNullable extends boolean, TDefault extends boolean>
-  extends NullableSchema<undefined, TNullable, TDefault> {
+export class UndefinedSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
+  extends GenericSchema<undefined, TOptional, TNullable, TDefault> {
 
   // CONFIG
+  protected readonly _optional: boolean
   protected readonly _nullable: boolean
   protected readonly _default: undefined | Unset
   protected readonly _fallback: undefined | Unset
@@ -26,6 +27,7 @@ export class UndefinedSchema<TNullable extends boolean, TDefault extends boolean
   // CONSTRUCTOR
   private constructor(config: UndefinedConfig) {
     super()
+    this._optional = config.optional
     this._nullable = config.nullable
     this._default = config.default
     this._fallback = config.fallback
@@ -34,8 +36,9 @@ export class UndefinedSchema<TNullable extends boolean, TDefault extends boolean
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create(): UndefinedSchema<false, false> {
+  public static create(): UndefinedSchema<false, false, false> {
     return new UndefinedSchema({
+      optional: false,
       nullable: false,
       default: UNSET,
       fallback: UNSET,
@@ -47,6 +50,7 @@ export class UndefinedSchema<TNullable extends boolean, TDefault extends boolean
   // UTILITY
   private get _configuration(): UndefinedConfig {
     return {
+      optional: this._optional,
       nullable: this._nullable,
       default: this._default,
       fallback: this._fallback,
@@ -54,7 +58,7 @@ export class UndefinedSchema<TNullable extends boolean, TDefault extends boolean
   }
 
   // UPDATER
-  private _updateConfig<TNullable extends boolean, TDefault extends boolean>(configuration: Partial<UndefinedConfig>): UndefinedSchema<TNullable, TDefault> {
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<UndefinedConfig>): UndefinedSchema<TOptional, TNullable, TDefault> {
     return new UndefinedSchema({
       ...this._configuration,
       ...configuration,
@@ -64,7 +68,7 @@ export class UndefinedSchema<TNullable extends boolean, TDefault extends boolean
   // --------------------------------------------------------------------------
 
   // VALIDATOR
-  public validate(input: unknown): Nullable<undefined, TNullable, TDefault> {
+  public validate(input: unknown): Nullish<undefined, TOptional, TNullable, TDefault> {
     return this._runSchema((current) => {
 
       if (current !== undefined) {
@@ -79,17 +83,22 @@ export class UndefinedSchema<TNullable extends boolean, TDefault extends boolean
   // --------------------------------------------------------------------------
 
   // CONFIG
-  public nullable(): UndefinedSchema<true, TDefault> {
+  public optional(): UndefinedSchema<true, TNullable, TDefault> {
+    return this._updateConfig({ optional: true })
+  }
+
+  // CONFIG
+  public nullable(): UndefinedSchema<TOptional, true, TDefault> {
     return this._updateConfig({ nullable: true })
   }
 
   // CONFIG
-  public default(value: undefined): UndefinedSchema<TNullable, true> {
+  public default(value: undefined): UndefinedSchema<TOptional, TNullable, true> {
     return this._updateConfig({ default: value })
   }
 
   // CONFIG
-  public fallback(value: undefined): UndefinedSchema<TNullable, TDefault> {
+  public fallback(value: undefined): UndefinedSchema<TOptional, TNullable, TDefault> {
     return this._updateConfig({ fallback: value })
   }
 

@@ -1,14 +1,12 @@
 // IMPORTS
-import type { Nullish } from '@/lib/NullishSchema'
-import type { GenericSchema, TestObject } from '@/lib/GenericSchema'
+import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import { NullishSchema } from '@/lib/NullishSchema'
 import { stringify } from '@/utils/stringify'
 import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
 interface SetConfig<TValue> {
-  schema: GenericSchema<TValue>
+  schema: GenericSchema<TValue, boolean, boolean, boolean>
   prune: boolean
   optional: boolean
   nullable: boolean
@@ -18,10 +16,10 @@ interface SetConfig<TValue> {
 
 // CLASS
 export class SetSchema<TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-  extends NullishSchema<Set<TValue>, TOptional, TNullable, TDefault> {
+  extends GenericSchema<Set<TValue>, TOptional, TNullable, TDefault> {
 
   // CONFIG
-  protected readonly _schema: GenericSchema<TValue>
+  protected readonly _schema: GenericSchema<TValue, boolean, boolean, boolean>
   protected readonly _prune: boolean
   protected readonly _optional: boolean
   protected readonly _nullable: boolean
@@ -46,7 +44,7 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TValue>(schema: GenericSchema<TValue>): SetSchema<TValue, false, false, false> {
+  public static create<TValue>(schema: GenericSchema<TValue, boolean, boolean, boolean>): SetSchema<TValue, false, false, false> {
     return new SetSchema<TValue, false, false, false>({
       schema: schema,
       prune: false,
@@ -104,7 +102,7 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
       for (const element of resolved) {
         try {
           const value = this._schema.validate(element)
-          result.add(value)
+          result.add(value as TValue)
         } catch (error) {
           if (error instanceof ValidationError) {
             if (this._prune) continue
