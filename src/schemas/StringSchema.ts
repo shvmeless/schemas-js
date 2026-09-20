@@ -166,9 +166,9 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
     return this._updateTests({
       min: undefined,
       max: undefined,
-      length: (current) => {
-        if (current.length !== length) return `The value must be ${stringify(length)} characters long.`
-        return null
+      length: (current, initial) => {
+        if (current.length !== length)
+          throw new ValidationError(initial, `The value must be ${stringify(length)} characters long.`)
       },
     })
   }
@@ -177,9 +177,9 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   public min(length: number): StringSchema<TOptional, TNullable, TDefault> {
     if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
     return this._updateTests({
-      min: (current) => {
-        if (current.length < length) return `The value must be at least ${stringify(length)} characters long.`
-        return null
+      min: (current, initial) => {
+        if (current.length < length)
+          throw new ValidationError(initial, `The value must be at least ${stringify(length)} characters long.`)
       },
     })
   }
@@ -188,9 +188,9 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   public max(length: number): StringSchema<TOptional, TNullable, TDefault> {
     if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
     return this._updateTests({
-      max: (current) => {
-        if (current.length > length) return `The value must be at most ${stringify(length)} characters long.`
-        return null
+      max: (current, initial) => {
+        if (current.length > length)
+          throw new ValidationError(initial, `The value must be at most ${stringify(length)} characters long.`)
       },
     })
   }
@@ -198,9 +198,9 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   // TEST
   public lowercase(): StringSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
-      casing: (current) => {
-        if (current.toLowerCase() !== current) return 'The value must be lowercase.'
-        return null
+      casing: (current, initial) => {
+        if (current.toLowerCase() !== current)
+          throw new ValidationError(initial, 'The value must be lowercase.')
       },
 
     })
@@ -209,9 +209,9 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   // TEST
   public uppercase(): StringSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
-      casing: (current) => {
-        if (current.toUpperCase() !== current) return 'The value must be uppercase.'
-        return null
+      casing: (current, initial) => {
+        if (current.toUpperCase() !== current)
+          throw new ValidationError(initial, 'The value must be uppercase.')
       },
 
     })
@@ -220,9 +220,9 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   // TEST
   public trim(): StringSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
-      trim: (current) => {
-        if (current.trim() !== current) return 'The value must be trimmed.'
-        return null
+      trim: (current, initial) => {
+        if (current.trim() !== current)
+          throw new ValidationError(initial, 'The value must be trimmed.')
       },
     })
   }
@@ -230,9 +230,9 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   // TEST
   public startsWith(prefix: string): StringSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
-      prefix: (current) => {
-        if (!current.startsWith(prefix)) return `The value must start with ${stringify(prefix)}.`
-        return null
+      prefix: (current, initial) => {
+        if (!current.startsWith(prefix))
+          throw new ValidationError(initial, `The value must start with ${stringify(prefix)}.`)
       },
     })
   }
@@ -240,9 +240,9 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   // TEST
   public endsWith(suffix: string): StringSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
-      suffix: (current) => {
-        if (!current.endsWith(suffix)) return `The value must end with ${stringify(suffix)}.`
-        return null
+      suffix: (current, initial) => {
+        if (!current.endsWith(suffix))
+          throw new ValidationError(initial, `The value must end with ${stringify(suffix)}.`)
       },
     })
   }
@@ -250,9 +250,9 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   // TEST
   public includes(search: string): StringSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
-      includes: (current) => {
-        if (!current.includes(search)) return `The value must include ${stringify(search)}.`
-        return null
+      includes: (current, initial) => {
+        if (!current.includes(search))
+          throw new ValidationError(initial, `The value must include ${stringify(search)}.`)
       },
     })
   }
@@ -260,9 +260,9 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   // TEST
   public excludes(search: string): StringSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
-      excludes: (current) => {
-        if (current.includes(search)) return `The value must not include ${stringify(search)}.`
-        return null
+      excludes: (current, initial) => {
+        if (current.includes(search))
+          throw new ValidationError(initial, `The value must not include ${stringify(search)}.`)
       },
     })
   }
@@ -270,9 +270,9 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   // TEST
   public match(pattern: RegExp): StringSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
-      pattern: (current) => {
-        if (!pattern.test(current)) return `The value must match the pattern ${stringify(pattern)}.`
-        return null
+      pattern: (current, initial) => {
+        if (!pattern.test(current))
+          throw new ValidationError(initial, `The value must match the pattern ${stringify(pattern)}.`)
       },
     })
   }

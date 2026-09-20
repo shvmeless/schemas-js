@@ -52,6 +52,8 @@ export default defineConfig ([
         default: 'generic',
         readonly: 'generic'
       }],
+      "@typescript-eslint/no-confusing-void-expression": "error",
+      "@typescript-eslint/no-invalid-void-type": "error",
 
       // SAFETY
       '@typescript-eslint/no-unsafe-argument': 'error',

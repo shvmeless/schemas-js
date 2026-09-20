@@ -204,38 +204,35 @@ export class ArraySchema<TValue, TOptional extends boolean, TNullable extends bo
 
   // TEST
   public length(length: number): ArraySchema<TValue, TOptional, TNullable, TDefault> {
-    if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
-    if (length < 0) throw new Error('The length value must be zero or positive.')
+    if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
     return this._updateTests({
       min: undefined,
       max: undefined,
-      length: (current) => {
-        if (current.length !== length) return `The value must be ${stringify(length)} elements long.`
-        return null
+      length: (current, initial) => {
+        if (current.length !== length)
+          throw new ValidationError(initial, `The value must be ${stringify(length)} elements long.`)
       },
     })
   }
 
   // TEST
   public min(length: number): ArraySchema<TValue, TOptional, TNullable, TDefault> {
-    if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
-    if (length < 0) throw new Error('The length value must be zero or positive.')
+    if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
     return this._updateTests({
-      min: (current) => {
-        if (current.length < length) return `The value must be at least ${stringify(length)} elements long.`
-        return null
+      min: (current, initial) => {
+        if (current.length < length)
+          throw new ValidationError(initial, `The value must be at least ${stringify(length)} elements long.`)
       },
     })
   }
 
   // TEST
   public max(length: number): ArraySchema<TValue, TOptional, TNullable, TDefault> {
-    if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
-    if (length < 0) throw new Error('The length value must be zero or positive.')
+    if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
     return this._updateTests({
-      max: (current) => {
-        if (current.length > length) return `The value must be at most ${stringify(length)} elements long.`
-        return null
+      max: (current, initial) => {
+        if (current.length > length)
+          throw new ValidationError(initial, `The value must be at most ${stringify(length)} elements long.`)
       },
     })
   }
@@ -243,12 +240,12 @@ export class ArraySchema<TValue, TOptional extends boolean, TNullable extends bo
   // TEST
   public some(callback: (value: TValue, index: number, array: Array<TValue>) => boolean): ArraySchema<TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({
-      some: (current) => {
+      some: (current, initial) => {
         for (let index = 0; index < current.length; index++) {
           const value = current[index] as TValue
-          if (callback(value, index, current)) return null
+          if (callback(value, index, current)) return
         }
-        return 'No element satisfies the given validation function.'
+        throw new ValidationError(initial, 'No element satisfies the given validation function.')
       },
     })
   }
@@ -256,12 +253,12 @@ export class ArraySchema<TValue, TOptional extends boolean, TNullable extends bo
   // TEST
   public every(callback: (value: TValue, index: number, array: Array<TValue>) => boolean): ArraySchema<TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({
-      every: (current) => {
+      every: (current, initial) => {
         for (let index = 0; index < current.length; index++) {
           const value = current[index] as TValue
-          if (!callback(value, index, current)) return 'At least one element does not satisfy the given validation function.'
+          if (!callback(value, index, current))
+            throw new ValidationError(initial, 'At least one element does not satisfy the given validation function.')
         }
-        return null
       },
     })
   }
@@ -269,12 +266,12 @@ export class ArraySchema<TValue, TOptional extends boolean, TNullable extends bo
   // TEST
   public none(callback: (value: TValue, index: number, array: Array<TValue>) => boolean): ArraySchema<TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({
-      none: (current) => {
+      none: (current, initial) => {
         for (let index = 0; index < current.length; index++) {
           const value = current[index] as TValue
-          if (callback(value, index, current)) return 'At least one element satisfies the given validation function.'
+          if (callback(value, index, current))
+            throw new ValidationError(initial, 'At least one element satisfies the given validation function.')
         }
-        return null
       },
     })
   }

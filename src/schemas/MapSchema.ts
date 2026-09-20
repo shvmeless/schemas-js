@@ -208,38 +208,35 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
 
   // TEST
   public size(size: number): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
-    if (Number.isNaN(size)) throw new Error('The size value must be zero or positive.')
-    if (size < 0) throw new Error('The size value must be zero or positive.')
+    if (Number.isNaN(size) || size < 0) throw new Error('The size value must be zero or positive.')
     return this._updateTests({
       min: undefined,
       max: undefined,
-      size: (current) => {
-        if (current.size !== size) return `The value must be ${stringify(size)} entries long.`
-        return null
+      size: (current, initial) => {
+        if (current.size !== size)
+          throw new ValidationError(initial, `The value must be ${stringify(size)} entries long.`)
       },
     })
   }
 
   // TEST
   public min(size: number): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
-    if (Number.isNaN(size)) throw new Error('The size value must be zero or positive.')
-    if (size < 0) throw new Error('The size value must be zero or positive.')
+    if (Number.isNaN(size) || size < 0) throw new Error('The size value must be zero or positive.')
     return this._updateTests({
-      min: (current) => {
-        if (current.size < size) return `The value must be at least ${stringify(size)} entries long.`
-        return null
+      min: (current, initial) => {
+        if (current.size < size)
+          throw new ValidationError(initial, `The value must be at least ${stringify(size)} entries long.`)
       },
     })
   }
 
   // TEST
   public max(size: number): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
-    if (Number.isNaN(size)) throw new Error('The size value must be zero or positive.')
-    if (size < 0) throw new Error('The size value must be zero or positive.')
+    if (Number.isNaN(size) || size < 0) throw new Error('The size value must be zero or positive.')
     return this._updateTests({
-      max: (current) => {
-        if (current.size > size) return `The value must be at most ${stringify(size)} entries long.`
-        return null
+      max: (current, initial) => {
+        if (current.size > size)
+          throw new ValidationError(initial, `The value must be at most ${stringify(size)} entries long.`)
       },
     })
   }
@@ -247,11 +244,11 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   // TEST
   public some(callback: (value: TValue, key: TKey, map: Map<TKey, TValue>) => boolean): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({
-      some: (current) => {
+      some: (current, initial) => {
         for (const [key, value] of current) {
-          if (callback(value, key, current)) return null
+          if (callback(value, key, current)) return
         }
-        return 'No entry satisfies the given validation function.'
+        throw new ValidationError(initial, 'No entry satisfies the given validation function.')
       },
     })
   }
@@ -259,11 +256,11 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   // TEST
   public every(callback: (value: TValue, key: TKey, map: Map<TKey, TValue>) => boolean): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({
-      every: (current) => {
+      every: (current, initial) => {
         for (const [key, value] of current) {
-          if (!callback(value, key, current)) return 'At least one entry does not satisfy the given validation function.'
+          if (!callback(value, key, current))
+            throw new ValidationError(initial, 'At least one entry does not satisfy the given validation function.')
         }
-        return null
       },
     })
   }
@@ -271,11 +268,11 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   // TEST
   public none(callback: (value: TValue, key: TKey, map: Map<TKey, TValue>) => boolean): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({
-      none: (current) => {
+      none: (current, initial) => {
         for (const [key, value] of current) {
-          if (callback(value, key, current)) return 'At least one entry satisfies the given validation function.'
+          if (callback(value, key, current))
+            throw new ValidationError(initial, 'At least one entry satisfies the given validation function.')
         }
-        return null
       },
     })
   }

@@ -165,9 +165,9 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
   public lessThan(target: number): NumberSchema<TOptional, TNullable, TDefault> {
     if (Number.isNaN(target)) throw new Error('The `target` parameter cannot be NaN.')
     return this._updateTests({
-      max: (current) => {
-        if (current >= target) return `The value must be less than ${stringify(target)}.`
-        return null
+      max: (current, initial) => {
+        if (current >= target)
+          throw new ValidationError(initial, `The value must be less than ${stringify(target)}.`)
       },
     })
   }
@@ -176,9 +176,9 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
   public lessThanOrEqual(target: number): NumberSchema<TOptional, TNullable, TDefault> {
     if (Number.isNaN(target)) throw new Error('The `target` parameter cannot be NaN.')
     return this._updateTests({
-      max: (current) => {
-        if (current > target) return `The value must be less than or equal to ${stringify(target)}.`
-        return null
+      max: (current, initial) => {
+        if (current > target)
+          throw new ValidationError(initial, `The value must be less than or equal to ${stringify(target)}.`)
       },
     })
   }
@@ -187,9 +187,9 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
   public greaterThan(target: number): NumberSchema<TOptional, TNullable, TDefault> {
     if (Number.isNaN(target)) throw new Error('The `target` parameter cannot be NaN.')
     return this._updateTests({
-      min: (current) => {
-        if (current <= target) return `The value must be greater than ${stringify(target)}.`
-        return null
+      min: (current, initial) => {
+        if (current <= target)
+          throw new ValidationError(initial, `The value must be greater than ${stringify(target)}.`)
       },
     })
   }
@@ -198,9 +198,9 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
   public greaterThanOrEqual(target: number): NumberSchema<TOptional, TNullable, TDefault> {
     if (Number.isNaN(target)) throw new Error('The `target` parameter cannot be NaN.')
     return this._updateTests({
-      min: (current) => {
-        if (current < target) return `The value must be greater than or equal to ${stringify(target)}.`
-        return null
+      min: (current, initial) => {
+        if (current < target)
+          throw new ValidationError(initial, `The value must be greater than or equal to ${stringify(target)}.`)
       },
     })
   }
@@ -208,9 +208,9 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
   // TEST
   public negative(): NumberSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
-      min: (current) => {
-        if (current >= 0) return 'The value must be a negative number.'
-        return null
+      min: (current, initial) => {
+        if (current >= 0)
+          throw new ValidationError(initial, 'The value must be a negative number.')
       },
     })
   }
@@ -218,9 +218,9 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
   // TEST
   public positive(): NumberSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
-      max: (current) => {
-        if (current <= 0) return 'The value must be a positive number.'
-        return null
+      max: (current, initial) => {
+        if (current <= 0)
+          throw new ValidationError(initial, 'The value must be a positive number.')
       },
     })
   }
@@ -228,9 +228,9 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
   // TEST
   public integer(): NumberSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
-      integer: (current) => {
-        if (!Number.isInteger(current)) return 'The value must be an integer.'
-        return null
+      integer: (current, initial) => {
+        if (!Number.isInteger(current))
+          throw new ValidationError(initial, 'The value must be an integer.')
       },
     })
   }
@@ -238,9 +238,9 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
   // TEST
   public finite(): NumberSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
-      finite: (current) => {
-        if (!Number.isFinite(current)) return 'The value must be a finite number.'
-        return null
+      finite: (current, initial) => {
+        if (!Number.isFinite(current))
+          throw new ValidationError(initial, 'The value must be a finite number.')
       },
     })
   }
@@ -248,10 +248,10 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
   // TEST
   public safe(): NumberSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
-      safe: (current) => {
-        if (Number.isNaN(current)) return 'The value must be a safe integer.'
-        if (current < Number.MIN_SAFE_INTEGER || current > Number.MAX_SAFE_INTEGER) return 'The value must be a safe integer.'
-        return null
+      safe: (current, initial) => {
+        if (Number.isNaN(current)) throw new ValidationError(initial, 'The value must be a safe integer.')
+        if (current < Number.MIN_SAFE_INTEGER || current > Number.MAX_SAFE_INTEGER)
+          throw new ValidationError(initial, 'The value must be a safe integer.')
       },
     })
   }
