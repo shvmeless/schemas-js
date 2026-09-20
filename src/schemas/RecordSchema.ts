@@ -1,5 +1,5 @@
 // IMPORTS
-import type { TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
@@ -15,6 +15,12 @@ interface RecordConfig<TValue> {
   fallback: Record<string, TValue> | Unset
 }
 
+// INTERFACE
+interface RecordPipeline<TValue> {
+  parse: ParseFunction | null
+  tests: TestObject<Record<string, TValue>>
+}
+
 // CLASS
 export class RecordSchema<TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
   extends GenericSchema<Record<string, TValue>, TOptional, TNullable, TDefault> {
@@ -28,10 +34,11 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
   protected readonly _fallback: Record<string, TValue> | Unset
 
   // PIPELINE
+  protected readonly _parse: ParseFunction | null
   protected readonly _tests: TestObject<Record<string, TValue>>
 
   // CONSTRUCTOR
-  private constructor(config: RecordConfig<TValue>, tests: TestObject<Record<string, TValue>>) {
+  private constructor(config: RecordConfig<TValue>, pipeline: RecordPipeline<TValue>) {
     super()
     this._schema = config.schema
     this._prune = config.prune
@@ -39,7 +46,8 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
     this._nullable = config.nullable
     this._default = config.default
     this._fallback = config.fallback
-    this._tests = tests
+    this._parse = pipeline.parse
+    this._tests = pipeline.tests
   }
 
   // --------------------------------------------------------------------------
@@ -53,7 +61,10 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
       nullable: false,
       default: UNSET,
       fallback: UNSET,
-    }, {})
+    }, {
+      parse: null,
+      tests: {},
+    })
   }
 
   // --------------------------------------------------------------------------
@@ -70,19 +81,38 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
     }
   }
 
+  // UTILITY
+  private get _pipeline(): RecordPipeline<TValue> {
+    return {
+      parse: this._parse,
+      tests: this._tests,
+    }
+  }
+
   // UPDATER
   private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<RecordConfig<TValue>>): RecordSchema<TValue, TOptional, TNullable, TDefault> {
     return new RecordSchema({
       ...this._configuration,
       ...configuration,
-    }, this._tests)
+    }, this._pipeline)
   }
 
   // UPDATER
   private _updateTests(tests: TestObject<Record<string, TValue>>): RecordSchema<TValue, TOptional, TNullable, TDefault> {
     return new RecordSchema<TValue, TOptional, TNullable, TDefault>(this._configuration, {
-      ...this._tests,
-      ...tests,
+      ...this._pipeline,
+      tests: {
+        ...this._tests,
+        ...tests,
+      },
+    })
+  }
+
+  // UPDATER
+  private _updatePipeline(pipeline: Partial<RecordPipeline<TValue>>): RecordSchema<TValue, TOptional, TNullable, TDefault> {
+    return new RecordSchema<TValue, TOptional, TNullable, TDefault>(this._configuration, {
+      ...this._pipeline,
+      ...pipeline,
     })
   }
 
@@ -148,6 +178,11 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
   }
 
   // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public parse(fn: ParseFunction): RecordSchema<TValue, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ parse: fn })
+  }
 
   // PIPELINE
   public test(id: string, test: TestFunction<Record<string, TValue>>): RecordSchema<TValue, TOptional, TNullable, TDefault> {

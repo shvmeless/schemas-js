@@ -1,5 +1,5 @@
 // IMPORTS
-import type { TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
@@ -10,6 +10,12 @@ interface NullConfig {
   nullable: boolean
   default: null | Unset
   fallback: null | Unset
+}
+
+// INTERFACE
+interface NullPipeline {
+  parse: ParseFunction | null
+  tests: TestObject<null>
 }
 
 // CLASS
@@ -23,16 +29,18 @@ export class NullSchema<TOptional extends boolean, TNullable extends boolean, TD
   protected readonly _fallback: null | Unset
 
   // PIPELINE
+  protected readonly _parse: ParseFunction | null
   protected readonly _tests: TestObject<null>
 
   // CONSTRUCTOR
-  private constructor(config: NullConfig, tests: TestObject<null>) {
+  private constructor(config: NullConfig, pipeline: NullPipeline) {
     super()
     this._optional = config.optional
     this._nullable = config.nullable
     this._default = config.default
     this._fallback = config.fallback
-    this._tests = tests
+    this._parse = pipeline.parse
+    this._tests = pipeline.tests
   }
 
   // --------------------------------------------------------------------------
@@ -44,7 +52,10 @@ export class NullSchema<TOptional extends boolean, TNullable extends boolean, TD
       nullable: false,
       default: UNSET,
       fallback: UNSET,
-    }, {})
+    }, {
+      parse: null,
+      tests: {},
+    })
   }
 
   // --------------------------------------------------------------------------
@@ -59,19 +70,38 @@ export class NullSchema<TOptional extends boolean, TNullable extends boolean, TD
     }
   }
 
+  // UTILITY
+  private get _pipeline(): NullPipeline {
+    return {
+      parse: this._parse,
+      tests: this._tests,
+    }
+  }
+
   // UPDATER
   private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<NullConfig>): NullSchema<TOptional, TNullable, TDefault> {
     return new NullSchema({
       ...this._configuration,
       ...configuration,
-    }, this._tests)
+    }, this._pipeline)
   }
 
   // UPDATER
   private _updateTests(tests: TestObject<null>): NullSchema<TOptional, TNullable, TDefault> {
     return new NullSchema(this._configuration, {
-      ...this._tests,
-      ...tests,
+      ...this._pipeline,
+      tests: {
+        ...this._tests,
+        ...tests,
+      },
+    })
+  }
+
+  // UPDATER
+  private _updatePipeline(pipeline: Partial<NullPipeline>): NullSchema<TOptional, TNullable, TDefault> {
+    return new NullSchema(this._configuration, {
+      ...this._pipeline,
+      ...pipeline,
     })
   }
 
@@ -113,6 +143,11 @@ export class NullSchema<TOptional extends boolean, TNullable extends boolean, TD
   }
 
   // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public parse(fn: ParseFunction): NullSchema<TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ parse: fn })
+  }
 
   // PIPELINE
   public test(id: string, test: TestFunction<null>): NullSchema<TOptional, TNullable, TDefault> {

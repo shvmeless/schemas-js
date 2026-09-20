@@ -1,5 +1,5 @@
 // IMPORTS
-import type { TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
@@ -11,6 +11,12 @@ interface EnumConfig<TValues extends string | number> {
   nullable: boolean
   default: TValues | Unset
   fallback: TValues | Unset
+}
+
+// INTERFACE
+interface EnumPipeline<TValues extends string | number> {
+  parse: ParseFunction | null
+  tests: TestObject<TValues>
 }
 
 // CLASS
@@ -25,17 +31,19 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
   protected readonly _fallback: TValues | Unset
 
   // PIPELINE
+  protected readonly _parse: ParseFunction | null
   protected readonly _tests: TestObject<TValues>
 
   // CONSTRUCTOR
-  private constructor(config: EnumConfig<TValues>, tests: TestObject<TValues>) {
+  private constructor(config: EnumConfig<TValues>, pipeline: EnumPipeline<TValues>) {
     super()
     this._values = config.values
     this._optional = config.optional
     this._nullable = config.nullable
     this._default = config.default
     this._fallback = config.fallback
-    this._tests = tests
+    this._parse = pipeline.parse
+    this._tests = pipeline.tests
     if (this._values.length === 0) {
       throw new Error('Must provide at least one literal value.')
     }
@@ -51,7 +59,10 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
       nullable: false,
       default: UNSET,
       fallback: UNSET,
-    }, {})
+    }, {
+      parse: null,
+      tests: {},
+    })
   }
 
   // --------------------------------------------------------------------------
@@ -67,19 +78,38 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
     }
   }
 
+  // UTILITY
+  private get _pipeline(): EnumPipeline<TValues> {
+    return {
+      parse: this._parse,
+      tests: this._tests,
+    }
+  }
+
   // UPDATER
   private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<EnumConfig<TValues>>): EnumSchema<TValues, TOptional, TNullable, TDefault> {
     return new EnumSchema({
       ...this._configuration,
       ...configuration,
-    }, this._tests)
+    }, this._pipeline)
   }
 
   // UPDATER
   private _updateTests(tests: TestObject<TValues>): EnumSchema<TValues, TOptional, TNullable, TDefault> {
     return new EnumSchema(this._configuration, {
-      ...this._tests,
-      ...tests,
+      ...this._pipeline,
+      tests: {
+        ...this._tests,
+        ...tests,
+      },
+    })
+  }
+
+  // UPDATER
+  private _updatePipeline(pipeline: Partial<EnumPipeline<TValues>>): EnumSchema<TValues, TOptional, TNullable, TDefault> {
+    return new EnumSchema(this._configuration, {
+      ...this._pipeline,
+      ...pipeline,
     })
   }
 
@@ -121,6 +151,11 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
   }
 
   // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public parse(fn: ParseFunction): EnumSchema<TValues, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ parse: fn })
+  }
 
   // PIPELINE
   public test(id: string, test: TestFunction<TValues>): EnumSchema<TValues, TOptional, TNullable, TDefault> {

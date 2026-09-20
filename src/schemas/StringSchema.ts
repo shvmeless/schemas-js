@@ -1,5 +1,5 @@
 // IMPORTS
-import type { TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
@@ -13,6 +13,12 @@ interface StringConfig {
   fallback: string | Unset
 }
 
+// INTERFACE
+interface StringPipeline {
+  parse: ParseFunction | null
+  tests: TestObject<string>
+}
+
 // CLASS
 export class StringSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
   extends GenericSchema<string, TOptional, TNullable, TDefault> {
@@ -24,16 +30,18 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   protected readonly _fallback: string | Unset
 
   // PIPELINE
+  protected readonly _parse: ParseFunction | null
   protected readonly _tests: TestObject<string>
 
   // CONSTRUCTOR
-  private constructor(config: StringConfig, tests: TestObject<string>) {
+  private constructor(config: StringConfig, pipeline: StringPipeline) {
     super()
     this._optional = config.optional
     this._nullable = config.nullable
     this._default = config.default
     this._fallback = config.fallback
-    this._tests = tests
+    this._parse = pipeline.parse
+    this._tests = pipeline.tests
   }
 
   // --------------------------------------------------------------------------
@@ -45,7 +53,10 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
       nullable: false,
       default: UNSET,
       fallback: UNSET,
-    }, {})
+    }, {
+      parse: null,
+      tests: {},
+    })
   }
 
   // --------------------------------------------------------------------------
@@ -60,19 +71,37 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
     }
   }
 
+  // UTILITY
+  private get _pipeline(): StringPipeline {
+    return {
+      parse: this._parse,
+      tests: this._tests,
+    }
+  }
+
   // UPDATER
   private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<StringConfig>): StringSchema<TOptional, TNullable, TDefault> {
     return new StringSchema({
       ...this._configuration,
       ...configuration,
-    }, this._tests)
+    }, this._pipeline)
   }
 
   // UPDATER
   private _updateTests(tests: TestObject<string>): StringSchema<TOptional, TNullable, TDefault> {
     return new StringSchema(this._configuration, {
-      ...this._tests,
-      ...tests,
+      ...this._pipeline, tests: {
+        ...this._tests,
+        ...tests,
+      },
+    })
+  }
+
+  // UPDATER
+  private _updatePipeline(pipeline: Partial<StringPipeline>): StringSchema<TOptional, TNullable, TDefault> {
+    return new StringSchema(this._configuration, {
+      ...this._pipeline,
+      ...pipeline,
     })
   }
 
@@ -114,6 +143,11 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   }
 
   // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public parse(fn: ParseFunction): StringSchema<TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ parse: fn })
+  }
 
   // PIPELINE
   public test(id: string, test: TestFunction<string>): StringSchema<TOptional, TNullable, TDefault> {

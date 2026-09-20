@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
 // IMPORTS
-import type { TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { type Unset, UNSET } from '@/utils/unset'
 
@@ -13,6 +13,12 @@ interface AnyConfig {
   nullable: boolean
   default: any | Unset
   fallback: any | Unset
+}
+
+// INTERFACE
+interface AnyPipeline {
+  parse: ParseFunction | null
+  tests: TestObject<any>
 }
 
 // CLASS
@@ -26,16 +32,18 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
   protected readonly _fallback: any | Unset
 
   // PIPELINE
+  protected readonly _parse: ParseFunction | null
   protected readonly _tests: TestObject<any>
 
   // CONSTRUCTOR
-  private constructor(config: AnyConfig, tests: TestObject<any>) {
+  private constructor(config: AnyConfig, pipeline: AnyPipeline) {
     super()
     this._optional = config.optional
     this._nullable = config.nullable
     this._default = config.default
     this._fallback = config.fallback
-    this._tests = tests
+    this._parse = pipeline.parse
+    this._tests = pipeline.tests
   }
 
   // --------------------------------------------------------------------------
@@ -47,7 +55,10 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
       nullable: false,
       default: UNSET,
       fallback: UNSET,
-    }, {})
+    }, {
+      parse: null,
+      tests: {},
+    })
   }
 
   // --------------------------------------------------------------------------
@@ -62,19 +73,38 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
     }
   }
 
+  // UTILITY
+  private get _pipeline(): AnyPipeline {
+    return {
+      parse: this._parse,
+      tests: this._tests,
+    }
+  }
+
   // UPDATER
   private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<AnyConfig>): AnySchema<TOptional, TNullable, TDefault> {
     return new AnySchema({
       ...this._configuration,
       ...configuration,
-    }, this._tests)
+    }, this._pipeline)
   }
 
   // UPDATER
   private _updateTests(tests: TestObject<any>): AnySchema<TOptional, TNullable, TDefault> {
     return new AnySchema(this._configuration, {
-      ...this._tests,
-      ...tests,
+      ...this._pipeline,
+      tests: {
+        ...this._tests,
+        ...tests,
+      },
+    })
+  }
+
+  // UPDATER
+  private _updatePipeline(pipeline: Partial<AnyPipeline>): AnySchema<TOptional, TNullable, TDefault> {
+    return new AnySchema(this._configuration, {
+      ...this._pipeline,
+      ...pipeline,
     })
   }
 
@@ -110,6 +140,11 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
   }
 
   // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public parse(fn: ParseFunction): AnySchema<TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ parse: fn })
+  }
 
   // PIPELINE
   public test(id: string, test: TestFunction<any>): AnySchema<TOptional, TNullable, TDefault> {

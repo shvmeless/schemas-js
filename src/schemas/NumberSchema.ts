@@ -1,5 +1,5 @@
 // IMPORTS
-import type { TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
@@ -13,6 +13,12 @@ interface NumberConfig {
   fallback: number | Unset
 }
 
+// INTERFACE
+interface NumberPipeline {
+  parse: ParseFunction | null
+  tests: TestObject<number>
+}
+
 // CLASS
 export class NumberSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
   extends GenericSchema<number, TOptional, TNullable, TDefault> {
@@ -24,16 +30,18 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
   protected readonly _fallback: number | Unset
 
   // PIPELINE
+  protected readonly _parse: ParseFunction | null
   protected readonly _tests: TestObject<number>
 
   // CONSTRUCTOR
-  private constructor(config: NumberConfig, tests: TestObject<number>) {
+  private constructor(config: NumberConfig, pipeline: NumberPipeline) {
     super()
     this._optional = config.optional
     this._nullable = config.nullable
     this._default = config.default
     this._fallback = config.fallback
-    this._tests = tests
+    this._parse = pipeline.parse
+    this._tests = pipeline.tests
   }
 
   // --------------------------------------------------------------------------
@@ -45,7 +53,10 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
       nullable: false,
       default: UNSET,
       fallback: UNSET,
-    }, {})
+    }, {
+      parse: null,
+      tests: {},
+    })
   }
 
   // --------------------------------------------------------------------------
@@ -60,19 +71,38 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
     }
   }
 
+  // UTILITY
+  private get _pipeline(): NumberPipeline {
+    return {
+      parse: this._parse,
+      tests: this._tests,
+    }
+  }
+
   // UPDATER
   private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<NumberConfig>): NumberSchema<TOptional, TNullable, TDefault> {
     return new NumberSchema({
       ...this._configuration,
       ...configuration,
-    }, this._tests)
+    }, this._pipeline)
   }
 
   // UPDATER
   private _updateTests(tests: TestObject<number>): NumberSchema<TOptional, TNullable, TDefault> {
     return new NumberSchema(this._configuration, {
-      ...this._tests,
-      ...tests,
+      ...this._pipeline,
+      tests: {
+        ...this._tests,
+        ...tests,
+      },
+    })
+  }
+
+  // UPDATER
+  private _updatePipeline(pipeline: Partial<NumberPipeline>): NumberSchema<TOptional, TNullable, TDefault> {
+    return new NumberSchema(this._configuration, {
+      ...this._pipeline,
+      ...pipeline,
     })
   }
 
@@ -114,6 +144,11 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
   }
 
   // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public parse(fn: ParseFunction): NumberSchema<TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ parse: fn })
+  }
 
   // PIPELINE
   public test(id: string, test: TestFunction<number>): NumberSchema<TOptional, TNullable, TDefault> {

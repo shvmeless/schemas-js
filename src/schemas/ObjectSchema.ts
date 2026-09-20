@@ -1,5 +1,5 @@
 // IMPORTS
-import type { TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
@@ -19,6 +19,12 @@ interface ObjectConfig<TObject> {
   fallback: TObject | Unset
 }
 
+// INTERFACE
+interface ObjectPipeline<TObject> {
+  parse: ParseFunction | null
+  tests: TestObject<TObject>
+}
+
 // CLASS
 export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
   extends GenericSchema<TObject, TOptional, TNullable, TDefault> {
@@ -32,10 +38,11 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
   protected readonly _fallback: TObject | Unset
 
   // PIPELINE
+  protected readonly _parse: ParseFunction | null
   protected readonly _tests: TestObject<TObject>
 
   // CONSTRUCTOR
-  private constructor(config: ObjectConfig<TObject>, tests: TestObject<TObject>) {
+  private constructor(config: ObjectConfig<TObject>, pipeline: ObjectPipeline<TObject>) {
     super()
     this._schema = config.schema
     this._strip = config.strip
@@ -43,7 +50,8 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
     this._nullable = config.nullable
     this._default = config.default
     this._fallback = config.fallback
-    this._tests = tests
+    this._parse = pipeline.parse
+    this._tests = pipeline.tests
   }
 
   // --------------------------------------------------------------------------
@@ -57,7 +65,10 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
       nullable: false,
       default: UNSET,
       fallback: UNSET,
-    }, {})
+    }, {
+      parse: null,
+      tests: {},
+    })
   }
 
   // --------------------------------------------------------------------------
@@ -74,19 +85,38 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
     }
   }
 
+  // UTILITY
+  private get _pipeline(): ObjectPipeline<TObject> {
+    return {
+      parse: this._parse,
+      tests: this._tests,
+    }
+  }
+
   // UPDATER
   private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<ObjectConfig<TObject>>): ObjectSchema<TObject, TOptional, TNullable, TDefault> {
     return new ObjectSchema({
       ...this._configuration,
       ...configuration,
-    }, this._tests)
+    }, this._pipeline)
   }
 
   // UPDATER
   private _updateTests(tests: TestObject<TObject>): ObjectSchema<TObject, TOptional, TNullable, TDefault> {
     return new ObjectSchema(this._configuration, {
-      ...this._tests,
-      ...tests,
+      ...this._pipeline,
+      tests: {
+        ...this._tests,
+        ...tests,
+      },
+    })
+  }
+
+  // UPDATER
+  private _updatePipeline(pipeline: Partial<ObjectPipeline<TObject>>): ObjectSchema<TObject, TOptional, TNullable, TDefault> {
+    return new ObjectSchema(this._configuration, {
+      ...this._pipeline,
+      ...pipeline,
     })
   }
 
@@ -166,6 +196,11 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
   }
 
   // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public parse(fn: ParseFunction): ObjectSchema<TObject, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ parse: fn })
+  }
 
   // PIPELINE
   public test(id: string, test: TestFunction<TObject>): ObjectSchema<TObject, TOptional, TNullable, TDefault> {

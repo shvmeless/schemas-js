@@ -1,5 +1,5 @@
 // IMPORTS
-import type { TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
@@ -10,6 +10,12 @@ interface UndefinedConfig {
   nullable: boolean
   default: undefined | Unset
   fallback: undefined | Unset
+}
+
+// INTERFACE
+interface UndefinedPipeline {
+  parse: ParseFunction | null
+  tests: TestObject<undefined>
 }
 
 // CLASS
@@ -23,16 +29,18 @@ export class UndefinedSchema<TOptional extends boolean, TNullable extends boolea
   protected readonly _fallback: undefined | Unset
 
   // PIPELINE
+  protected readonly _parse: ParseFunction | null
   protected readonly _tests: TestObject<undefined>
 
   // CONSTRUCTOR
-  private constructor(config: UndefinedConfig, tests: TestObject<undefined>) {
+  private constructor(config: UndefinedConfig, pipeline: UndefinedPipeline) {
     super()
     this._optional = config.optional
     this._nullable = config.nullable
     this._default = config.default
     this._fallback = config.fallback
-    this._tests = tests
+    this._parse = pipeline.parse
+    this._tests = pipeline.tests
   }
 
   // --------------------------------------------------------------------------
@@ -44,7 +52,10 @@ export class UndefinedSchema<TOptional extends boolean, TNullable extends boolea
       nullable: false,
       default: UNSET,
       fallback: UNSET,
-    }, {})
+    }, {
+      parse: null,
+      tests: {},
+    })
   }
 
   // --------------------------------------------------------------------------
@@ -59,19 +70,38 @@ export class UndefinedSchema<TOptional extends boolean, TNullable extends boolea
     }
   }
 
+  // UTILITY
+  private get _pipeline(): UndefinedPipeline {
+    return {
+      parse: this._parse,
+      tests: this._tests,
+    }
+  }
+
   // UPDATER
   private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<UndefinedConfig>): UndefinedSchema<TOptional, TNullable, TDefault> {
     return new UndefinedSchema({
       ...this._configuration,
       ...configuration,
-    }, this._tests)
+    }, this._pipeline)
   }
 
   // UPDATER
   private _updateTests(tests: TestObject<undefined>): UndefinedSchema<TOptional, TNullable, TDefault> {
     return new UndefinedSchema(this._configuration, {
-      ...this._tests,
-      ...tests,
+      ...this._pipeline,
+      tests: {
+        ...this._tests,
+        ...tests,
+      },
+    })
+  }
+
+  // UPDATER
+  private _updatePipeline(pipeline: Partial<UndefinedPipeline>): UndefinedSchema<TOptional, TNullable, TDefault> {
+    return new UndefinedSchema(this._configuration, {
+      ...this._pipeline,
+      ...pipeline,
     })
   }
 
@@ -113,6 +143,11 @@ export class UndefinedSchema<TOptional extends boolean, TNullable extends boolea
   }
 
   // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public parse(fn: ParseFunction): UndefinedSchema<TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ parse: fn })
+  }
 
   // PIPELINE
   public test(id: string, test: TestFunction<undefined>): UndefinedSchema<TOptional, TNullable, TDefault> {

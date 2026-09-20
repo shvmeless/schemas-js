@@ -1,5 +1,5 @@
 // IMPORTS
-import type { TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
@@ -15,6 +15,12 @@ interface ArrayConfig<TItem> {
   fallback: Array<TItem> | Unset
 }
 
+// INTERFACE
+interface ArrayPipeline<TItem> {
+  parse: ParseFunction | null
+  tests: TestObject<Array<TItem>>
+}
+
 // CLASS
 export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
   extends GenericSchema<Array<TItem>, TOptional, TNullable, TDefault> {
@@ -28,10 +34,11 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   protected readonly _fallback: Array<TItem> | Unset
 
   // PIPELINE
+  protected readonly _parse: ParseFunction | null
   protected readonly _tests: TestObject<Array<TItem>>
 
   // CONSTRUCTOR
-  private constructor(config: ArrayConfig<TItem>, tests: TestObject<Array<TItem>>) {
+  private constructor(config: ArrayConfig<TItem>, pipeline: ArrayPipeline<TItem>) {
     super()
     this._schema = config.schema
     this._prune = config.prune
@@ -39,7 +46,8 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
     this._nullable = config.nullable
     this._default = config.default
     this._fallback = config.fallback
-    this._tests = tests
+    this._parse = pipeline.parse
+    this._tests = pipeline.tests
   }
 
   // --------------------------------------------------------------------------
@@ -53,7 +61,10 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
       nullable: false,
       default: UNSET,
       fallback: UNSET,
-    }, {})
+    }, {
+      parse: null,
+      tests: {},
+    })
   }
 
   // --------------------------------------------------------------------------
@@ -70,19 +81,38 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
     }
   }
 
+  // UTILITY
+  private get _pipeline(): ArrayPipeline<TItem> {
+    return {
+      parse: this._parse,
+      tests: this._tests,
+    }
+  }
+
   // UPDATER
   private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<ArrayConfig<TItem>>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
     return new ArraySchema({
       ...this._configuration,
       ...configuration,
-    }, this._tests)
+    }, this._pipeline)
   }
 
   // UPDATER
   private _updateTests(tests: TestObject<Array<TItem>>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
     return new ArraySchema(this._configuration, {
-      ...this._tests,
-      ...tests,
+      ...this._pipeline,
+      tests: {
+        ...this._tests,
+        ...tests,
+      },
+    })
+  }
+
+  // UPDATER
+  private _updatePipeline(pipeline: Partial<ArrayPipeline<TItem>>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+    return new ArraySchema(this._configuration, {
+      ...this._pipeline,
+      ...pipeline,
     })
   }
 
@@ -149,6 +179,11 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   }
 
   // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public parse(fn: ParseFunction): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ parse: fn })
+  }
 
   // PIPELINE
   public test(id: string, test: TestFunction<Array<TItem>>): ArraySchema<TItem, TOptional, TNullable, TDefault> {

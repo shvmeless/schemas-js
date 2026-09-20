@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // IMPORTS
-import type { TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
@@ -19,6 +19,12 @@ interface UnionConfig<TSchemas> {
   fallback: TSchemas | Unset
 }
 
+// INTERFACE
+interface UnionPipeline<TSchemas> {
+  parse: ParseFunction | null
+  tests: TestObject<TSchemas>
+}
+
 // CLASS
 export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
   extends GenericSchema<TSchemas, TOptional, TNullable, TDefault> {
@@ -31,17 +37,19 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
   protected readonly _fallback: TSchemas | Unset
 
   // PIPELINE
+  protected readonly _parse: ParseFunction | null
   protected readonly _tests: TestObject<TSchemas>
 
   // CONSTRUCTOR
-  private constructor(config: UnionConfig<TSchemas>, tests: TestObject<TSchemas>) {
+  private constructor(config: UnionConfig<TSchemas>, pipeline: UnionPipeline<TSchemas>) {
     super()
     this._schemas = config.schemas
     this._optional = config.optional
     this._nullable = config.nullable
     this._default = config.default
     this._fallback = config.fallback
-    this._tests = tests
+    this._parse = pipeline.parse
+    this._tests = pipeline.tests
     if (this._schemas.length < 2) throw new Error('Must provide at least two schemas.')
   }
 
@@ -55,7 +63,10 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
       nullable: false,
       default: UNSET,
       fallback: UNSET,
-    }, {})
+    }, {
+      parse: null,
+      tests: {},
+    })
   }
 
   // --------------------------------------------------------------------------
@@ -71,19 +82,38 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
     }
   }
 
+  // UTILITY
+  private get _pipeline(): UnionPipeline<TSchemas> {
+    return {
+      parse: this._parse,
+      tests: this._tests,
+    }
+  }
+
   // UPDATER
   private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<UnionConfig<TSchemas>>): UnionSchema<TSchemas, TOptional, TNullable, TDefault> {
     return new UnionSchema({
       ...this._configuration,
       ...configuration,
-    }, this._tests)
+    }, this._pipeline)
   }
 
   // UPDATER
   private _updateTests(tests: TestObject<TSchemas>): UnionSchema<TSchemas, TOptional, TNullable, TDefault> {
     return new UnionSchema(this._configuration, {
-      ...this._tests,
-      ...tests,
+      ...this._pipeline,
+      tests: {
+        ...this._tests,
+        ...tests,
+      },
+    })
+  }
+
+  // UPDATER
+  private _updatePipeline(pipeline: Partial<UnionPipeline<TSchemas>>): UnionSchema<TSchemas, TOptional, TNullable, TDefault> {
+    return new UnionSchema(this._configuration, {
+      ...this._pipeline,
+      ...pipeline,
     })
   }
 
@@ -130,6 +160,11 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
   }
 
   // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public parse(fn: ParseFunction): UnionSchema<TSchemas, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ parse: fn })
+  }
 
   // PIPELINE
   public test(id: string, test: TestFunction<TSchemas>): UnionSchema<TSchemas, TOptional, TNullable, TDefault> {

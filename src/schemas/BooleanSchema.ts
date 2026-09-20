@@ -1,5 +1,5 @@
 // IMPORTS
-import type { TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
@@ -10,6 +10,12 @@ interface BooleanConfig {
   nullable: boolean
   default: boolean | Unset
   fallback: boolean | Unset
+}
+
+// INTERFACE
+interface BooleanPipeline {
+  parse: ParseFunction | null
+  tests: TestObject<boolean>
 }
 
 // CLASS
@@ -23,16 +29,18 @@ export class BooleanSchema<TOptional extends boolean, TNullable extends boolean,
   protected readonly _fallback: boolean | Unset
 
   // PIPELINE
+  protected readonly _parse: ParseFunction | null
   protected readonly _tests: TestObject<boolean>
 
   // CONSTRUCTOR
-  private constructor(config: BooleanConfig, tests: TestObject<boolean>) {
+  private constructor(config: BooleanConfig, pipeline: BooleanPipeline) {
     super()
     this._optional = config.optional
     this._nullable = config.nullable
     this._default = config.default
     this._fallback = config.fallback
-    this._tests = tests
+    this._parse = pipeline.parse
+    this._tests = pipeline.tests
   }
 
   // --------------------------------------------------------------------------
@@ -44,7 +52,10 @@ export class BooleanSchema<TOptional extends boolean, TNullable extends boolean,
       nullable: false,
       default: UNSET,
       fallback: UNSET,
-    }, {})
+    }, {
+      parse: null,
+      tests: {},
+    })
   }
 
   // --------------------------------------------------------------------------
@@ -59,19 +70,38 @@ export class BooleanSchema<TOptional extends boolean, TNullable extends boolean,
     }
   }
 
+  // UTILITY
+  private get _pipeline(): BooleanPipeline {
+    return {
+      parse: this._parse,
+      tests: this._tests,
+    }
+  }
+
   // UPDATER
   private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<BooleanConfig>): BooleanSchema<TOptional, TNullable, TDefault> {
     return new BooleanSchema({
       ...this._configuration,
       ...configuration,
-    }, this._tests)
+    }, this._pipeline)
   }
 
   // UPDATER
   private _updateTests(tests: TestObject<boolean>): BooleanSchema<TOptional, TNullable, TDefault> {
     return new BooleanSchema(this._configuration, {
-      ...this._tests,
-      ...tests,
+      ...this._pipeline,
+      tests: {
+        ...this._tests,
+        ...tests,
+      },
+    })
+  }
+
+  // UPDATER
+  private _updatePipeline(pipeline: Partial<BooleanPipeline>): BooleanSchema<TOptional, TNullable, TDefault> {
+    return new BooleanSchema(this._configuration, {
+      ...this._pipeline,
+      ...pipeline,
     })
   }
 
@@ -113,6 +143,11 @@ export class BooleanSchema<TOptional extends boolean, TNullable extends boolean,
   }
 
   // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public parse(fn: ParseFunction): BooleanSchema<TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ parse: fn })
+  }
 
   // PIPELINE
   public test(id: string, test: TestFunction<boolean>): BooleanSchema<TOptional, TNullable, TDefault> {

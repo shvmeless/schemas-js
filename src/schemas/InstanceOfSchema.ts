@@ -1,5 +1,5 @@
 // IMPORTS
-import type { TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
@@ -17,6 +17,12 @@ interface InstanceOfConfig<TConstructor extends AnyConstructor> {
   fallback: InstanceType<TConstructor> | Unset
 }
 
+// INTERFACE
+interface InstanceOfPipeline<TConstructor extends AnyConstructor> {
+  parse: ParseFunction | null
+  tests: TestObject<InstanceType<TConstructor>>
+}
+
 // CLASS
 export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
   extends GenericSchema<InstanceType<TConstructor>, TOptional, TNullable, TDefault> {
@@ -29,17 +35,19 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
   protected readonly _fallback: InstanceType<TConstructor> | Unset
 
   // PIPELINE
+  protected readonly _parse: ParseFunction | null
   protected readonly _tests: TestObject<InstanceType<TConstructor>>
 
   // CONSTRUCTOR
-  private constructor(config: InstanceOfConfig<TConstructor>, tests: TestObject<InstanceType<TConstructor>>) {
+  private constructor(config: InstanceOfConfig<TConstructor>, pipeline: InstanceOfPipeline<TConstructor>) {
     super()
     this._constructor = config.constructor
     this._optional = config.optional
     this._nullable = config.nullable
     this._default = config.default
     this._fallback = config.fallback
-    this._tests = tests
+    this._parse = pipeline.parse
+    this._tests = pipeline.tests
   }
 
   // --------------------------------------------------------------------------
@@ -52,7 +60,10 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
       nullable: false,
       default: UNSET,
       fallback: UNSET,
-    }, {})
+    }, {
+      parse: null,
+      tests: {},
+    })
   }
 
   // --------------------------------------------------------------------------
@@ -68,19 +79,38 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
     }
   }
 
+  // UTILITY
+  private get _pipeline(): InstanceOfPipeline<TConstructor> {
+    return {
+      parse: this._parse,
+      tests: this._tests,
+    }
+  }
+
   // UPDATER
   private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<Omit<InstanceOfConfig<TConstructor>, 'constructor'>>): InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault> {
     return new InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault>({
       ...this._configuration,
       ...configuration,
-    }, this._tests)
+    }, this._pipeline)
   }
 
   // UPDATER
   private _updateTests(tests: TestObject<InstanceType<TConstructor>>): InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault> {
     return new InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault>(this._configuration, {
-      ...this._tests,
-      ...tests,
+      ...this._pipeline,
+      tests: {
+        ...this._tests,
+        ...tests,
+      },
+    })
+  }
+
+  // UPDATER
+  private _updatePipeline(pipeline: Partial<InstanceOfPipeline<TConstructor>>): InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault> {
+    return new InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault>(this._configuration, {
+      ...this._pipeline,
+      ...pipeline,
     })
   }
 
@@ -122,6 +152,11 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
   }
 
   // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public parse(fn: ParseFunction): InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ parse: fn })
+  }
 
   // PIPELINE
   public test(id: string, test: TestFunction<InstanceType<TConstructor>>): InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault> {

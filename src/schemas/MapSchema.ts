@@ -1,5 +1,5 @@
 // IMPORTS
-import type { TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
@@ -16,6 +16,12 @@ interface MapConfig<TKey, TValue> {
   fallback: Map<TKey, TValue> | Unset
 }
 
+// INTERFACE
+interface MapPipeline<TKey, TValue> {
+  parse: ParseFunction | null
+  tests: TestObject<Map<TKey, TValue>>
+}
+
 // CLASS
 export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
   extends GenericSchema<Map<TKey, TValue>, TOptional, TNullable, TDefault> {
@@ -30,10 +36,11 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   protected readonly _fallback: Map<TKey, TValue> | Unset
 
   // PIPELINE
+  protected readonly _parse: ParseFunction | null
   protected readonly _tests: TestObject<Map<TKey, TValue>>
 
   // CONSTRUCTOR
-  private constructor(config: MapConfig<TKey, TValue>, tests: TestObject<Map<TKey, TValue>>) {
+  private constructor(config: MapConfig<TKey, TValue>, pipeline: MapPipeline<TKey, TValue>) {
     super()
     this._keySchema = config.keySchema
     this._valueSchema = config.valueSchema
@@ -42,7 +49,8 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
     this._nullable = config.nullable
     this._default = config.default
     this._fallback = config.fallback
-    this._tests = tests
+    this._parse = pipeline.parse
+    this._tests = pipeline.tests
   }
 
   // --------------------------------------------------------------------------
@@ -57,7 +65,10 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
       nullable: false,
       default: UNSET,
       fallback: UNSET,
-    }, {})
+    }, {
+      parse: null,
+      tests: {},
+    })
   }
 
   // --------------------------------------------------------------------------
@@ -75,19 +86,38 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
     }
   }
 
+  // UTILITY
+  private get _pipeline(): MapPipeline<TKey, TValue> {
+    return {
+      parse: this._parse,
+      tests: this._tests,
+    }
+  }
+
   // UPDATER
   private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<MapConfig<TKey, TValue>>): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     return new MapSchema({
       ...this._configuration,
       ...configuration,
-    }, this._tests)
+    }, this._pipeline)
   }
 
   // UPDATER
   private _updateTests(tests: TestObject<Map<TKey, TValue>>): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     return new MapSchema<TKey, TValue, TOptional, TNullable, TDefault>(this._configuration, {
-      ...this._tests,
-      ...tests,
+      ...this._pipeline,
+      tests: {
+        ...this._tests,
+        ...tests,
+      },
+    })
+  }
+
+  // UPDATER
+  private _updatePipeline(pipeline: Partial<MapPipeline<TKey, TValue>>): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
+    return new MapSchema<TKey, TValue, TOptional, TNullable, TDefault>(this._configuration, {
+      ...this._pipeline,
+      ...pipeline,
     })
   }
 
@@ -155,6 +185,11 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   }
 
   // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public parse(fn: ParseFunction): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ parse: fn })
+  }
 
   // PIPELINE
   public test(id: string, test: TestFunction<Map<TKey, TValue>>): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {

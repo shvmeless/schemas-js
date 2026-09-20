@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest'
 import { StringSchema } from '@/schemas/StringSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectValidation } from '@tests/helpers/expect'
+import { ValidationError } from '@/errors/ValidationError'
 
 // NOTE -----------------------------------------------------------------------
 
@@ -130,6 +131,44 @@ describe('.fallback(value)', () => {
 
   it('returns when `input` is `null` and the schema is nullable.', () => {
     expectValidation(schema.nullable(), null).toReturn(null)
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
+describe('.parse(callback)', () => {
+
+  const base = StringSchema.create()
+  const schema = base.parse((input) => {
+    if (typeof input === 'string') return input
+    if (typeof input === 'number') return input.toString()
+    throw new ValidationError(input, 'The value must be a string or a number.')
+  })
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(StringSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `parse` returns a value that satisfies the schema.', () => {
+    expectValidation(schema, 'string').toReturn('string')
+    expectValidation(schema, 100).toReturn('100')
+  })
+
+  it('throws when `parse` returns a value that does not satisfy the schema.', () => {
+    const constrained = StringSchema.create().min(8)
+    expectValidation(constrained, 'short').toThrow('The value must be at least 8 characters long.')
+  })
+
+  it('throws when `parse` throws a `ValidationError`.', () => {
+    DataTypeGenerator.skip('strings', 'numbers').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be a string or a number.')
+    })
+  })
+
+  it('returns when `parse` throws but `fallback` is provided.', () => {
+    DataTypeGenerator.skip('strings', 'numbers').forEach((value) => {
+      expectValidation(schema.fallback('fallback'), value).toReturn('fallback')
+    })
   })
 })
 

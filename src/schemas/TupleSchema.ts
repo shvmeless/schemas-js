@@ -1,5 +1,5 @@
 // IMPORTS
-import type { TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
@@ -19,6 +19,12 @@ interface TupleConfig<TTuple extends ReadonlyArray<unknown>> {
   fallback: TTuple | Unset
 }
 
+// INTERFACE
+interface TuplePipeline<TTuple extends ReadonlyArray<unknown>> {
+  parse: ParseFunction | null
+  tests: TestObject<TTuple>
+}
+
 // CLASS
 export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
   extends GenericSchema<TTuple, TOptional, TNullable, TDefault> {
@@ -32,10 +38,11 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
   protected readonly _fallback: TTuple | Unset
 
   // PIPELINE
+  protected readonly _parse: ParseFunction | null
   protected readonly _tests: TestObject<TTuple>
 
   // CONSTRUCTOR
-  private constructor(config: TupleConfig<TTuple>, tests: TestObject<TTuple>) {
+  private constructor(config: TupleConfig<TTuple>, pipeline: TuplePipeline<TTuple>) {
     super()
     this._shape = config.shape
     this._strip = config.strip
@@ -43,7 +50,8 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
     this._nullable = config.nullable
     this._default = config.default
     this._fallback = config.fallback
-    this._tests = tests
+    this._parse = pipeline.parse
+    this._tests = pipeline.tests
   }
 
   // --------------------------------------------------------------------------
@@ -57,7 +65,10 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
       nullable: false,
       default: UNSET,
       fallback: UNSET,
-    }, {})
+    }, {
+      parse: null,
+      tests: {},
+    })
   }
 
   // --------------------------------------------------------------------------
@@ -74,19 +85,38 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
     }
   }
 
+  // UTILITY
+  private get _pipeline(): TuplePipeline<TTuple> {
+    return {
+      parse: this._parse,
+      tests: this._tests,
+    }
+  }
+
   // UPDATER
   private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<TupleConfig<TTuple>>): TupleSchema<TTuple, TOptional, TNullable, TDefault> {
     return new TupleSchema({
       ...this._configuration,
       ...configuration,
-    }, this._tests)
+    }, this._pipeline)
   }
 
   // UPDATER
   private _updateTests(tests: TestObject<TTuple>): TupleSchema<TTuple, TOptional, TNullable, TDefault> {
     return new TupleSchema(this._configuration, {
-      ...this._tests,
-      ...tests,
+      ...this._pipeline,
+      tests: {
+        ...this._tests,
+        ...tests,
+      },
+    })
+  }
+
+  // UPDATER
+  private _updatePipeline(pipeline: Partial<TuplePipeline<TTuple>>): TupleSchema<TTuple, TOptional, TNullable, TDefault> {
+    return new TupleSchema(this._configuration, {
+      ...this._pipeline,
+      ...pipeline,
     })
   }
 
@@ -166,6 +196,11 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
   }
 
   // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public parse(fn: ParseFunction): TupleSchema<TTuple, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ parse: fn })
+  }
 
   // PIPELINE
   public test(id: string, test: TestFunction<TTuple>): TupleSchema<TTuple, TOptional, TNullable, TDefault> {

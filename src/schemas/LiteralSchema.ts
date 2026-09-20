@@ -1,5 +1,5 @@
 // IMPORTS
-import type { TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
@@ -11,6 +11,12 @@ interface LiteralConfig<TValue extends string | number | boolean> {
   nullable: boolean
   default: TValue | Unset
   fallback: TValue | Unset
+}
+
+// INTERFACE
+interface LiteralPipeline<TValue extends string | number | boolean> {
+  parse: ParseFunction | null
+  tests: TestObject<TValue>
 }
 
 // CLASS
@@ -25,17 +31,19 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
   protected readonly _fallback: TValue | Unset
 
   // PIPELINE
+  protected readonly _parse: ParseFunction | null
   protected readonly _tests: TestObject<TValue>
 
   // CONSTRUCTOR
-  private constructor(config: LiteralConfig<TValue>, tests: TestObject<TValue>) {
+  private constructor(config: LiteralConfig<TValue>, pipeline: LiteralPipeline<TValue>) {
     super()
     this._literal = config.literal
     this._optional = config.optional
     this._nullable = config.nullable
     this._default = config.default
     this._fallback = config.fallback
-    this._tests = tests
+    this._parse = pipeline.parse
+    this._tests = pipeline.tests
   }
 
   // --------------------------------------------------------------------------
@@ -48,7 +56,10 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
       nullable: false,
       default: UNSET,
       fallback: UNSET,
-    }, {})
+    }, {
+      parse: null,
+      tests: {},
+    })
   }
 
   // --------------------------------------------------------------------------
@@ -64,19 +75,38 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
     }
   }
 
+  // UTILITY
+  private get _pipeline(): LiteralPipeline<TValue> {
+    return {
+      parse: this._parse,
+      tests: this._tests,
+    }
+  }
+
   // UPDATER
   private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<LiteralConfig<TValue>>): LiteralSchema<TValue, TOptional, TNullable, TDefault> {
     return new LiteralSchema({
       ...this._configuration,
       ...configuration,
-    }, this._tests)
+    }, this._pipeline)
   }
 
   // UPDATER
   private _updateTests(tests: TestObject<TValue>): LiteralSchema<TValue, TOptional, TNullable, TDefault> {
     return new LiteralSchema(this._configuration, {
-      ...this._tests,
-      ...tests,
+      ...this._pipeline,
+      tests: {
+        ...this._tests,
+        ...tests,
+      },
+    })
+  }
+
+  // UPDATER
+  private _updatePipeline(pipeline: Partial<LiteralPipeline<TValue>>): LiteralSchema<TValue, TOptional, TNullable, TDefault> {
+    return new LiteralSchema(this._configuration, {
+      ...this._pipeline,
+      ...pipeline,
     })
   }
 
@@ -118,6 +148,11 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
   }
 
   // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public parse(fn: ParseFunction): LiteralSchema<TValue, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ parse: fn })
+  }
 
   // PIPELINE
   public test(id: string, test: TestFunction<TValue>): LiteralSchema<TValue, TOptional, TNullable, TDefault> {

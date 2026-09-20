@@ -1,5 +1,5 @@
 // IMPORTS
-import type { TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
@@ -15,6 +15,12 @@ interface SetConfig<TValue> {
   fallback: Set<TValue> | Unset
 }
 
+// INTERFACE
+interface SetPipeline<TValue> {
+  parse: ParseFunction | null
+  tests: TestObject<Set<TValue>>
+}
+
 // CLASS
 export class SetSchema<TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
   extends GenericSchema<Set<TValue>, TOptional, TNullable, TDefault> {
@@ -28,10 +34,11 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
   protected readonly _fallback: Set<TValue> | Unset
 
   // PIPELINE
+  protected readonly _parse: ParseFunction | null
   protected readonly _tests: TestObject<Set<TValue>>
 
   // CONSTRUCTOR
-  private constructor(config: SetConfig<TValue>, tests: TestObject<Set<TValue>>) {
+  private constructor(config: SetConfig<TValue>, pipeline: SetPipeline<TValue>) {
     super()
     this._schema = config.schema
     this._prune = config.prune
@@ -39,7 +46,8 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
     this._nullable = config.nullable
     this._default = config.default
     this._fallback = config.fallback
-    this._tests = tests
+    this._parse = pipeline.parse
+    this._tests = pipeline.tests
   }
 
   // --------------------------------------------------------------------------
@@ -53,7 +61,10 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
       nullable: false,
       default: UNSET,
       fallback: UNSET,
-    }, {})
+    }, {
+      parse: null,
+      tests: {},
+    })
   }
 
   // --------------------------------------------------------------------------
@@ -70,19 +81,38 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
     }
   }
 
+  // UTILITY
+  private get _pipeline(): SetPipeline<TValue> {
+    return {
+      parse: this._parse,
+      tests: this._tests,
+    }
+  }
+
   // UPDATER
   private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<SetConfig<TValue>>): SetSchema<TValue, TOptional, TNullable, TDefault> {
     return new SetSchema({
       ...this._configuration,
       ...configuration,
-    }, this._tests)
+    }, this._pipeline)
   }
 
   // UPDATER
   private _updateTests(tests: TestObject<Set<TValue>>): SetSchema<TValue, TOptional, TNullable, TDefault> {
     return new SetSchema<TValue, TOptional, TNullable, TDefault>(this._configuration, {
-      ...this._tests,
-      ...tests,
+      ...this._pipeline,
+      tests: {
+        ...this._tests,
+        ...tests,
+      },
+    })
+  }
+
+  // UPDATER
+  private _updatePipeline(pipeline: Partial<SetPipeline<TValue>>): SetSchema<TValue, TOptional, TNullable, TDefault> {
+    return new SetSchema<TValue, TOptional, TNullable, TDefault>(this._configuration, {
+      ...this._pipeline,
+      ...pipeline,
     })
   }
 
@@ -149,6 +179,11 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
   }
 
   // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public parse(fn: ParseFunction): SetSchema<TValue, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ parse: fn })
+  }
 
   // PIPELINE
   public test(id: string, test: TestFunction<Set<TValue>>): SetSchema<TValue, TOptional, TNullable, TDefault> {
