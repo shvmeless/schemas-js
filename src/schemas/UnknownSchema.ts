@@ -1,100 +1,170 @@
 // IMPORTS
-import type { NullishSchema, Nullish } from '@/lib/GenericSchema'
+import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
+import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
 interface UnknownConfig {
   optional: boolean
   nullable: boolean
-  default: unknown
-  fallback: unknown
+  default: unknown | Unset
+  fallback: unknown | Unset
+}
+
+// INTERFACE
+interface UnknownPipeline {
+  parse: ParseFunction | null
+  prepare: Array<PrepareFunction<unknown>>
+  tests: TestObject<unknown>
+  refine: Array<RefineFunction<unknown>>
 }
 
 // CLASS
 export class UnknownSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements NullishSchema<unknown, TOptional, TNullable, TDefault> {
+  extends GenericSchema<unknown, TOptional, TNullable, TDefault> {
 
-  // PROPERTIES
-  private readonly _config: UnknownConfig
+  // CONFIG
+  protected readonly _optional: boolean
+  protected readonly _nullable: boolean
+  protected readonly _default: unknown | Unset
+  protected readonly _fallback: unknown | Unset
+
+  // PIPELINE
+  protected readonly _parse: ParseFunction | null
+  protected readonly _prepare: Array<PrepareFunction<unknown>>
+  protected readonly _tests: TestObject<unknown>
+  protected readonly _refine: Array<RefineFunction<unknown>>
 
   // CONSTRUCTOR
-  private constructor(config: UnknownConfig) {
-    this._config = config
+  private constructor(config: UnknownConfig, pipeline: UnknownPipeline) {
+    super()
+    this._optional = config.optional
+    this._nullable = config.nullable
+    this._default = config.default
+    this._fallback = config.fallback
+    this._parse = pipeline.parse
+    this._prepare = pipeline.prepare
+    this._tests = pipeline.tests
+    this._refine = pipeline.refine
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
   public static create(): UnknownSchema<false, false, false> {
-    return new UnknownSchema({ optional: false, nullable: false, default: null, fallback: null })
+    return new UnknownSchema({
+      optional: false,
+      nullable: false,
+      default: UNSET,
+      fallback: UNSET,
+    }, {
+      parse: null,
+      prepare: [],
+      tests: {},
+      refine: [],
+    })
   }
 
   // --------------------------------------------------------------------------
 
-  // PRIVATE
-  private _resolveInput(input: unknown): unknown {
-
-    if (input === undefined && this._config.optional) {
-      return (this._config.default !== null) ? this._config.default : undefined
+  // UTILITY
+  private get _configuration(): UnknownConfig {
+    return {
+      optional: this._optional,
+      nullable: this._nullable,
+      default: this._default,
+      fallback: this._fallback,
     }
-
-    if (input === null && this._config.nullable) {
-      return (this._config.default !== null) ? this._config.default : null
-    }
-
-    return input
-
   }
+
+  // UTILITY
+  private get _pipeline(): UnknownPipeline {
+    return {
+      parse: this._parse,
+      prepare: this._prepare,
+      tests: this._tests,
+      refine: this._refine,
+    }
+  }
+
+  // UPDATER
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<UnknownConfig>): UnknownSchema<TOptional, TNullable, TDefault> {
+    return new UnknownSchema({
+      ...this._configuration,
+      ...configuration,
+    }, this._pipeline)
+  }
+
+  // UPDATER
+  private _updateTests(tests: TestObject<unknown>): UnknownSchema<TOptional, TNullable, TDefault> {
+    return new UnknownSchema(this._configuration, {
+      ...this._pipeline,
+      tests: {
+        ...this._tests,
+        ...tests,
+      },
+    })
+  }
+
+  // UPDATER
+  private _updatePipeline(pipeline: Partial<UnknownPipeline>): UnknownSchema<TOptional, TNullable, TDefault> {
+    return new UnknownSchema(this._configuration, {
+      ...this._pipeline,
+      ...pipeline,
+    })
+  }
+
+  // --------------------------------------------------------------------------
 
   // VALIDATOR
   public validate(input: unknown): Nullish<unknown, TOptional, TNullable, TDefault> {
-    type Output = Nullish<unknown, TOptional, TNullable, TDefault>
-    try {
-
-      const resolved = this._resolveInput(input)
-
-      if (resolved === undefined) return undefined as Output
-      if (resolved === null) return null as Output
-
-      return resolved as Output
-
-    } catch (error) {
-      if (this._config.fallback !== null) return this._config.fallback
-      throw error
-    }
+    return this._runSchema((current) => {
+      return current
+    }, input)
   }
 
   // --------------------------------------------------------------------------
 
   // CONFIG
   public optional(): UnknownSchema<true, TNullable, TDefault> {
-    return new UnknownSchema({
-      ...this._config,
-      optional: true,
-    })
+    return this._updateConfig({ optional: true })
   }
 
   // CONFIG
   public nullable(): UnknownSchema<TOptional, true, TDefault> {
-    return new UnknownSchema({
-      ...this._config,
-      nullable: true,
-    })
+    return this._updateConfig({ nullable: true })
   }
 
   // CONFIG
   public default(value: unknown): UnknownSchema<TOptional, TNullable, true> {
-    return new UnknownSchema({
-      ...this._config,
-      default: value,
-    })
+    return this._updateConfig({ default: value })
   }
 
   // CONFIG
   public fallback(value: unknown): UnknownSchema<TOptional, TNullable, TDefault> {
-    return new UnknownSchema({
-      ...this._config,
-      fallback: value,
-    })
+    return this._updateConfig({ fallback: value })
+  }
+
+  // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public parse(fn: ParseFunction): UnknownSchema<TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ parse: fn })
+  }
+
+  // PIPELINE
+  public prepare(fn: PrepareFunction<unknown>): UnknownSchema<TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ prepare: [...this._prepare, fn] })
+  }
+
+  // PIPELINE
+  public test(id: string, test: TestFunction<unknown>): UnknownSchema<TOptional, TNullable, TDefault> {
+    return this._updateTests({ [`_${id}`]: test })
+  }
+
+  // PIPELINE
+  public refine(fn: RefineFunction<unknown>): UnknownSchema<TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ refine: [...this._refine, fn] })
   }
 
 }

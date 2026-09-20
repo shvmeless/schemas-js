@@ -1,6 +1,8 @@
 // IMPORTS
+import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import type { NullishSchema, Nullish } from '@/lib/GenericSchema'
+import { type Unset, UNSET } from '@/utils/unset'
 
 // TYPE
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -11,100 +13,174 @@ interface InstanceOfConfig<TConstructor extends AnyConstructor> {
   constructor: TConstructor
   optional: boolean
   nullable: boolean
-  default: InstanceType<TConstructor> | null
-  fallback: InstanceType<TConstructor> | null
+  default: InstanceType<TConstructor> | Unset
+  fallback: InstanceType<TConstructor> | Unset
+}
+
+// INTERFACE
+interface InstanceOfPipeline<TConstructor extends AnyConstructor> {
+  parse: ParseFunction | null
+  prepare: Array<PrepareFunction<InstanceType<TConstructor>>>
+  tests: TestObject<InstanceType<TConstructor>>
+  refine: Array<RefineFunction<InstanceType<TConstructor>>>
 }
 
 // CLASS
 export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements NullishSchema<InstanceType<TConstructor>, TOptional, TNullable, TDefault> {
+  extends GenericSchema<InstanceType<TConstructor>, TOptional, TNullable, TDefault> {
 
-  // PROPERTIES
-  private readonly _config: InstanceOfConfig<TConstructor>
+  // CONFIG
+  protected readonly _constructor: TConstructor
+  protected readonly _optional: boolean
+  protected readonly _nullable: boolean
+  protected readonly _default: InstanceType<TConstructor> | Unset
+  protected readonly _fallback: InstanceType<TConstructor> | Unset
+
+  // PIPELINE
+  protected readonly _parse: ParseFunction | null
+  protected readonly _prepare: Array<PrepareFunction<InstanceType<TConstructor>>>
+  protected readonly _tests: TestObject<InstanceType<TConstructor>>
+  protected readonly _refine: Array<RefineFunction<InstanceType<TConstructor>>>
 
   // CONSTRUCTOR
-  private constructor(config: InstanceOfConfig<TConstructor>) {
-    this._config = config
+  private constructor(config: InstanceOfConfig<TConstructor>, pipeline: InstanceOfPipeline<TConstructor>) {
+    super()
+    this._constructor = config.constructor
+    this._optional = config.optional
+    this._nullable = config.nullable
+    this._default = config.default
+    this._fallback = config.fallback
+    this._parse = pipeline.parse
+    this._prepare = pipeline.prepare
+    this._tests = pipeline.tests
+    this._refine = pipeline.refine
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
   public static create<TConstructor extends AnyConstructor>(constructor: TConstructor): InstanceOfSchema<TConstructor, false, false, false> {
-    return new InstanceOfSchema({ constructor, optional: false, nullable: false, default: null, fallback: null })
+    return new InstanceOfSchema({
+      constructor,
+      optional: false,
+      nullable: false,
+      default: UNSET,
+      fallback: UNSET,
+    }, {
+      parse: null,
+      prepare: [],
+      tests: {},
+      refine: [],
+    })
   }
 
   // --------------------------------------------------------------------------
 
-  // PRIVATE
-  private _resolveInput(input: unknown): InstanceType<TConstructor> | null | undefined {
-
-    if (input === undefined && this._config.optional) {
-      return (this._config.default !== null) ? this._config.default : undefined
+  // UTILITY
+  private get _configuration(): InstanceOfConfig<TConstructor> {
+    return {
+      constructor: this._constructor,
+      optional: this._optional,
+      nullable: this._nullable,
+      default: this._default,
+      fallback: this._fallback,
     }
-
-    if (input === null && this._config.nullable) {
-      return (this._config.default !== null) ? this._config.default : null
-    }
-
-    if (!(input instanceof this._config.constructor)) {
-      throw new ValidationError(input, `Expected instance of ${this._config.constructor.name}.`)
-    }
-
-    return input as InstanceType<TConstructor>
-
   }
+
+  // UTILITY
+  private get _pipeline(): InstanceOfPipeline<TConstructor> {
+    return {
+      parse: this._parse,
+      prepare: this._prepare,
+      tests: this._tests,
+      refine: this._refine,
+    }
+  }
+
+  // UPDATER
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<Omit<InstanceOfConfig<TConstructor>, 'constructor'>>): InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault> {
+    return new InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault>({
+      ...this._configuration,
+      ...configuration,
+    }, this._pipeline)
+  }
+
+  // UPDATER
+  private _updateTests(tests: TestObject<InstanceType<TConstructor>>): InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault> {
+    return new InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault>(this._configuration, {
+      ...this._pipeline,
+      tests: {
+        ...this._tests,
+        ...tests,
+      },
+    })
+  }
+
+  // UPDATER
+  private _updatePipeline(pipeline: Partial<InstanceOfPipeline<TConstructor>>): InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault> {
+    return new InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault>(this._configuration, {
+      ...this._pipeline,
+      ...pipeline,
+    })
+  }
+
+  // --------------------------------------------------------------------------
 
   // VALIDATOR
   public validate(input: unknown): Nullish<InstanceType<TConstructor>, TOptional, TNullable, TDefault> {
-    type Output = Nullish<InstanceType<TConstructor>, TOptional, TNullable, TDefault>
-    try {
+    return this._runSchema((current) => {
 
-      const resolved = this._resolveInput(input)
+      if (!(current instanceof this._constructor)) {
+        throw new ValidationError(input, `Expected instance of ${this._constructor.name}.`)
+      }
 
-      if (resolved === undefined) return undefined as Output
-      if (resolved === null) return null as Output
+      return current as InstanceType<TConstructor>
 
-      return resolved as Output
-
-    } catch (error) {
-      if (this._config.fallback !== null) return this._config.fallback
-      throw error
-    }
+    }, input)
   }
 
   // --------------------------------------------------------------------------
 
   // CONFIG
   public optional(): InstanceOfSchema<TConstructor, true, TNullable, TDefault> {
-    return new InstanceOfSchema({
-      ...this._config,
-      optional: true,
-    })
+    return this._updateConfig({ optional: true })
   }
 
   // CONFIG
   public nullable(): InstanceOfSchema<TConstructor, TOptional, true, TDefault> {
-    return new InstanceOfSchema({
-      ...this._config,
-      nullable: true,
-    })
+    return this._updateConfig({ nullable: true })
   }
 
   // CONFIG
   public default(value: InstanceType<TConstructor>): InstanceOfSchema<TConstructor, TOptional, TNullable, true> {
-    return new InstanceOfSchema({
-      ...this._config,
-      default: value,
-    })
+    return this._updateConfig({ default: value })
   }
 
   // CONFIG
   public fallback(value: InstanceType<TConstructor>): InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault> {
-    return new InstanceOfSchema({
-      ...this._config,
-      fallback: value,
-    })
+    return this._updateConfig({ fallback: value })
+  }
+
+  // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public parse(fn: ParseFunction): InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ parse: fn })
+  }
+
+  // PIPELINE
+  public prepare(fn: PrepareFunction<InstanceType<TConstructor>>): InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ prepare: [...this._prepare, fn] })
+  }
+
+  // PIPELINE
+  public test(id: string, test: TestFunction<InstanceType<TConstructor>>): InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault> {
+    return this._updateTests({ [`_${id}`]: test })
+  }
+
+  // PIPELINE
+  public refine(fn: RefineFunction<InstanceType<TConstructor>>): InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ refine: [...this._refine, fn] })
   }
 
 }

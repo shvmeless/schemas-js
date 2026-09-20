@@ -1,105 +1,177 @@
 // IMPORTS
+import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import type { NullishSchema, Nullish } from '@/lib/GenericSchema'
+import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
 interface BooleanConfig {
   optional: boolean
   nullable: boolean
-  default: boolean | null
-  fallback: boolean | null
+  default: boolean | Unset
+  fallback: boolean | Unset
+}
+
+// INTERFACE
+interface BooleanPipeline {
+  parse: ParseFunction | null
+  prepare: Array<PrepareFunction<boolean>>
+  tests: TestObject<boolean>
+  refine: Array<RefineFunction<boolean>>
 }
 
 // CLASS
 export class BooleanSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements NullishSchema<boolean, TOptional, TNullable, TDefault> {
+  extends GenericSchema<boolean, TOptional, TNullable, TDefault> {
 
-  // PROPERTIES
-  private readonly _config: BooleanConfig
+  // CONFIG
+  protected readonly _optional: boolean
+  protected readonly _nullable: boolean
+  protected readonly _default: boolean | Unset
+  protected readonly _fallback: boolean | Unset
+
+  // PIPELINE
+  protected readonly _parse: ParseFunction | null
+  protected readonly _prepare: Array<PrepareFunction<boolean>>
+  protected readonly _tests: TestObject<boolean>
+  protected readonly _refine: Array<RefineFunction<boolean>>
 
   // CONSTRUCTOR
-  private constructor(config: BooleanConfig) {
-    this._config = config
+  private constructor(config: BooleanConfig, pipeline: BooleanPipeline) {
+    super()
+    this._optional = config.optional
+    this._nullable = config.nullable
+    this._default = config.default
+    this._fallback = config.fallback
+    this._parse = pipeline.parse
+    this._prepare = pipeline.prepare
+    this._tests = pipeline.tests
+    this._refine = pipeline.refine
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
   public static create(): BooleanSchema<false, false, false> {
-    return new BooleanSchema({ optional: false, nullable: false, default: null, fallback: null })
+    return new BooleanSchema({
+      optional: false,
+      nullable: false,
+      default: UNSET,
+      fallback: UNSET,
+    }, {
+      parse: null,
+      prepare: [],
+      tests: {},
+      refine: [],
+    })
   }
 
   // --------------------------------------------------------------------------
 
-  // PRIVATE
-  private _resolveInput(input: unknown): boolean | null | undefined {
-
-    if (input === undefined && this._config.optional) {
-      return (this._config.default !== null) ? this._config.default : undefined
+  // UTILITY
+  private get _configuration(): BooleanConfig {
+    return {
+      optional: this._optional,
+      nullable: this._nullable,
+      default: this._default,
+      fallback: this._fallback,
     }
-
-    if (input === null && this._config.nullable) {
-      return (this._config.default !== null) ? this._config.default : null
-    }
-
-    if (typeof input !== 'boolean') {
-      throw new ValidationError(input, 'The value must be a boolean.')
-    }
-
-    return input
-
   }
+
+  // UTILITY
+  private get _pipeline(): BooleanPipeline {
+    return {
+      parse: this._parse,
+      prepare: this._prepare,
+      tests: this._tests,
+      refine: this._refine,
+    }
+  }
+
+  // UPDATER
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<BooleanConfig>): BooleanSchema<TOptional, TNullable, TDefault> {
+    return new BooleanSchema({
+      ...this._configuration,
+      ...configuration,
+    }, this._pipeline)
+  }
+
+  // UPDATER
+  private _updateTests(tests: TestObject<boolean>): BooleanSchema<TOptional, TNullable, TDefault> {
+    return new BooleanSchema(this._configuration, {
+      ...this._pipeline,
+      tests: {
+        ...this._tests,
+        ...tests,
+      },
+    })
+  }
+
+  // UPDATER
+  private _updatePipeline(pipeline: Partial<BooleanPipeline>): BooleanSchema<TOptional, TNullable, TDefault> {
+    return new BooleanSchema(this._configuration, {
+      ...this._pipeline,
+      ...pipeline,
+    })
+  }
+
+  // --------------------------------------------------------------------------
 
   // VALIDATOR
   public validate(input: unknown): Nullish<boolean, TOptional, TNullable, TDefault> {
-    type Output = Nullish<boolean, TOptional, TNullable, TDefault>
-    try {
+    return this._runSchema((current) => {
 
-      const resolved = this._resolveInput(input)
+      if (typeof current !== 'boolean') {
+        throw new ValidationError(input, 'The value must be a boolean.')
+      }
 
-      if (resolved === undefined) return undefined as Output
-      if (resolved === null) return null as Output
+      return current
 
-      return resolved as Output
-
-    } catch (error) {
-      if (this._config.fallback !== null) return this._config.fallback
-      throw error
-    }
+    }, input)
   }
 
   // --------------------------------------------------------------------------
 
   // CONFIG
   public optional(): BooleanSchema<true, TNullable, TDefault> {
-    return new BooleanSchema({
-      ...this._config,
-      optional: true,
-    })
+    return this._updateConfig({ optional: true })
   }
 
   // CONFIG
   public nullable(): BooleanSchema<TOptional, true, TDefault> {
-    return new BooleanSchema({
-      ...this._config,
-      nullable: true,
-    })
+    return this._updateConfig({ nullable: true })
   }
 
   // CONFIG
   public default(value: boolean): BooleanSchema<TOptional, TNullable, true> {
-    return new BooleanSchema({
-      ...this._config,
-      default: value,
-    })
+    return this._updateConfig({ default: value })
   }
 
   // CONFIG
   public fallback(value: boolean): BooleanSchema<TOptional, TNullable, TDefault> {
-    return new BooleanSchema({
-      ...this._config,
-      fallback: value,
-    })
+    return this._updateConfig({ fallback: value })
+  }
+
+  // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public parse(fn: ParseFunction): BooleanSchema<TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ parse: fn })
+  }
+
+  // PIPELINE
+  public prepare(fn: PrepareFunction<boolean>): BooleanSchema<TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ prepare: [...this._prepare, fn] })
+  }
+
+  // PIPELINE
+  public test(id: string, test: TestFunction<boolean>): BooleanSchema<TOptional, TNullable, TDefault> {
+    return this._updateTests({ [`_${id}`]: test })
+  }
+
+  // PIPELINE
+  public refine(fn: RefineFunction<boolean>): BooleanSchema<TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ refine: [...this._refine, fn] })
   }
 
 }

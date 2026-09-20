@@ -1,101 +1,152 @@
 // IMPORTS
+import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import type { GenericSchema, NullishSchema, Nullish } from '@/lib/GenericSchema'
-import { runValidations, type GenericValidations } from '@/utils/validations'
 import { stringify } from '@/utils/stringify'
-
-// TYPE
-type ArrayValidations<TItem> = GenericValidations<'length' | 'min' | 'max' | 'some' | 'every' | 'none', Array<TItem>>
+import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
 interface ArrayConfig<TItem> {
-  schema: GenericSchema<TItem>
+  schema: GenericSchema<TItem, boolean, boolean, boolean>
   prune: boolean
   optional: boolean
   nullable: boolean
-  default: Array<TItem> | null
-  fallback: Array<TItem> | null
+  default: Array<TItem> | Unset
+  fallback: Array<TItem> | Unset
+}
+
+// INTERFACE
+interface ArrayPipeline<TItem> {
+  parse: ParseFunction | null
+  prepare: Array<PrepareFunction<Array<TItem>>>
+  tests: TestObject<Array<TItem>>
+  refine: Array<RefineFunction<Array<TItem>>>
 }
 
 // CLASS
 export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
-implements NullishSchema<Array<TItem>, TOptional, TNullable, TDefault> {
+  extends GenericSchema<Array<TItem>, TOptional, TNullable, TDefault> {
 
-  // PROPERTIES
-  private readonly _config: ArrayConfig<TItem>
-  private readonly _validations: ArrayValidations<TItem>
+  // CONFIG
+  protected readonly _schema: GenericSchema<TItem, boolean, boolean, boolean>
+  protected readonly _prune: boolean
+  protected readonly _optional: boolean
+  protected readonly _nullable: boolean
+  protected readonly _default: Array<TItem> | Unset
+  protected readonly _fallback: Array<TItem> | Unset
+
+  // PIPELINE
+  protected readonly _parse: ParseFunction | null
+  protected readonly _prepare: Array<PrepareFunction<Array<TItem>>>
+  protected readonly _tests: TestObject<Array<TItem>>
+  protected readonly _refine: Array<RefineFunction<Array<TItem>>>
 
   // CONSTRUCTOR
-  private constructor(config: ArrayConfig<TItem>, validations: ArrayValidations<TItem>) {
-    this._config = config
-    this._validations = validations
+  private constructor(config: ArrayConfig<TItem>, pipeline: ArrayPipeline<TItem>) {
+    super()
+    this._schema = config.schema
+    this._prune = config.prune
+    this._optional = config.optional
+    this._nullable = config.nullable
+    this._default = config.default
+    this._fallback = config.fallback
+    this._parse = pipeline.parse
+    this._prepare = pipeline.prepare
+    this._tests = pipeline.tests
+    this._refine = pipeline.refine
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TItem>(schema: GenericSchema<TItem>): ArraySchema<TItem, false, false, false> {
+  public static create<TItem>(schema: GenericSchema<TItem, boolean, boolean, boolean>): ArraySchema<TItem, false, false, false> {
     return new ArraySchema({
       schema: schema,
       prune: false,
       optional: false,
       nullable: false,
-      default: null,
-      fallback: null,
-    }, {})
+      default: UNSET,
+      fallback: UNSET,
+    }, {
+      parse: null,
+      prepare: [],
+      tests: {},
+      refine: [],
+    })
   }
 
   // --------------------------------------------------------------------------
+
+  // UTILITY
+  private get _configuration(): ArrayConfig<TItem> {
+    return {
+      schema: this._schema,
+      prune: this._prune,
+      optional: this._optional,
+      nullable: this._nullable,
+      default: this._default,
+      fallback: this._fallback,
+    }
+  }
+
+  // UTILITY
+  private get _pipeline(): ArrayPipeline<TItem> {
+    return {
+      parse: this._parse,
+      prepare: this._prepare,
+      tests: this._tests,
+      refine: this._refine,
+    }
+  }
 
   // UPDATER
-  private updateValidation(validations: ArrayValidations<TItem>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
-    return new ArraySchema(
-      this._config,
-      { ...this._validations, ...validations },
-    )
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<ArrayConfig<TItem>>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+    return new ArraySchema({
+      ...this._configuration,
+      ...configuration,
+    }, this._pipeline)
+  }
+
+  // UPDATER
+  private _updateTests(tests: TestObject<Array<TItem>>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+    return new ArraySchema(this._configuration, {
+      ...this._pipeline,
+      tests: {
+        ...this._tests,
+        ...tests,
+      },
+    })
+  }
+
+  // UPDATER
+  private _updatePipeline(pipeline: Partial<ArrayPipeline<TItem>>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+    return new ArraySchema(this._configuration, {
+      ...this._pipeline,
+      ...pipeline,
+    })
   }
 
   // --------------------------------------------------------------------------
-
-  // PRIVATE
-  private _resolveInput(input: unknown): Array<unknown> | null | undefined {
-
-    if (input === undefined && this._config.optional) {
-      return (this._config.default !== null) ? this._config.default : undefined
-    }
-
-    if (input === null && this._config.nullable) {
-      return (this._config.default !== null) ? this._config.default : null
-    }
-
-    if (!Array.isArray(input)) {
-      throw new ValidationError(input, 'The value must be an array.')
-    }
-
-    return input as Array<unknown>
-
-  }
 
   // VALIDATOR
   public validate(input: unknown): Nullish<Array<TItem>, TOptional, TNullable, TDefault> {
-    type Output = Nullish<Array<TItem>, TOptional, TNullable, TDefault>
-    try {
+    return this._runSchema((current) => {
 
-      const resolved = this._resolveInput(input)
+      if (!Array.isArray(current)) {
+        throw new ValidationError(input, 'The value must be an array.')
+      }
 
-      if (resolved === undefined) return undefined as Output
-      if (resolved === null) return null as Output
-
+      const resolved = current as Array<unknown>
       const output: Array<TItem> = []
       const errors = ValidationError.prepare()
 
       resolved.forEach((element, index) => {
         try {
-          const value = this._config.schema.validate(element)
-          output.push(value)
+          const value = this._schema.validate(element)
+          output.push(value as TItem)
         } catch (error) {
           if (error instanceof ValidationError) {
-            if (this._config.prune) return
+            if (this._prune) return
             errors.add(index, error)
           } else throw error
         }
@@ -105,56 +156,58 @@ implements NullishSchema<Array<TItem>, TOptional, TNullable, TDefault> {
         errors.throw(input, 'At least one element does not match the given schema.')
       }
 
-      runValidations(this._validations, input, output)
+      return output
 
-      return output as Output
-
-    } catch (error) {
-      if (this._config.fallback !== null) return this._config.fallback
-      throw error
-    }
+    }, input)
   }
 
   // --------------------------------------------------------------------------
 
   // CONFIG
   public prune(): ArraySchema<TItem, TOptional, TNullable, TDefault> {
-    return new ArraySchema({
-      ...this._config,
-      prune: true,
-    }, this._validations)
+    return this._updateConfig({ prune: true })
   }
 
   // CONFIG
   public optional(): ArraySchema<TItem, true, TNullable, TDefault> {
-    return new ArraySchema({
-      ...this._config,
-      optional: true,
-    }, this._validations)
+    return this._updateConfig({ optional: true })
   }
 
   // CONFIG
   public nullable(): ArraySchema<TItem, TOptional, true, TDefault> {
-    return new ArraySchema({
-      ...this._config,
-      nullable: true,
-    }, this._validations)
+    return this._updateConfig({ nullable: true })
   }
 
   // CONFIG
   public default(value: Array<TItem>): ArraySchema<TItem, TOptional, TNullable, true> {
-    return new ArraySchema({
-      ...this._config,
-      default: value,
-    }, this._validations)
+    return this._updateConfig({ default: value })
   }
 
   // CONFIG
   public fallback(value: Array<TItem>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
-    return new ArraySchema({
-      ...this._config,
-      fallback: value,
-    }, this._validations)
+    return this._updateConfig({ fallback: value })
+  }
+
+  // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public parse(fn: ParseFunction): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ parse: fn })
+  }
+
+  // PIPELINE
+  public prepare(fn: PrepareFunction<Array<TItem>>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ prepare: [...this._prepare, fn] })
+  }
+
+  // PIPELINE
+  public test(id: string, test: TestFunction<Array<TItem>>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+    return this._updateTests({ [`_${id}`]: test })
+  }
+
+  // PIPELINE
+  public refine(fn: RefineFunction<Array<TItem>>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ refine: [...this._refine, fn] })
   }
 
   // --------------------------------------------------------------------------
@@ -163,12 +216,12 @@ implements NullishSchema<Array<TItem>, TOptional, TNullable, TDefault> {
   public length(length: number): ArraySchema<TItem, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this.updateValidation({
+    return this._updateTests({
       min: undefined,
       max: undefined,
-      length: (current, initial) => {
-        if (current.length === length) return
-        throw new ValidationError(initial, `The value must be ${stringify(length)} elements long.`)
+      length: (current) => {
+        if (current.length !== length) return `The value must be ${stringify(length)} elements long.`
+        return null
       },
     })
   }
@@ -177,10 +230,10 @@ implements NullishSchema<Array<TItem>, TOptional, TNullable, TDefault> {
   public min(length: number): ArraySchema<TItem, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this.updateValidation({
-      min: (current, initial) => {
-        if (current.length >= length) return
-        throw new ValidationError(initial, `The value must be at least ${stringify(length)} elements long.`)
+    return this._updateTests({
+      min: (current) => {
+        if (current.length < length) return `The value must be at least ${stringify(length)} elements long.`
+        return null
       },
     })
   }
@@ -189,47 +242,49 @@ implements NullishSchema<Array<TItem>, TOptional, TNullable, TDefault> {
   public max(length: number): ArraySchema<TItem, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this.updateValidation({
-      max: (current, initial) => {
-        if (current.length <= length) return
-        throw new ValidationError(initial, `The value must be at most ${stringify(length)} elements long.`)
+    return this._updateTests({
+      max: (current) => {
+        if (current.length > length) return `The value must be at most ${stringify(length)} elements long.`
+        return null
       },
     })
   }
 
   // METHOD
   public some(callback: (value: TItem, index: number, array: Array<TItem>) => boolean): ArraySchema<TItem, TOptional, TNullable, TDefault> {
-    return this.updateValidation({
-      some: (current, initial) => {
+    return this._updateTests({
+      some: (current) => {
         for (let index = 0; index < current.length; index++) {
           const value = current[index] as TItem
-          if (callback(value, index, current)) return
+          if (callback(value, index, current)) return null
         }
-        throw new ValidationError(initial, 'No element satisfies the given validation function.')
+        return 'No element satisfies the given validation function.'
       },
     })
   }
 
   // METHOD
   public every(callback: (value: TItem, index: number, array: Array<TItem>) => boolean): ArraySchema<TItem, TOptional, TNullable, TDefault> {
-    return this.updateValidation({
-      every: (current, initial) => {
+    return this._updateTests({
+      every: (current) => {
         for (let index = 0; index < current.length; index++) {
           const value = current[index] as TItem
-          if (!callback(value, index, current)) throw new ValidationError(initial, 'At least one element does not satisfy the given validation function.')
+          if (!callback(value, index, current)) return 'At least one element does not satisfy the given validation function.'
         }
+        return null
       },
     })
   }
 
   // METHOD
   public none(callback: (value: TItem, index: number, array: Array<TItem>) => boolean): ArraySchema<TItem, TOptional, TNullable, TDefault> {
-    return this.updateValidation({
-      none: (current, initial) => {
+    return this._updateTests({
+      none: (current) => {
         for (let index = 0; index < current.length; index++) {
           const value = current[index] as TItem
-          if (callback(value, index, current)) throw new ValidationError(initial, 'At least one element satisfies the given validation function.')
+          if (callback(value, index, current)) return 'At least one element satisfies the given validation function.'
         }
+        return null
       },
     })
   }

@@ -1,92 +1,177 @@
 // IMPORTS
+import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import type { OptionalSchema, Optional } from '@/lib/GenericSchema'
+import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
 interface NullConfig {
   optional: boolean
-  default: null | undefined
-  fallback: null | undefined
+  nullable: boolean
+  default: null | Unset
+  fallback: null | Unset
+}
+
+// INTERFACE
+interface NullPipeline {
+  parse: ParseFunction | null
+  prepare: Array<PrepareFunction<null>>
+  tests: TestObject<null>
+  refine: Array<RefineFunction<null>>
 }
 
 // CLASS
-export class NullSchema<TOptional extends boolean, TDefault extends boolean>
-implements OptionalSchema<null, TOptional, TDefault> {
+export class NullSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
+  extends GenericSchema<null, TOptional, TNullable, TDefault> {
 
-  // PROPERTIES
-  private readonly _config: NullConfig
+  // CONFIG
+  protected readonly _optional: boolean
+  protected readonly _nullable: boolean
+  protected readonly _default: null | Unset
+  protected readonly _fallback: null | Unset
+
+  // PIPELINE
+  protected readonly _parse: ParseFunction | null
+  protected readonly _prepare: Array<PrepareFunction<null>>
+  protected readonly _tests: TestObject<null>
+  protected readonly _refine: Array<RefineFunction<null>>
 
   // CONSTRUCTOR
-  private constructor(config: NullConfig) {
-    this._config = config
+  private constructor(config: NullConfig, pipeline: NullPipeline) {
+    super()
+    this._optional = config.optional
+    this._nullable = config.nullable
+    this._default = config.default
+    this._fallback = config.fallback
+    this._parse = pipeline.parse
+    this._prepare = pipeline.prepare
+    this._tests = pipeline.tests
+    this._refine = pipeline.refine
   }
 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create(): NullSchema<false, false> {
-    return new NullSchema({ optional: false, default: undefined, fallback: undefined })
+  public static create(): NullSchema<false, false, false> {
+    return new NullSchema({
+      optional: false,
+      nullable: false,
+      default: UNSET,
+      fallback: UNSET,
+    }, {
+      parse: null,
+      prepare: [],
+      tests: {},
+      refine: [],
+    })
   }
 
   // --------------------------------------------------------------------------
 
-  // PRIVATE
-  private _resolveInput(input: unknown): null | undefined {
-
-    if (input === undefined && this._config.optional) {
-      return (this._config.default !== undefined) ? this._config.default : undefined
+  // UTILITY
+  private get _configuration(): NullConfig {
+    return {
+      optional: this._optional,
+      nullable: this._nullable,
+      default: this._default,
+      fallback: this._fallback,
     }
-
-    if (input !== null) {
-      throw new ValidationError(input, 'The value must be null.')
-    }
-
-    return input
-
   }
+
+  // UTILITY
+  private get _pipeline(): NullPipeline {
+    return {
+      parse: this._parse,
+      prepare: this._prepare,
+      tests: this._tests,
+      refine: this._refine,
+    }
+  }
+
+  // UPDATER
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<NullConfig>): NullSchema<TOptional, TNullable, TDefault> {
+    return new NullSchema({
+      ...this._configuration,
+      ...configuration,
+    }, this._pipeline)
+  }
+
+  // UPDATER
+  private _updateTests(tests: TestObject<null>): NullSchema<TOptional, TNullable, TDefault> {
+    return new NullSchema(this._configuration, {
+      ...this._pipeline,
+      tests: {
+        ...this._tests,
+        ...tests,
+      },
+    })
+  }
+
+  // UPDATER
+  private _updatePipeline(pipeline: Partial<NullPipeline>): NullSchema<TOptional, TNullable, TDefault> {
+    return new NullSchema(this._configuration, {
+      ...this._pipeline,
+      ...pipeline,
+    })
+  }
+
+  // --------------------------------------------------------------------------
 
   // VALIDATOR
-  public validate(input: unknown): Optional<null, TOptional, TDefault> {
-    type Output = Optional<null, TOptional, TDefault>
-    try {
+  public validate(input: unknown): Nullish<null, TOptional, TNullable, TDefault> {
+    return this._runSchema((current) => {
 
-      const resolved = this._resolveInput(input)
+      if (current !== null) {
+        throw new ValidationError(input, 'The value must be null.')
+      }
 
-      if (resolved === undefined) return undefined as Output
-      if (resolved === null) return null as Output
+      return current
 
-      return resolved as Output
-
-    } catch (error) {
-      if (this._config.fallback !== undefined) return this._config.fallback
-      throw error
-    }
+    }, input)
   }
 
   // --------------------------------------------------------------------------
 
   // CONFIG
-  public optional(): NullSchema<true, TDefault> {
-    return new NullSchema({
-      ...this._config,
-      optional: true,
-    })
+  public optional(): NullSchema<true, TNullable, TDefault> {
+    return this._updateConfig({ optional: true })
   }
 
   // CONFIG
-  public default(value: null): NullSchema<TOptional, true> {
-    return new NullSchema({
-      ...this._config,
-      default: value,
-    })
+  public nullable(): NullSchema<TOptional, true, TDefault> {
+    return this._updateConfig({ nullable: true })
   }
 
   // CONFIG
-  public fallback(value: null): NullSchema<TOptional, TDefault> {
-    return new NullSchema({
-      ...this._config,
-      fallback: value,
-    })
+  public default(value: null): NullSchema<TOptional, TNullable, true> {
+    return this._updateConfig({ default: value })
+  }
+
+  // CONFIG
+  public fallback(value: null): NullSchema<TOptional, TNullable, TDefault> {
+    return this._updateConfig({ fallback: value })
+  }
+
+  // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public parse(fn: ParseFunction): NullSchema<TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ parse: fn })
+  }
+
+  // PIPELINE
+  public prepare(fn: PrepareFunction<null>): NullSchema<TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ prepare: [...this._prepare, fn] })
+  }
+
+  // PIPELINE
+  public test(id: string, test: TestFunction<null>): NullSchema<TOptional, TNullable, TDefault> {
+    return this._updateTests({ [`_${id}`]: test })
+  }
+
+  // PIPELINE
+  public refine(fn: RefineFunction<null>): NullSchema<TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ refine: [...this._refine, fn] })
   }
 
 }
