@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // IMPORTS
-import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
@@ -11,20 +11,8 @@ type InferSchemaType<I> = I extends GenericSchema<infer T, any, any, any> ? T : 
 type SchemaTypeUnion<A extends ReadonlyArray<GenericSchema<any, any, any, any>>> = InferSchemaType<A[number]>
 
 // INTERFACE
-interface UnionConfig<TSchemas> {
+interface UnionConfig<TSchemas> extends GenericConfig<TSchemas> {
   schemas: ReadonlyArray<GenericSchema<TSchemas, boolean, boolean, boolean>>
-  optional: boolean
-  nullable: boolean
-  default: TSchemas | Unset
-  fallback: TSchemas | Unset
-}
-
-// INTERFACE
-interface UnionPipeline<TSchemas> {
-  parse: ParseFunction | null
-  prepare: Array<PrepareFunction<TSchemas>>
-  tests: TestObject<TSchemas>
-  refine: Array<RefineFunction<TSchemas>>
 }
 
 // CLASS
@@ -45,7 +33,7 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
   protected readonly _refine: Array<RefineFunction<TSchemas>>
 
   // CONSTRUCTOR
-  private constructor(config: UnionConfig<TSchemas>, pipeline: UnionPipeline<TSchemas>) {
+  private constructor(config: UnionConfig<TSchemas>, pipeline: GenericPipeline<TSchemas>) {
     super()
     this._schemas = config.schemas
     this._optional = config.optional
@@ -91,7 +79,7 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
   }
 
   // UTILITY
-  private get _pipeline(): UnionPipeline<TSchemas> {
+  private get _pipeline(): GenericPipeline<TSchemas> {
     return {
       parse: this._parse,
       prepare: this._prepare,
@@ -120,7 +108,7 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
   }
 
   // UPDATER
-  private _updatePipeline(pipeline: Partial<UnionPipeline<TSchemas>>): UnionSchema<TSchemas, TOptional, TNullable, TDefault> {
+  private _updatePipeline(pipeline: Partial<GenericPipeline<TSchemas>>): UnionSchema<TSchemas, TOptional, TNullable, TDefault> {
     return new UnionSchema(this._configuration, {
       ...this._pipeline,
       ...pipeline,

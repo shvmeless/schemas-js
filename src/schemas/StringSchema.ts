@@ -1,25 +1,9 @@
 // IMPORTS
-import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
 import { type Unset, UNSET } from '@/utils/unset'
-
-// INTERFACE
-interface StringConfig {
-  optional: boolean
-  nullable: boolean
-  default: string | Unset
-  fallback: string | Unset
-}
-
-// INTERFACE
-interface StringPipeline {
-  parse: ParseFunction | null
-  prepare: Array<PrepareFunction<string>>
-  tests: TestObject<string>
-  refine: Array<RefineFunction<string>>
-}
 
 // CLASS
 export class StringSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
@@ -38,7 +22,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   protected readonly _refine: Array<RefineFunction<string>>
 
   // CONSTRUCTOR
-  private constructor(config: StringConfig, pipeline: StringPipeline) {
+  private constructor(config: GenericConfig<string>, pipeline: GenericPipeline<string>) {
     super()
     this._optional = config.optional
     this._nullable = config.nullable
@@ -70,7 +54,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   // --------------------------------------------------------------------------
 
   // UTILITY
-  private get _configuration(): StringConfig {
+  private get _configuration(): GenericConfig<string> {
     return {
       optional: this._optional,
       nullable: this._nullable,
@@ -80,7 +64,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   }
 
   // UTILITY
-  private get _pipeline(): StringPipeline {
+  private get _pipeline(): GenericPipeline<string> {
     return {
       parse: this._parse,
       prepare: this._prepare,
@@ -90,7 +74,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   }
 
   // UPDATER
-  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<StringConfig>): StringSchema<TOptional, TNullable, TDefault> {
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<GenericConfig<string>>): StringSchema<TOptional, TNullable, TDefault> {
     return new StringSchema({
       ...this._configuration,
       ...configuration,
@@ -108,7 +92,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   }
 
   // UPDATER
-  private _updatePipeline(pipeline: Partial<StringPipeline>): StringSchema<TOptional, TNullable, TDefault> {
+  private _updatePipeline(pipeline: Partial<GenericPipeline<string>>): StringSchema<TOptional, TNullable, TDefault> {
     return new StringSchema(this._configuration, {
       ...this._pipeline,
       ...pipeline,

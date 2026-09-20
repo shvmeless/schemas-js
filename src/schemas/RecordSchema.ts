@@ -1,26 +1,14 @@
 // IMPORTS
-import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
 import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
-interface RecordConfig<TValue> {
+interface RecordConfig<TValue> extends GenericConfig<Record<string, TValue>> {
   schema: GenericSchema<TValue, boolean, boolean, boolean>
   prune: boolean
-  optional: boolean
-  nullable: boolean
-  default: Record<string, TValue> | Unset
-  fallback: Record<string, TValue> | Unset
-}
-
-// INTERFACE
-interface RecordPipeline<TValue> {
-  parse: ParseFunction | null
-  prepare: Array<PrepareFunction<Record<string, TValue>>>
-  tests: TestObject<Record<string, TValue>>
-  refine: Array<RefineFunction<Record<string, TValue>>>
 }
 
 // CLASS
@@ -42,7 +30,7 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
   protected readonly _refine: Array<RefineFunction<Record<string, TValue>>>
 
   // CONSTRUCTOR
-  private constructor(config: RecordConfig<TValue>, pipeline: RecordPipeline<TValue>) {
+  private constructor(config: RecordConfig<TValue>, pipeline: GenericPipeline<Record<string, TValue>>) {
     super()
     this._schema = config.schema
     this._prune = config.prune
@@ -90,7 +78,7 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
   }
 
   // UTILITY
-  private get _pipeline(): RecordPipeline<TValue> {
+  private get _pipeline(): GenericPipeline<Record<string, TValue>> {
     return {
       parse: this._parse,
       prepare: this._prepare,
@@ -119,7 +107,7 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
   }
 
   // UPDATER
-  private _updatePipeline(pipeline: Partial<RecordPipeline<TValue>>): RecordSchema<TValue, TOptional, TNullable, TDefault> {
+  private _updatePipeline(pipeline: Partial<GenericPipeline<Record<string, TValue>>>): RecordSchema<TValue, TOptional, TNullable, TDefault> {
     return new RecordSchema<TValue, TOptional, TNullable, TDefault>(this._configuration, {
       ...this._pipeline,
       ...pipeline,

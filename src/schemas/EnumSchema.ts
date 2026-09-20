@@ -1,24 +1,12 @@
 // IMPORTS
-import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
-interface EnumConfig<TValues extends string | number> {
+interface EnumConfig<TValues extends string | number> extends GenericConfig<TValues> {
   values: ReadonlyArray<TValues>
-  optional: boolean
-  nullable: boolean
-  default: TValues | Unset
-  fallback: TValues | Unset
-}
-
-// INTERFACE
-interface EnumPipeline<TValues extends string | number> {
-  parse: ParseFunction | null
-  prepare: Array<PrepareFunction<TValues>>
-  tests: TestObject<TValues>
-  refine: Array<RefineFunction<TValues>>
 }
 
 // CLASS
@@ -39,7 +27,7 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
   protected readonly _refine: Array<RefineFunction<TValues>>
 
   // CONSTRUCTOR
-  private constructor(config: EnumConfig<TValues>, pipeline: EnumPipeline<TValues>) {
+  private constructor(config: EnumConfig<TValues>, pipeline: GenericPipeline<TValues>) {
     super()
     this._values = config.values
     this._optional = config.optional
@@ -87,7 +75,7 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
   }
 
   // UTILITY
-  private get _pipeline(): EnumPipeline<TValues> {
+  private get _pipeline(): GenericPipeline<TValues> {
     return {
       parse: this._parse,
       prepare: this._prepare,
@@ -116,7 +104,7 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
   }
 
   // UPDATER
-  private _updatePipeline(pipeline: Partial<EnumPipeline<TValues>>): EnumSchema<TValues, TOptional, TNullable, TDefault> {
+  private _updatePipeline(pipeline: Partial<GenericPipeline<TValues>>): EnumSchema<TValues, TOptional, TNullable, TDefault> {
     return new EnumSchema(this._configuration, {
       ...this._pipeline,
       ...pipeline,

@@ -1,25 +1,9 @@
 // IMPORTS
-import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
 import { type Unset, UNSET } from '@/utils/unset'
-
-// INTERFACE
-interface NumberConfig {
-  optional: boolean
-  nullable: boolean
-  default: number | Unset
-  fallback: number | Unset
-}
-
-// INTERFACE
-interface NumberPipeline {
-  parse: ParseFunction | null
-  prepare: Array<PrepareFunction<number>>
-  tests: TestObject<number>
-  refine: Array<RefineFunction<number>>
-}
 
 // CLASS
 export class NumberSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
@@ -38,7 +22,7 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
   protected readonly _refine: Array<RefineFunction<number>>
 
   // CONSTRUCTOR
-  private constructor(config: NumberConfig, pipeline: NumberPipeline) {
+  private constructor(config: GenericConfig<number>, pipeline: GenericPipeline<number>) {
     super()
     this._optional = config.optional
     this._nullable = config.nullable
@@ -70,7 +54,7 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
   // --------------------------------------------------------------------------
 
   // UTILITY
-  private get _configuration(): NumberConfig {
+  private get _configuration(): GenericConfig<number> {
     return {
       optional: this._optional,
       nullable: this._nullable,
@@ -80,7 +64,7 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
   }
 
   // UTILITY
-  private get _pipeline(): NumberPipeline {
+  private get _pipeline(): GenericPipeline<number> {
     return {
       parse: this._parse,
       prepare: this._prepare,
@@ -90,7 +74,7 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
   }
 
   // UPDATER
-  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<NumberConfig>): NumberSchema<TOptional, TNullable, TDefault> {
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<GenericConfig<number>>): NumberSchema<TOptional, TNullable, TDefault> {
     return new NumberSchema({
       ...this._configuration,
       ...configuration,
@@ -109,7 +93,7 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
   }
 
   // UPDATER
-  private _updatePipeline(pipeline: Partial<NumberPipeline>): NumberSchema<TOptional, TNullable, TDefault> {
+  private _updatePipeline(pipeline: Partial<GenericPipeline<number>>): NumberSchema<TOptional, TNullable, TDefault> {
     return new NumberSchema(this._configuration, {
       ...this._pipeline,
       ...pipeline,

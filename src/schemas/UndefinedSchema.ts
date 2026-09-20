@@ -1,24 +1,8 @@
 // IMPORTS
-import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
-
-// INTERFACE
-interface UndefinedConfig {
-  optional: boolean
-  nullable: boolean
-  default: undefined | Unset
-  fallback: undefined | Unset
-}
-
-// INTERFACE
-interface UndefinedPipeline {
-  parse: ParseFunction | null
-  prepare: Array<PrepareFunction<undefined>>
-  tests: TestObject<undefined>
-  refine: Array<RefineFunction<undefined>>
-}
 
 // CLASS
 export class UndefinedSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
@@ -37,7 +21,7 @@ export class UndefinedSchema<TOptional extends boolean, TNullable extends boolea
   protected readonly _refine: Array<RefineFunction<undefined>>
 
   // CONSTRUCTOR
-  private constructor(config: UndefinedConfig, pipeline: UndefinedPipeline) {
+  private constructor(config: GenericConfig<undefined>, pipeline: GenericPipeline<undefined>) {
     super()
     this._optional = config.optional
     this._nullable = config.nullable
@@ -69,7 +53,7 @@ export class UndefinedSchema<TOptional extends boolean, TNullable extends boolea
   // --------------------------------------------------------------------------
 
   // UTILITY
-  private get _configuration(): UndefinedConfig {
+  private get _configuration(): GenericConfig<undefined> {
     return {
       optional: this._optional,
       nullable: this._nullable,
@@ -79,7 +63,7 @@ export class UndefinedSchema<TOptional extends boolean, TNullable extends boolea
   }
 
   // UTILITY
-  private get _pipeline(): UndefinedPipeline {
+  private get _pipeline(): GenericPipeline<undefined> {
     return {
       parse: this._parse,
       prepare: this._prepare,
@@ -89,7 +73,7 @@ export class UndefinedSchema<TOptional extends boolean, TNullable extends boolea
   }
 
   // UPDATER
-  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<UndefinedConfig>): UndefinedSchema<TOptional, TNullable, TDefault> {
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<GenericConfig<undefined>>): UndefinedSchema<TOptional, TNullable, TDefault> {
     return new UndefinedSchema({
       ...this._configuration,
       ...configuration,
@@ -108,7 +92,7 @@ export class UndefinedSchema<TOptional extends boolean, TNullable extends boolea
   }
 
   // UPDATER
-  private _updatePipeline(pipeline: Partial<UndefinedPipeline>): UndefinedSchema<TOptional, TNullable, TDefault> {
+  private _updatePipeline(pipeline: Partial<GenericPipeline<undefined>>): UndefinedSchema<TOptional, TNullable, TDefault> {
     return new UndefinedSchema(this._configuration, {
       ...this._pipeline,
       ...pipeline,

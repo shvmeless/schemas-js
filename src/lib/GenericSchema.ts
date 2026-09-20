@@ -21,6 +21,22 @@ export type TestFunction<TType> = (current: TType) => (string | null)
 export type TestObject<TType> = Record<string, TestFunction<TType> | undefined>
 export type RefineFunction<TType> = (input: TType) => TType
 
+// INTERFACE
+export interface GenericConfig<TType> {
+  optional: boolean
+  nullable: boolean
+  default: TType | Unset
+  fallback: TType | Unset
+}
+
+// INTERFACE
+export interface GenericPipeline<TType> {
+  parse: ParseFunction | null
+  prepare: Array<PrepareFunction<TType>>
+  tests: TestObject<TType>
+  refine: Array<RefineFunction<TType>>
+}
+
 // CLASS
 export abstract class GenericSchema<TType, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean> {
 

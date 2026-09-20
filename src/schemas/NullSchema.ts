@@ -1,24 +1,8 @@
 // IMPORTS
-import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
-
-// INTERFACE
-interface NullConfig {
-  optional: boolean
-  nullable: boolean
-  default: null | Unset
-  fallback: null | Unset
-}
-
-// INTERFACE
-interface NullPipeline {
-  parse: ParseFunction | null
-  prepare: Array<PrepareFunction<null>>
-  tests: TestObject<null>
-  refine: Array<RefineFunction<null>>
-}
 
 // CLASS
 export class NullSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
@@ -37,7 +21,7 @@ export class NullSchema<TOptional extends boolean, TNullable extends boolean, TD
   protected readonly _refine: Array<RefineFunction<null>>
 
   // CONSTRUCTOR
-  private constructor(config: NullConfig, pipeline: NullPipeline) {
+  private constructor(config: GenericConfig<null>, pipeline: GenericPipeline<null>) {
     super()
     this._optional = config.optional
     this._nullable = config.nullable
@@ -69,7 +53,7 @@ export class NullSchema<TOptional extends boolean, TNullable extends boolean, TD
   // --------------------------------------------------------------------------
 
   // UTILITY
-  private get _configuration(): NullConfig {
+  private get _configuration(): GenericConfig<null> {
     return {
       optional: this._optional,
       nullable: this._nullable,
@@ -79,7 +63,7 @@ export class NullSchema<TOptional extends boolean, TNullable extends boolean, TD
   }
 
   // UTILITY
-  private get _pipeline(): NullPipeline {
+  private get _pipeline(): GenericPipeline<null> {
     return {
       parse: this._parse,
       prepare: this._prepare,
@@ -89,7 +73,7 @@ export class NullSchema<TOptional extends boolean, TNullable extends boolean, TD
   }
 
   // UPDATER
-  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<NullConfig>): NullSchema<TOptional, TNullable, TDefault> {
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<GenericConfig<null>>): NullSchema<TOptional, TNullable, TDefault> {
     return new NullSchema({
       ...this._configuration,
       ...configuration,
@@ -108,7 +92,7 @@ export class NullSchema<TOptional extends boolean, TNullable extends boolean, TD
   }
 
   // UPDATER
-  private _updatePipeline(pipeline: Partial<NullPipeline>): NullSchema<TOptional, TNullable, TDefault> {
+  private _updatePipeline(pipeline: Partial<GenericPipeline<null>>): NullSchema<TOptional, TNullable, TDefault> {
     return new NullSchema(this._configuration, {
       ...this._pipeline,
       ...pipeline,

@@ -1,26 +1,14 @@
 // IMPORTS
-import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
 import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
-interface ArrayConfig<TItem> {
+interface ArrayConfig<TItem> extends GenericConfig<Array<TItem>> {
   schema: GenericSchema<TItem, boolean, boolean, boolean>
   prune: boolean
-  optional: boolean
-  nullable: boolean
-  default: Array<TItem> | Unset
-  fallback: Array<TItem> | Unset
-}
-
-// INTERFACE
-interface ArrayPipeline<TItem> {
-  parse: ParseFunction | null
-  prepare: Array<PrepareFunction<Array<TItem>>>
-  tests: TestObject<Array<TItem>>
-  refine: Array<RefineFunction<Array<TItem>>>
 }
 
 // CLASS
@@ -42,14 +30,16 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   protected readonly _refine: Array<RefineFunction<Array<TItem>>>
 
   // CONSTRUCTOR
-  private constructor(config: ArrayConfig<TItem>, pipeline: ArrayPipeline<TItem>) {
+  private constructor(config: ArrayConfig<TItem>, pipeline: GenericPipeline<Array<TItem>>) {
     super()
+
     this._schema = config.schema
     this._prune = config.prune
     this._optional = config.optional
     this._nullable = config.nullable
     this._default = config.default
     this._fallback = config.fallback
+
     this._parse = pipeline.parse
     this._prepare = pipeline.prepare
     this._tests = pipeline.tests
@@ -90,7 +80,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   }
 
   // UTILITY
-  private get _pipeline(): ArrayPipeline<TItem> {
+  private get _pipeline(): GenericPipeline<Array<TItem>> {
     return {
       parse: this._parse,
       prepare: this._prepare,
@@ -119,7 +109,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   }
 
   // UPDATER
-  private _updatePipeline(pipeline: Partial<ArrayPipeline<TItem>>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+  private _updatePipeline(pipeline: Partial<GenericPipeline<Array<TItem>>>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
     return new ArraySchema(this._configuration, {
       ...this._pipeline,
       ...pipeline,
@@ -212,7 +202,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
 
   // --------------------------------------------------------------------------
 
-  // METHOD
+  // TEST
   public length(length: number): ArraySchema<TItem, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
@@ -226,7 +216,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
     })
   }
 
-  // METHOD
+  // TEST
   public min(length: number): ArraySchema<TItem, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
@@ -238,7 +228,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
     })
   }
 
-  // METHOD
+  // TEST
   public max(length: number): ArraySchema<TItem, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
     if (length < 0) throw new Error('The length value must be zero or positive.')
@@ -250,7 +240,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
     })
   }
 
-  // METHOD
+  // TEST
   public some(callback: (value: TItem, index: number, array: Array<TItem>) => boolean): ArraySchema<TItem, TOptional, TNullable, TDefault> {
     return this._updateTests({
       some: (current) => {
@@ -263,7 +253,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
     })
   }
 
-  // METHOD
+  // TEST
   public every(callback: (value: TItem, index: number, array: Array<TItem>) => boolean): ArraySchema<TItem, TOptional, TNullable, TDefault> {
     return this._updateTests({
       every: (current) => {
@@ -276,7 +266,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
     })
   }
 
-  // METHOD
+  // TEST
   public none(callback: (value: TItem, index: number, array: Array<TItem>) => boolean): ArraySchema<TItem, TOptional, TNullable, TDefault> {
     return this._updateTests({
       none: (current) => {

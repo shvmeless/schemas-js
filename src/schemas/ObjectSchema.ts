@@ -1,5 +1,5 @@
 // IMPORTS
-import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
@@ -10,21 +10,9 @@ type InferShape<TObject> = {
 }
 
 // INTERFACE
-interface ObjectConfig<TObject> {
+interface ObjectConfig<TObject> extends GenericConfig<TObject> {
   schema: InferShape<TObject>
   strip: boolean
-  optional: boolean
-  nullable: boolean
-  default: TObject | Unset
-  fallback: TObject | Unset
-}
-
-// INTERFACE
-interface ObjectPipeline<TObject> {
-  parse: ParseFunction | null
-  prepare: Array<PrepareFunction<TObject>>
-  tests: TestObject<TObject>
-  refine: Array<RefineFunction<TObject>>
 }
 
 // CLASS
@@ -46,7 +34,7 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
   protected readonly _refine: Array<RefineFunction<TObject>>
 
   // CONSTRUCTOR
-  private constructor(config: ObjectConfig<TObject>, pipeline: ObjectPipeline<TObject>) {
+  private constructor(config: ObjectConfig<TObject>, pipeline: GenericPipeline<TObject>) {
     super()
     this._schema = config.schema
     this._strip = config.strip
@@ -94,7 +82,7 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
   }
 
   // UTILITY
-  private get _pipeline(): ObjectPipeline<TObject> {
+  private get _pipeline(): GenericPipeline<TObject> {
     return {
       parse: this._parse,
       prepare: this._prepare,
@@ -123,7 +111,7 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
   }
 
   // UPDATER
-  private _updatePipeline(pipeline: Partial<ObjectPipeline<TObject>>): ObjectSchema<TObject, TOptional, TNullable, TDefault> {
+  private _updatePipeline(pipeline: Partial<GenericPipeline<TObject>>): ObjectSchema<TObject, TOptional, TNullable, TDefault> {
     return new ObjectSchema(this._configuration, {
       ...this._pipeline,
       ...pipeline,

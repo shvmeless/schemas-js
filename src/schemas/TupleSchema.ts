@@ -1,5 +1,5 @@
 // IMPORTS
-import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
@@ -10,21 +10,9 @@ type InferShape<TTuple extends ReadonlyArray<unknown>> = {
 }
 
 // INTERFACE
-interface TupleConfig<TTuple extends ReadonlyArray<unknown>> {
+interface TupleConfig<TTuple extends ReadonlyArray<unknown>> extends GenericConfig<TTuple> {
   shape: InferShape<TTuple>
   strip: boolean
-  optional: boolean
-  nullable: boolean
-  default: TTuple | Unset
-  fallback: TTuple | Unset
-}
-
-// INTERFACE
-interface TuplePipeline<TTuple extends ReadonlyArray<unknown>> {
-  parse: ParseFunction | null
-  prepare: Array<PrepareFunction<TTuple>>
-  tests: TestObject<TTuple>
-  refine: Array<RefineFunction<TTuple>>
 }
 
 // CLASS
@@ -46,7 +34,7 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
   protected readonly _refine: Array<RefineFunction<TTuple>>
 
   // CONSTRUCTOR
-  private constructor(config: TupleConfig<TTuple>, pipeline: TuplePipeline<TTuple>) {
+  private constructor(config: TupleConfig<TTuple>, pipeline: GenericPipeline<TTuple>) {
     super()
     this._shape = config.shape
     this._strip = config.strip
@@ -94,7 +82,7 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
   }
 
   // UTILITY
-  private get _pipeline(): TuplePipeline<TTuple> {
+  private get _pipeline(): GenericPipeline<TTuple> {
     return {
       parse: this._parse,
       prepare: this._prepare,
@@ -123,7 +111,7 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
   }
 
   // UPDATER
-  private _updatePipeline(pipeline: Partial<TuplePipeline<TTuple>>): TupleSchema<TTuple, TOptional, TNullable, TDefault> {
+  private _updatePipeline(pipeline: Partial<GenericPipeline<TTuple>>): TupleSchema<TTuple, TOptional, TNullable, TDefault> {
     return new TupleSchema(this._configuration, {
       ...this._pipeline,
       ...pipeline,
