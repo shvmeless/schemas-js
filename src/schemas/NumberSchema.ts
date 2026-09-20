@@ -1,4 +1,5 @@
 // IMPORTS
+import type { TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
@@ -110,6 +111,13 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
   // CONFIG
   public fallback(value: number): NumberSchema<TOptional, TNullable, TDefault> {
     return this._updateConfig({ fallback: value })
+  }
+
+  // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public test(id: string, test: TestFunction<number>): NumberSchema<TOptional, TNullable, TDefault> {
+    return this._updateTests({ [`_${id}`]: test })
   }
 
   // --------------------------------------------------------------------------

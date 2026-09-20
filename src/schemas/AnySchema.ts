@@ -3,7 +3,8 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
 // IMPORTS
-import { GenericSchema, type Nullish } from '@/lib/GenericSchema'
+import type { TestFunction } from '@/lib/GenericSchema'
+import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
@@ -25,15 +26,16 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
   protected readonly _fallback: any | Unset
 
   // PIPELINE
-  protected readonly _tests = {}
+  protected readonly _tests: TestObject<any>
 
   // CONSTRUCTOR
-  private constructor(config: AnyConfig) {
+  private constructor(config: AnyConfig, tests: TestObject<any>) {
     super()
     this._optional = config.optional
     this._nullable = config.nullable
     this._default = config.default
     this._fallback = config.fallback
+    this._tests = tests
   }
 
   // --------------------------------------------------------------------------
@@ -45,7 +47,7 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
       nullable: false,
       default: UNSET,
       fallback: UNSET,
-    })
+    }, {})
   }
 
   // --------------------------------------------------------------------------
@@ -65,6 +67,14 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
     return new AnySchema({
       ...this._configuration,
       ...configuration,
+    }, this._tests)
+  }
+
+  // UPDATER
+  private _updateTests(tests: TestObject<any>): AnySchema<TOptional, TNullable, TDefault> {
+    return new AnySchema(this._configuration, {
+      ...this._tests,
+      ...tests,
     })
   }
 
@@ -97,6 +107,13 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
   // CONFIG
   public fallback(value: unknown): AnySchema<TOptional, TNullable, TDefault> {
     return this._updateConfig({ fallback: value })
+  }
+
+  // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public test(id: string, test: TestFunction<any>): AnySchema<TOptional, TNullable, TDefault> {
+    return this._updateTests({ [`_${id}`]: test })
   }
 
 }

@@ -1,5 +1,6 @@
 // IMPORTS
-import { GenericSchema, type Nullish } from '@/lib/GenericSchema'
+import type { TestFunction } from '@/lib/GenericSchema'
+import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
 
@@ -22,15 +23,16 @@ export class BooleanSchema<TOptional extends boolean, TNullable extends boolean,
   protected readonly _fallback: boolean | Unset
 
   // PIPELINE
-  protected readonly _tests = {}
+  protected readonly _tests: TestObject<boolean>
 
   // CONSTRUCTOR
-  private constructor(config: BooleanConfig) {
+  private constructor(config: BooleanConfig, tests: TestObject<boolean>) {
     super()
     this._optional = config.optional
     this._nullable = config.nullable
     this._default = config.default
     this._fallback = config.fallback
+    this._tests = tests
   }
 
   // --------------------------------------------------------------------------
@@ -42,7 +44,7 @@ export class BooleanSchema<TOptional extends boolean, TNullable extends boolean,
       nullable: false,
       default: UNSET,
       fallback: UNSET,
-    })
+    }, {})
   }
 
   // --------------------------------------------------------------------------
@@ -62,6 +64,14 @@ export class BooleanSchema<TOptional extends boolean, TNullable extends boolean,
     return new BooleanSchema({
       ...this._configuration,
       ...configuration,
+    }, this._tests)
+  }
+
+  // UPDATER
+  private _updateTests(tests: TestObject<boolean>): BooleanSchema<TOptional, TNullable, TDefault> {
+    return new BooleanSchema(this._configuration, {
+      ...this._tests,
+      ...tests,
     })
   }
 
@@ -100,6 +110,13 @@ export class BooleanSchema<TOptional extends boolean, TNullable extends boolean,
   // CONFIG
   public fallback(value: boolean): BooleanSchema<TOptional, TNullable, TDefault> {
     return this._updateConfig({ fallback: value })
+  }
+
+  // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public test(id: string, test: TestFunction<boolean>): BooleanSchema<TOptional, TNullable, TDefault> {
+    return this._updateTests({ [`_${id}`]: test })
   }
 
 }

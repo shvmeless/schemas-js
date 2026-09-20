@@ -1,5 +1,6 @@
 // IMPORTS
-import { GenericSchema, type Nullish } from '@/lib/GenericSchema'
+import type { TestFunction } from '@/lib/GenericSchema'
+import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
 
@@ -24,16 +25,17 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
   protected readonly _fallback: TValue | Unset
 
   // PIPELINE
-  protected readonly _tests = {}
+  protected readonly _tests: TestObject<TValue>
 
   // CONSTRUCTOR
-  private constructor(config: LiteralConfig<TValue>) {
+  private constructor(config: LiteralConfig<TValue>, tests: TestObject<TValue>) {
     super()
     this._literal = config.literal
     this._optional = config.optional
     this._nullable = config.nullable
     this._default = config.default
     this._fallback = config.fallback
+    this._tests = tests
   }
 
   // --------------------------------------------------------------------------
@@ -46,7 +48,7 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
       nullable: false,
       default: UNSET,
       fallback: UNSET,
-    })
+    }, {})
   }
 
   // --------------------------------------------------------------------------
@@ -67,6 +69,14 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
     return new LiteralSchema({
       ...this._configuration,
       ...configuration,
+    }, this._tests)
+  }
+
+  // UPDATER
+  private _updateTests(tests: TestObject<TValue>): LiteralSchema<TValue, TOptional, TNullable, TDefault> {
+    return new LiteralSchema(this._configuration, {
+      ...this._tests,
+      ...tests,
     })
   }
 
@@ -105,6 +115,13 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
   // CONFIG
   public fallback(value: TValue): LiteralSchema<TValue, TOptional, TNullable, TDefault> {
     return this._updateConfig({ fallback: value })
+  }
+
+  // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public test(id: string, test: TestFunction<TValue>): LiteralSchema<TValue, TOptional, TNullable, TDefault> {
+    return this._updateTests({ [`_${id}`]: test })
   }
 
 }

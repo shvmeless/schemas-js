@@ -1,5 +1,6 @@
 // IMPORTS
-import { GenericSchema, type Nullish } from '@/lib/GenericSchema'
+import type { TestFunction } from '@/lib/GenericSchema'
+import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
 
@@ -22,15 +23,16 @@ export class NullSchema<TOptional extends boolean, TNullable extends boolean, TD
   protected readonly _fallback: null | Unset
 
   // PIPELINE
-  protected readonly _tests = {}
+  protected readonly _tests: TestObject<null>
 
   // CONSTRUCTOR
-  private constructor(config: NullConfig) {
+  private constructor(config: NullConfig, tests: TestObject<null>) {
     super()
     this._optional = config.optional
     this._nullable = config.nullable
     this._default = config.default
     this._fallback = config.fallback
+    this._tests = tests
   }
 
   // --------------------------------------------------------------------------
@@ -42,7 +44,7 @@ export class NullSchema<TOptional extends boolean, TNullable extends boolean, TD
       nullable: false,
       default: UNSET,
       fallback: UNSET,
-    })
+    }, {})
   }
 
   // --------------------------------------------------------------------------
@@ -62,6 +64,14 @@ export class NullSchema<TOptional extends boolean, TNullable extends boolean, TD
     return new NullSchema({
       ...this._configuration,
       ...configuration,
+    }, this._tests)
+  }
+
+  // UPDATER
+  private _updateTests(tests: TestObject<null>): NullSchema<TOptional, TNullable, TDefault> {
+    return new NullSchema(this._configuration, {
+      ...this._tests,
+      ...tests,
     })
   }
 
@@ -100,6 +110,13 @@ export class NullSchema<TOptional extends boolean, TNullable extends boolean, TD
   // CONFIG
   public fallback(value: null): NullSchema<TOptional, TNullable, TDefault> {
     return this._updateConfig({ fallback: value })
+  }
+
+  // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public test(id: string, test: TestFunction<null>): NullSchema<TOptional, TNullable, TDefault> {
+    return this._updateTests({ [`_${id}`]: test })
   }
 
 }

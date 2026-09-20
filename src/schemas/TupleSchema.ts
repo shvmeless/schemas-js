@@ -1,5 +1,6 @@
 // IMPORTS
-import { GenericSchema, type Nullish } from '@/lib/GenericSchema'
+import type { TestFunction } from '@/lib/GenericSchema'
+import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
 
@@ -31,10 +32,10 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
   protected readonly _fallback: TTuple | Unset
 
   // PIPELINE
-  protected readonly _tests = {}
+  protected readonly _tests: TestObject<TTuple>
 
   // CONSTRUCTOR
-  private constructor(config: TupleConfig<TTuple>) {
+  private constructor(config: TupleConfig<TTuple>, tests: TestObject<TTuple>) {
     super()
     this._shape = config.shape
     this._strip = config.strip
@@ -42,6 +43,7 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
     this._nullable = config.nullable
     this._default = config.default
     this._fallback = config.fallback
+    this._tests = tests
   }
 
   // --------------------------------------------------------------------------
@@ -55,7 +57,7 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
       nullable: false,
       default: UNSET,
       fallback: UNSET,
-    })
+    }, {})
   }
 
   // --------------------------------------------------------------------------
@@ -77,6 +79,14 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
     return new TupleSchema({
       ...this._configuration,
       ...configuration,
+    }, this._tests)
+  }
+
+  // UPDATER
+  private _updateTests(tests: TestObject<TTuple>): TupleSchema<TTuple, TOptional, TNullable, TDefault> {
+    return new TupleSchema(this._configuration, {
+      ...this._tests,
+      ...tests,
     })
   }
 
@@ -153,6 +163,13 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
   // CONFIG
   public fallback(value: TTuple): TupleSchema<TTuple, TOptional, TNullable, TDefault> {
     return this._updateConfig({ fallback: value })
+  }
+
+  // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public test(id: string, test: TestFunction<TTuple>): TupleSchema<TTuple, TOptional, TNullable, TDefault> {
+    return this._updateTests({ [`_${id}`]: test })
   }
 
 }

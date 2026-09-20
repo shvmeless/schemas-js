@@ -1,5 +1,6 @@
 // IMPORTS
-import { GenericSchema, type Nullish } from '@/lib/GenericSchema'
+import type { TestFunction } from '@/lib/GenericSchema'
+import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
 
@@ -28,16 +29,17 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
   protected readonly _fallback: InstanceType<TConstructor> | Unset
 
   // PIPELINE
-  protected readonly _tests = {}
+  protected readonly _tests: TestObject<InstanceType<TConstructor>>
 
   // CONSTRUCTOR
-  private constructor(config: InstanceOfConfig<TConstructor>) {
+  private constructor(config: InstanceOfConfig<TConstructor>, tests: TestObject<InstanceType<TConstructor>>) {
     super()
     this._constructor = config.constructor
     this._optional = config.optional
     this._nullable = config.nullable
     this._default = config.default
     this._fallback = config.fallback
+    this._tests = tests
   }
 
   // --------------------------------------------------------------------------
@@ -50,7 +52,7 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
       nullable: false,
       default: UNSET,
       fallback: UNSET,
-    })
+    }, {})
   }
 
   // --------------------------------------------------------------------------
@@ -71,6 +73,14 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
     return new InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault>({
       ...this._configuration,
       ...configuration,
+    }, this._tests)
+  }
+
+  // UPDATER
+  private _updateTests(tests: TestObject<InstanceType<TConstructor>>): InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault> {
+    return new InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault>(this._configuration, {
+      ...this._tests,
+      ...tests,
     })
   }
 
@@ -109,6 +119,13 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
   // CONFIG
   public fallback(value: InstanceType<TConstructor>): InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault> {
     return this._updateConfig({ fallback: value })
+  }
+
+  // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public test(id: string, test: TestFunction<InstanceType<TConstructor>>): InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault> {
+    return this._updateTests({ [`_${id}`]: test })
   }
 
 }

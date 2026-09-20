@@ -34,6 +34,7 @@ export abstract class GenericSchema<TType, TOptional extends boolean, TNullable 
   public abstract nullable(): GenericSchema<TType, TOptional, true, TDefault>
   public abstract default(value: TType): GenericSchema<TType, TOptional, TNullable, true>
   public abstract fallback(value: TType): GenericSchema<TType, TOptional, TNullable, TDefault>
+  public abstract test(id: string, test: TestFunction<TType>): GenericSchema<TType, TOptional, TNullable, TDefault>
 
   // PROTECTED
   protected _runTests(initial: unknown, current: TType): void {

@@ -1,4 +1,5 @@
 // IMPORTS
+import type { TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
@@ -144,6 +145,13 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
   // CONFIG
   public fallback(value: Record<string, TValue>): RecordSchema<TValue, TOptional, TNullable, TDefault> {
     return this._updateConfig({ fallback: value })
+  }
+
+  // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public test(id: string, test: TestFunction<Record<string, TValue>>): RecordSchema<TValue, TOptional, TNullable, TDefault> {
+    return this._updateTests({ [`_${id}`]: test })
   }
 
   // --------------------------------------------------------------------------

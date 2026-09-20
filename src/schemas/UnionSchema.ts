@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // IMPORTS
-import { GenericSchema, type Nullish } from '@/lib/GenericSchema'
+import type { TestFunction } from '@/lib/GenericSchema'
+import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
 
@@ -30,16 +31,17 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
   protected readonly _fallback: TSchemas | Unset
 
   // PIPELINE
-  protected readonly _tests = {}
+  protected readonly _tests: TestObject<TSchemas>
 
   // CONSTRUCTOR
-  private constructor(config: UnionConfig<TSchemas>) {
+  private constructor(config: UnionConfig<TSchemas>, tests: TestObject<TSchemas>) {
     super()
     this._schemas = config.schemas
     this._optional = config.optional
     this._nullable = config.nullable
     this._default = config.default
     this._fallback = config.fallback
+    this._tests = tests
     if (this._schemas.length < 2) throw new Error('Must provide at least two schemas.')
   }
 
@@ -53,7 +55,7 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
       nullable: false,
       default: UNSET,
       fallback: UNSET,
-    })
+    }, {})
   }
 
   // --------------------------------------------------------------------------
@@ -74,6 +76,14 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
     return new UnionSchema({
       ...this._configuration,
       ...configuration,
+    }, this._tests)
+  }
+
+  // UPDATER
+  private _updateTests(tests: TestObject<TSchemas>): UnionSchema<TSchemas, TOptional, TNullable, TDefault> {
+    return new UnionSchema(this._configuration, {
+      ...this._tests,
+      ...tests,
     })
   }
 
@@ -117,6 +127,13 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
   // CONFIG
   public fallback(value: TSchemas): UnionSchema<TSchemas, TOptional, TNullable, TDefault> {
     return this._updateConfig({ fallback: value })
+  }
+
+  // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public test(id: string, test: TestFunction<TSchemas>): UnionSchema<TSchemas, TOptional, TNullable, TDefault> {
+    return this._updateTests({ [`_${id}`]: test })
   }
 
 }

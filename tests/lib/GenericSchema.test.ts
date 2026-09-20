@@ -8,7 +8,8 @@ import { expectValidation } from '@tests/helpers/expect'
 
 // `GenericSchema` is abstract, so `StringSchema` is used as a concrete
 // implementation to test the behaviour inherited by every schema:
-// `.optional()`, `.nullable()`, `.default(value)` and `.fallback(value)`.
+// `.optional()`, `.nullable()`, `.default(value)`, `.fallback(value)` and
+// `.test(id, test)`.
 // These methods are not tested again in each concrete schema.
 
 // METHOD ---------------------------------------------------------------------
@@ -129,5 +130,32 @@ describe('.fallback(value)', () => {
 
   it('returns when `input` is `null` and the schema is nullable.', () => {
     expectValidation(schema.nullable(), null).toReturn(null)
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
+describe('.test(id, test)', () => {
+
+  const base = StringSchema.create()
+  const schema = base.test('allowed', (current) => {
+    if (current !== 'allowed') return 'The value must be "allowed".'
+    return null
+  })
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(StringSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when the test is satisfied.', () => {
+    expectValidation(schema, 'allowed').toReturn('allowed')
+  })
+
+  it('throws when the test is not satisfied.', () => {
+    expectValidation(schema, 'string').toThrow('The value must be "allowed".')
+  })
+
+  it('returns when the test is not satisfied but `fallback` is provided.', () => {
+    expectValidation(schema.fallback('fallback'), 'string').toReturn('fallback')
   })
 })

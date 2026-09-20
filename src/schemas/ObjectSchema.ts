@@ -1,5 +1,6 @@
 // IMPORTS
-import { GenericSchema, type Nullish } from '@/lib/GenericSchema'
+import type { TestFunction } from '@/lib/GenericSchema'
+import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
 
@@ -31,10 +32,10 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
   protected readonly _fallback: TObject | Unset
 
   // PIPELINE
-  protected readonly _tests = {}
+  protected readonly _tests: TestObject<TObject>
 
   // CONSTRUCTOR
-  private constructor(config: ObjectConfig<TObject>) {
+  private constructor(config: ObjectConfig<TObject>, tests: TestObject<TObject>) {
     super()
     this._schema = config.schema
     this._strip = config.strip
@@ -42,6 +43,7 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
     this._nullable = config.nullable
     this._default = config.default
     this._fallback = config.fallback
+    this._tests = tests
   }
 
   // --------------------------------------------------------------------------
@@ -55,7 +57,7 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
       nullable: false,
       default: UNSET,
       fallback: UNSET,
-    })
+    }, {})
   }
 
   // --------------------------------------------------------------------------
@@ -77,6 +79,14 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
     return new ObjectSchema({
       ...this._configuration,
       ...configuration,
+    }, this._tests)
+  }
+
+  // UPDATER
+  private _updateTests(tests: TestObject<TObject>): ObjectSchema<TObject, TOptional, TNullable, TDefault> {
+    return new ObjectSchema(this._configuration, {
+      ...this._tests,
+      ...tests,
     })
   }
 
@@ -153,6 +163,13 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
   // CONFIG
   public fallback(value: TObject): ObjectSchema<TObject, TOptional, TNullable, TDefault> {
     return this._updateConfig({ fallback: value })
+  }
+
+  // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public test(id: string, test: TestFunction<TObject>): ObjectSchema<TObject, TOptional, TNullable, TDefault> {
+    return this._updateTests({ [`_${id}`]: test })
   }
 
 }

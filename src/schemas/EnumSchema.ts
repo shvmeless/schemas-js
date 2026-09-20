@@ -1,5 +1,6 @@
 // IMPORTS
-import { GenericSchema, type Nullish } from '@/lib/GenericSchema'
+import type { TestFunction } from '@/lib/GenericSchema'
+import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
 
@@ -24,16 +25,17 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
   protected readonly _fallback: TValues | Unset
 
   // PIPELINE
-  protected readonly _tests = {}
+  protected readonly _tests: TestObject<TValues>
 
   // CONSTRUCTOR
-  private constructor(config: EnumConfig<TValues>) {
+  private constructor(config: EnumConfig<TValues>, tests: TestObject<TValues>) {
     super()
     this._values = config.values
     this._optional = config.optional
     this._nullable = config.nullable
     this._default = config.default
     this._fallback = config.fallback
+    this._tests = tests
     if (this._values.length === 0) {
       throw new Error('Must provide at least one literal value.')
     }
@@ -49,7 +51,7 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
       nullable: false,
       default: UNSET,
       fallback: UNSET,
-    })
+    }, {})
   }
 
   // --------------------------------------------------------------------------
@@ -70,6 +72,14 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
     return new EnumSchema({
       ...this._configuration,
       ...configuration,
+    }, this._tests)
+  }
+
+  // UPDATER
+  private _updateTests(tests: TestObject<TValues>): EnumSchema<TValues, TOptional, TNullable, TDefault> {
+    return new EnumSchema(this._configuration, {
+      ...this._tests,
+      ...tests,
     })
   }
 
@@ -108,6 +118,13 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
   // CONFIG
   public fallback(value: TValues): EnumSchema<TValues, TOptional, TNullable, TDefault> {
     return this._updateConfig({ fallback: value })
+  }
+
+  // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public test(id: string, test: TestFunction<TValues>): EnumSchema<TValues, TOptional, TNullable, TDefault> {
+    return this._updateTests({ [`_${id}`]: test })
   }
 
 }

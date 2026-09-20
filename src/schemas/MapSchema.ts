@@ -1,4 +1,5 @@
 // IMPORTS
+import type { TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
@@ -151,6 +152,13 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   // CONFIG
   public fallback(value: Map<TKey, TValue>): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     return this._updateConfig({ fallback: value })
+  }
+
+  // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public test(id: string, test: TestFunction<Map<TKey, TValue>>): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
+    return this._updateTests({ [`_${id}`]: test })
   }
 
   // --------------------------------------------------------------------------
