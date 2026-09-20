@@ -1,5 +1,5 @@
 // IMPORTS
-import type { ParseFunction, PrepareFunction, TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
@@ -17,6 +17,7 @@ interface NullPipeline {
   parse: ParseFunction | null
   prepare: Array<PrepareFunction<null>>
   tests: TestObject<null>
+  refine: Array<RefineFunction<null>>
 }
 
 // CLASS
@@ -33,6 +34,7 @@ export class NullSchema<TOptional extends boolean, TNullable extends boolean, TD
   protected readonly _parse: ParseFunction | null
   protected readonly _prepare: Array<PrepareFunction<null>>
   protected readonly _tests: TestObject<null>
+  protected readonly _refine: Array<RefineFunction<null>>
 
   // CONSTRUCTOR
   private constructor(config: NullConfig, pipeline: NullPipeline) {
@@ -44,6 +46,7 @@ export class NullSchema<TOptional extends boolean, TNullable extends boolean, TD
     this._parse = pipeline.parse
     this._prepare = pipeline.prepare
     this._tests = pipeline.tests
+    this._refine = pipeline.refine
   }
 
   // --------------------------------------------------------------------------
@@ -59,6 +62,7 @@ export class NullSchema<TOptional extends boolean, TNullable extends boolean, TD
       parse: null,
       prepare: [],
       tests: {},
+      refine: [],
     })
   }
 
@@ -80,6 +84,7 @@ export class NullSchema<TOptional extends boolean, TNullable extends boolean, TD
       parse: this._parse,
       prepare: this._prepare,
       tests: this._tests,
+      refine: this._refine,
     }
   }
 
@@ -162,6 +167,11 @@ export class NullSchema<TOptional extends boolean, TNullable extends boolean, TD
   // PIPELINE
   public test(id: string, test: TestFunction<null>): NullSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({ [`_${id}`]: test })
+  }
+
+  // PIPELINE
+  public refine(fn: RefineFunction<null>): NullSchema<TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ refine: [...this._refine, fn] })
   }
 
 }

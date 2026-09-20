@@ -205,6 +205,34 @@ describe('.prepare(callback)', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
+describe('.refine(callback)', () => {
+
+  const base = StringSchema.create()
+  const schema = base.refine((value) => {
+    if (value === '') throw new ValidationError(value, 'The value must not be empty.')
+    return value.toUpperCase()
+  })
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(StringSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `refine` returns a value.', () => {
+    const constrained = schema.lowercase()
+    expectValidation(constrained, 'string').toReturn('STRING')
+  })
+
+  it('throws when `refine` throws a `ValidationError`.', () => {
+    expectValidation(schema, '').toThrow('The value must not be empty.')
+  })
+
+  it('returns when `refine` throws but `fallback` is provided.', () => {
+    expectValidation(schema.fallback('fallback'), '').toReturn('fallback')
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
 describe('.test(id, test)', () => {
 
   const base = StringSchema.create()

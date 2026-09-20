@@ -1,5 +1,5 @@
 // IMPORTS
-import type { ParseFunction, PrepareFunction, TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
@@ -18,6 +18,7 @@ interface StringPipeline {
   parse: ParseFunction | null
   prepare: Array<PrepareFunction<string>>
   tests: TestObject<string>
+  refine: Array<RefineFunction<string>>
 }
 
 // CLASS
@@ -34,6 +35,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   protected readonly _parse: ParseFunction | null
   protected readonly _prepare: Array<PrepareFunction<string>>
   protected readonly _tests: TestObject<string>
+  protected readonly _refine: Array<RefineFunction<string>>
 
   // CONSTRUCTOR
   private constructor(config: StringConfig, pipeline: StringPipeline) {
@@ -45,6 +47,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
     this._parse = pipeline.parse
     this._prepare = pipeline.prepare
     this._tests = pipeline.tests
+    this._refine = pipeline.refine
   }
 
   // --------------------------------------------------------------------------
@@ -60,6 +63,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
       parse: null,
       prepare: [],
       tests: {},
+      refine: [],
     })
   }
 
@@ -81,6 +85,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
       parse: this._parse,
       prepare: this._prepare,
       tests: this._tests,
+      refine: this._refine,
     }
   }
 
@@ -162,6 +167,11 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   // PIPELINE
   public test(id: string, test: TestFunction<string>): StringSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({ [`_${id}`]: test })
+  }
+
+  // PIPELINE
+  public refine(fn: RefineFunction<string>): StringSchema<TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ refine: [...this._refine, fn] })
   }
 
   // --------------------------------------------------------------------------

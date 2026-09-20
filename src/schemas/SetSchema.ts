@@ -1,5 +1,5 @@
 // IMPORTS
-import type { ParseFunction, PrepareFunction, TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
@@ -20,6 +20,7 @@ interface SetPipeline<TValue> {
   parse: ParseFunction | null
   prepare: Array<PrepareFunction<Set<TValue>>>
   tests: TestObject<Set<TValue>>
+  refine: Array<RefineFunction<Set<TValue>>>
 }
 
 // CLASS
@@ -38,6 +39,7 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
   protected readonly _parse: ParseFunction | null
   protected readonly _prepare: Array<PrepareFunction<Set<TValue>>>
   protected readonly _tests: TestObject<Set<TValue>>
+  protected readonly _refine: Array<RefineFunction<Set<TValue>>>
 
   // CONSTRUCTOR
   private constructor(config: SetConfig<TValue>, pipeline: SetPipeline<TValue>) {
@@ -51,6 +53,7 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
     this._parse = pipeline.parse
     this._prepare = pipeline.prepare
     this._tests = pipeline.tests
+    this._refine = pipeline.refine
   }
 
   // --------------------------------------------------------------------------
@@ -68,6 +71,7 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
       parse: null,
       prepare: [],
       tests: {},
+      refine: [],
     })
   }
 
@@ -91,6 +95,7 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
       parse: this._parse,
       prepare: this._prepare,
       tests: this._tests,
+      refine: this._refine,
     }
   }
 
@@ -198,6 +203,11 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
   // PIPELINE
   public test(id: string, test: TestFunction<Set<TValue>>): SetSchema<TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({ [`_${id}`]: test })
+  }
+
+  // PIPELINE
+  public refine(fn: RefineFunction<Set<TValue>>): SetSchema<TValue, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ refine: [...this._refine, fn] })
   }
 
   // --------------------------------------------------------------------------

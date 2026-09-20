@@ -1,5 +1,5 @@
 // IMPORTS
-import type { ParseFunction, PrepareFunction, TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
@@ -22,6 +22,7 @@ interface InstanceOfPipeline<TConstructor extends AnyConstructor> {
   parse: ParseFunction | null
   prepare: Array<PrepareFunction<InstanceType<TConstructor>>>
   tests: TestObject<InstanceType<TConstructor>>
+  refine: Array<RefineFunction<InstanceType<TConstructor>>>
 }
 
 // CLASS
@@ -39,6 +40,7 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
   protected readonly _parse: ParseFunction | null
   protected readonly _prepare: Array<PrepareFunction<InstanceType<TConstructor>>>
   protected readonly _tests: TestObject<InstanceType<TConstructor>>
+  protected readonly _refine: Array<RefineFunction<InstanceType<TConstructor>>>
 
   // CONSTRUCTOR
   private constructor(config: InstanceOfConfig<TConstructor>, pipeline: InstanceOfPipeline<TConstructor>) {
@@ -51,6 +53,7 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
     this._parse = pipeline.parse
     this._prepare = pipeline.prepare
     this._tests = pipeline.tests
+    this._refine = pipeline.refine
   }
 
   // --------------------------------------------------------------------------
@@ -67,6 +70,7 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
       parse: null,
       prepare: [],
       tests: {},
+      refine: [],
     })
   }
 
@@ -89,6 +93,7 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
       parse: this._parse,
       prepare: this._prepare,
       tests: this._tests,
+      refine: this._refine,
     }
   }
 
@@ -171,6 +176,11 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
   // PIPELINE
   public test(id: string, test: TestFunction<InstanceType<TConstructor>>): InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault> {
     return this._updateTests({ [`_${id}`]: test })
+  }
+
+  // PIPELINE
+  public refine(fn: RefineFunction<InstanceType<TConstructor>>): InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ refine: [...this._refine, fn] })
   }
 
 }

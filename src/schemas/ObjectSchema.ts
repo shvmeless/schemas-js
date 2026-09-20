@@ -1,5 +1,5 @@
 // IMPORTS
-import type { ParseFunction, PrepareFunction, TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
@@ -24,6 +24,7 @@ interface ObjectPipeline<TObject> {
   parse: ParseFunction | null
   prepare: Array<PrepareFunction<TObject>>
   tests: TestObject<TObject>
+  refine: Array<RefineFunction<TObject>>
 }
 
 // CLASS
@@ -42,6 +43,7 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
   protected readonly _parse: ParseFunction | null
   protected readonly _prepare: Array<PrepareFunction<TObject>>
   protected readonly _tests: TestObject<TObject>
+  protected readonly _refine: Array<RefineFunction<TObject>>
 
   // CONSTRUCTOR
   private constructor(config: ObjectConfig<TObject>, pipeline: ObjectPipeline<TObject>) {
@@ -55,6 +57,7 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
     this._parse = pipeline.parse
     this._prepare = pipeline.prepare
     this._tests = pipeline.tests
+    this._refine = pipeline.refine
   }
 
   // --------------------------------------------------------------------------
@@ -72,6 +75,7 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
       parse: null,
       prepare: [],
       tests: {},
+      refine: [],
     })
   }
 
@@ -95,6 +99,7 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
       parse: this._parse,
       prepare: this._prepare,
       tests: this._tests,
+      refine: this._refine,
     }
   }
 
@@ -215,6 +220,11 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
   // PIPELINE
   public test(id: string, test: TestFunction<TObject>): ObjectSchema<TObject, TOptional, TNullable, TDefault> {
     return this._updateTests({ [`_${id}`]: test })
+  }
+
+  // PIPELINE
+  public refine(fn: RefineFunction<TObject>): ObjectSchema<TObject, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ refine: [...this._refine, fn] })
   }
 
 }

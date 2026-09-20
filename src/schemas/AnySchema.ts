@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
 // IMPORTS
-import type { ParseFunction, PrepareFunction, TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { type Unset, UNSET } from '@/utils/unset'
 
@@ -20,6 +20,7 @@ interface AnyPipeline {
   parse: ParseFunction | null
   prepare: Array<PrepareFunction<any>>
   tests: TestObject<any>
+  refine: Array<RefineFunction<any>>
 }
 
 // CLASS
@@ -36,6 +37,7 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
   protected readonly _parse: ParseFunction | null
   protected readonly _prepare: Array<PrepareFunction<any>>
   protected readonly _tests: TestObject<any>
+  protected readonly _refine: Array<RefineFunction<any>>
 
   // CONSTRUCTOR
   private constructor(config: AnyConfig, pipeline: AnyPipeline) {
@@ -47,6 +49,7 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
     this._parse = pipeline.parse
     this._prepare = pipeline.prepare
     this._tests = pipeline.tests
+    this._refine = pipeline.refine
   }
 
   // --------------------------------------------------------------------------
@@ -62,6 +65,7 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
       parse: null,
       prepare: [],
       tests: {},
+      refine: [],
     })
   }
 
@@ -83,6 +87,7 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
       parse: this._parse,
       prepare: this._prepare,
       tests: this._tests,
+      refine: this._refine,
     }
   }
 
@@ -159,6 +164,11 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
   // PIPELINE
   public test(id: string, test: TestFunction<any>): AnySchema<TOptional, TNullable, TDefault> {
     return this._updateTests({ [`_${id}`]: test })
+  }
+
+  // PIPELINE
+  public refine(fn: RefineFunction<any>): AnySchema<TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ refine: [...this._refine, fn] })
   }
 
 }

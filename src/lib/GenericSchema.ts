@@ -19,6 +19,7 @@ export type ParseFunction = (input: unknown) => unknown
 export type PrepareFunction<TType> = (input: TType) => TType
 export type TestFunction<TType> = (current: TType) => (string | null)
 export type TestObject<TType> = Record<string, TestFunction<TType> | undefined>
+export type RefineFunction<TType> = (input: TType) => TType
 
 // CLASS
 export abstract class GenericSchema<TType, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean> {
@@ -31,6 +32,7 @@ export abstract class GenericSchema<TType, TOptional extends boolean, TNullable 
   protected abstract readonly _parse: ParseFunction | null
   protected abstract readonly _prepare: Array<PrepareFunction<TType>>
   protected abstract readonly _tests: TestObject<TType>
+  protected abstract readonly _refine: Array<RefineFunction<TType>>
 
   // ABSTRACT METHODS
   public abstract validate(input: unknown): Nullish<TType, TOptional, TNullable, TDefault>
@@ -41,6 +43,7 @@ export abstract class GenericSchema<TType, TOptional extends boolean, TNullable 
   public abstract parse(fn: ParseFunction): GenericSchema<TType, TOptional, TNullable, TDefault>
   public abstract prepare(fn: PrepareFunction<TType>): GenericSchema<TType, TOptional, TNullable, TDefault>
   public abstract test(id: string, test: TestFunction<TType>): GenericSchema<TType, TOptional, TNullable, TDefault>
+  public abstract refine(fn: RefineFunction<TType>): GenericSchema<TType, TOptional, TNullable, TDefault>
 
   // PROTECTED
   protected _runTests(initial: unknown, current: TType): void {
@@ -76,6 +79,10 @@ export abstract class GenericSchema<TType, TOptional extends boolean, TNullable 
       }
 
       this._runTests(input, output)
+
+      for (const refine of this._refine) {
+        output = refine(output)
+      }
 
       return output
 

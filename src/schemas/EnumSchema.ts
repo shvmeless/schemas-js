@@ -1,5 +1,5 @@
 // IMPORTS
-import type { ParseFunction, PrepareFunction, TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
@@ -18,6 +18,7 @@ interface EnumPipeline<TValues extends string | number> {
   parse: ParseFunction | null
   prepare: Array<PrepareFunction<TValues>>
   tests: TestObject<TValues>
+  refine: Array<RefineFunction<TValues>>
 }
 
 // CLASS
@@ -35,6 +36,7 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
   protected readonly _parse: ParseFunction | null
   protected readonly _prepare: Array<PrepareFunction<TValues>>
   protected readonly _tests: TestObject<TValues>
+  protected readonly _refine: Array<RefineFunction<TValues>>
 
   // CONSTRUCTOR
   private constructor(config: EnumConfig<TValues>, pipeline: EnumPipeline<TValues>) {
@@ -47,6 +49,7 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
     this._parse = pipeline.parse
     this._prepare = pipeline.prepare
     this._tests = pipeline.tests
+    this._refine = pipeline.refine
     if (this._values.length === 0) {
       throw new Error('Must provide at least one literal value.')
     }
@@ -66,6 +69,7 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
       parse: null,
       prepare: [],
       tests: {},
+      refine: [],
     })
   }
 
@@ -88,6 +92,7 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
       parse: this._parse,
       prepare: this._prepare,
       tests: this._tests,
+      refine: this._refine,
     }
   }
 
@@ -170,6 +175,11 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
   // PIPELINE
   public test(id: string, test: TestFunction<TValues>): EnumSchema<TValues, TOptional, TNullable, TDefault> {
     return this._updateTests({ [`_${id}`]: test })
+  }
+
+  // PIPELINE
+  public refine(fn: RefineFunction<TValues>): EnumSchema<TValues, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ refine: [...this._refine, fn] })
   }
 
 }

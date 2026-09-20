@@ -1,5 +1,5 @@
 // IMPORTS
-import type { ParseFunction, PrepareFunction, TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
@@ -21,6 +21,7 @@ interface MapPipeline<TKey, TValue> {
   parse: ParseFunction | null
   prepare: Array<PrepareFunction<Map<TKey, TValue>>>
   tests: TestObject<Map<TKey, TValue>>
+  refine: Array<RefineFunction<Map<TKey, TValue>>>
 }
 
 // CLASS
@@ -40,6 +41,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   protected readonly _parse: ParseFunction | null
   protected readonly _prepare: Array<PrepareFunction<Map<TKey, TValue>>>
   protected readonly _tests: TestObject<Map<TKey, TValue>>
+  protected readonly _refine: Array<RefineFunction<Map<TKey, TValue>>>
 
   // CONSTRUCTOR
   private constructor(config: MapConfig<TKey, TValue>, pipeline: MapPipeline<TKey, TValue>) {
@@ -54,6 +56,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
     this._parse = pipeline.parse
     this._prepare = pipeline.prepare
     this._tests = pipeline.tests
+    this._refine = pipeline.refine
   }
 
   // --------------------------------------------------------------------------
@@ -72,6 +75,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
       parse: null,
       prepare: [],
       tests: {},
+      refine: [],
     })
   }
 
@@ -96,6 +100,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
       parse: this._parse,
       prepare: this._prepare,
       tests: this._tests,
+      refine: this._refine,
     }
   }
 
@@ -204,6 +209,11 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   // PIPELINE
   public test(id: string, test: TestFunction<Map<TKey, TValue>>): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({ [`_${id}`]: test })
+  }
+
+  // PIPELINE
+  public refine(fn: RefineFunction<Map<TKey, TValue>>): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ refine: [...this._refine, fn] })
   }
 
   // --------------------------------------------------------------------------

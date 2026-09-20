@@ -1,5 +1,5 @@
 // IMPORTS
-import type { ParseFunction, PrepareFunction, TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
@@ -20,6 +20,7 @@ interface RecordPipeline<TValue> {
   parse: ParseFunction | null
   prepare: Array<PrepareFunction<Record<string, TValue>>>
   tests: TestObject<Record<string, TValue>>
+  refine: Array<RefineFunction<Record<string, TValue>>>
 }
 
 // CLASS
@@ -38,6 +39,7 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
   protected readonly _parse: ParseFunction | null
   protected readonly _prepare: Array<PrepareFunction<Record<string, TValue>>>
   protected readonly _tests: TestObject<Record<string, TValue>>
+  protected readonly _refine: Array<RefineFunction<Record<string, TValue>>>
 
   // CONSTRUCTOR
   private constructor(config: RecordConfig<TValue>, pipeline: RecordPipeline<TValue>) {
@@ -51,6 +53,7 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
     this._parse = pipeline.parse
     this._prepare = pipeline.prepare
     this._tests = pipeline.tests
+    this._refine = pipeline.refine
   }
 
   // --------------------------------------------------------------------------
@@ -68,6 +71,7 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
       parse: null,
       prepare: [],
       tests: {},
+      refine: [],
     })
   }
 
@@ -91,6 +95,7 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
       parse: this._parse,
       prepare: this._prepare,
       tests: this._tests,
+      refine: this._refine,
     }
   }
 
@@ -197,6 +202,11 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
   // PIPELINE
   public test(id: string, test: TestFunction<Record<string, TValue>>): RecordSchema<TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({ [`_${id}`]: test })
+  }
+
+  // PIPELINE
+  public refine(fn: RefineFunction<Record<string, TValue>>): RecordSchema<TValue, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ refine: [...this._refine, fn] })
   }
 
   // --------------------------------------------------------------------------

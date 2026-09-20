@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // IMPORTS
-import type { ParseFunction, PrepareFunction, TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
@@ -24,6 +24,7 @@ interface UnionPipeline<TSchemas> {
   parse: ParseFunction | null
   prepare: Array<PrepareFunction<TSchemas>>
   tests: TestObject<TSchemas>
+  refine: Array<RefineFunction<TSchemas>>
 }
 
 // CLASS
@@ -41,6 +42,7 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
   protected readonly _parse: ParseFunction | null
   protected readonly _prepare: Array<PrepareFunction<TSchemas>>
   protected readonly _tests: TestObject<TSchemas>
+  protected readonly _refine: Array<RefineFunction<TSchemas>>
 
   // CONSTRUCTOR
   private constructor(config: UnionConfig<TSchemas>, pipeline: UnionPipeline<TSchemas>) {
@@ -53,6 +55,7 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
     this._parse = pipeline.parse
     this._prepare = pipeline.prepare
     this._tests = pipeline.tests
+    this._refine = pipeline.refine
     if (this._schemas.length < 2) throw new Error('Must provide at least two schemas.')
   }
 
@@ -70,6 +73,7 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
       parse: null,
       prepare: [],
       tests: {},
+      refine: [],
     })
   }
 
@@ -92,6 +96,7 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
       parse: this._parse,
       prepare: this._prepare,
       tests: this._tests,
+      refine: this._refine,
     }
   }
 
@@ -179,6 +184,11 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
   // PIPELINE
   public test(id: string, test: TestFunction<TSchemas>): UnionSchema<TSchemas, TOptional, TNullable, TDefault> {
     return this._updateTests({ [`_${id}`]: test })
+  }
+
+  // PIPELINE
+  public refine(fn: RefineFunction<TSchemas>): UnionSchema<TSchemas, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ refine: [...this._refine, fn] })
   }
 
 }

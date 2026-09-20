@@ -1,5 +1,5 @@
 // IMPORTS
-import type { ParseFunction, PrepareFunction, TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
@@ -18,6 +18,7 @@ interface NumberPipeline {
   parse: ParseFunction | null
   prepare: Array<PrepareFunction<number>>
   tests: TestObject<number>
+  refine: Array<RefineFunction<number>>
 }
 
 // CLASS
@@ -34,6 +35,7 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
   protected readonly _parse: ParseFunction | null
   protected readonly _prepare: Array<PrepareFunction<number>>
   protected readonly _tests: TestObject<number>
+  protected readonly _refine: Array<RefineFunction<number>>
 
   // CONSTRUCTOR
   private constructor(config: NumberConfig, pipeline: NumberPipeline) {
@@ -45,6 +47,7 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
     this._parse = pipeline.parse
     this._prepare = pipeline.prepare
     this._tests = pipeline.tests
+    this._refine = pipeline.refine
   }
 
   // --------------------------------------------------------------------------
@@ -60,6 +63,7 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
       parse: null,
       prepare: [],
       tests: {},
+      refine: [],
     })
   }
 
@@ -81,6 +85,7 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
       parse: this._parse,
       prepare: this._prepare,
       tests: this._tests,
+      refine: this._refine,
     }
   }
 
@@ -163,6 +168,11 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
   // PIPELINE
   public test(id: string, test: TestFunction<number>): NumberSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({ [`_${id}`]: test })
+  }
+
+  // PIPELINE
+  public refine(fn: RefineFunction<number>): NumberSchema<TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ refine: [...this._refine, fn] })
   }
 
   // --------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 // IMPORTS
-import type { ParseFunction, PrepareFunction, TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
@@ -18,6 +18,7 @@ interface LiteralPipeline<TValue extends string | number | boolean> {
   parse: ParseFunction | null
   prepare: Array<PrepareFunction<TValue>>
   tests: TestObject<TValue>
+  refine: Array<RefineFunction<TValue>>
 }
 
 // CLASS
@@ -35,6 +36,7 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
   protected readonly _parse: ParseFunction | null
   protected readonly _prepare: Array<PrepareFunction<TValue>>
   protected readonly _tests: TestObject<TValue>
+  protected readonly _refine: Array<RefineFunction<TValue>>
 
   // CONSTRUCTOR
   private constructor(config: LiteralConfig<TValue>, pipeline: LiteralPipeline<TValue>) {
@@ -47,6 +49,7 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
     this._parse = pipeline.parse
     this._prepare = pipeline.prepare
     this._tests = pipeline.tests
+    this._refine = pipeline.refine
   }
 
   // --------------------------------------------------------------------------
@@ -63,6 +66,7 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
       parse: null,
       prepare: [],
       tests: {},
+      refine: [],
     })
   }
 
@@ -85,6 +89,7 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
       parse: this._parse,
       prepare: this._prepare,
       tests: this._tests,
+      refine: this._refine,
     }
   }
 
@@ -167,6 +172,11 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
   // PIPELINE
   public test(id: string, test: TestFunction<TValue>): LiteralSchema<TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({ [`_${id}`]: test })
+  }
+
+  // PIPELINE
+  public refine(fn: RefineFunction<TValue>): LiteralSchema<TValue, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ refine: [...this._refine, fn] })
   }
 
 }

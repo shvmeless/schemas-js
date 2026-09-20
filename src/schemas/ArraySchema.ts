@@ -1,5 +1,5 @@
 // IMPORTS
-import type { ParseFunction, PrepareFunction, TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
@@ -20,6 +20,7 @@ interface ArrayPipeline<TItem> {
   parse: ParseFunction | null
   prepare: Array<PrepareFunction<Array<TItem>>>
   tests: TestObject<Array<TItem>>
+  refine: Array<RefineFunction<Array<TItem>>>
 }
 
 // CLASS
@@ -38,6 +39,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   protected readonly _parse: ParseFunction | null
   protected readonly _prepare: Array<PrepareFunction<Array<TItem>>>
   protected readonly _tests: TestObject<Array<TItem>>
+  protected readonly _refine: Array<RefineFunction<Array<TItem>>>
 
   // CONSTRUCTOR
   private constructor(config: ArrayConfig<TItem>, pipeline: ArrayPipeline<TItem>) {
@@ -51,6 +53,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
     this._parse = pipeline.parse
     this._prepare = pipeline.prepare
     this._tests = pipeline.tests
+    this._refine = pipeline.refine
   }
 
   // --------------------------------------------------------------------------
@@ -68,6 +71,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
       parse: null,
       prepare: [],
       tests: {},
+      refine: [],
     })
   }
 
@@ -91,6 +95,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
       parse: this._parse,
       prepare: this._prepare,
       tests: this._tests,
+      refine: this._refine,
     }
   }
 
@@ -198,6 +203,11 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   // PIPELINE
   public test(id: string, test: TestFunction<Array<TItem>>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
     return this._updateTests({ [`_${id}`]: test })
+  }
+
+  // PIPELINE
+  public refine(fn: RefineFunction<Array<TItem>>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ refine: [...this._refine, fn] })
   }
 
   // --------------------------------------------------------------------------
