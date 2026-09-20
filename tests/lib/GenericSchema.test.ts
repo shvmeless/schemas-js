@@ -173,6 +173,38 @@ describe('.parse(callback)', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
+describe('.prepare(callback)', () => {
+
+  const base = StringSchema.create()
+  const schema = base.prepare((value) => {
+    if (value === '') throw new ValidationError(value, 'The value must not be empty.')
+    return value.toUpperCase()
+  })
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(StringSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `prepare` returns a value that satisfies the schema.', () => {
+    expectValidation(schema, 'string').toReturn('STRING')
+  })
+
+  it('throws when `prepare` returns a value that does not satisfy the schema.', () => {
+    const constrained = StringSchema.create().min(8)
+    expectValidation(constrained, 'short').toThrow('The value must be at least 8 characters long.')
+  })
+
+  it('throws when `prepare` throws a `ValidationError`.', () => {
+    expectValidation(schema, '').toThrow('The value must not be empty.')
+  })
+
+  it('returns when `prepare` throws but `fallback` is provided.', () => {
+    expectValidation(schema.fallback('fallback'), '').toReturn('fallback')
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
 describe('.test(id, test)', () => {
 
   const base = StringSchema.create()

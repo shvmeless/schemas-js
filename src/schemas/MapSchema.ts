@@ -1,5 +1,5 @@
 // IMPORTS
-import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, PrepareFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
@@ -19,6 +19,7 @@ interface MapConfig<TKey, TValue> {
 // INTERFACE
 interface MapPipeline<TKey, TValue> {
   parse: ParseFunction | null
+  prepare: Array<PrepareFunction<Map<TKey, TValue>>>
   tests: TestObject<Map<TKey, TValue>>
 }
 
@@ -37,6 +38,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
 
   // PIPELINE
   protected readonly _parse: ParseFunction | null
+  protected readonly _prepare: Array<PrepareFunction<Map<TKey, TValue>>>
   protected readonly _tests: TestObject<Map<TKey, TValue>>
 
   // CONSTRUCTOR
@@ -50,6 +52,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
     this._default = config.default
     this._fallback = config.fallback
     this._parse = pipeline.parse
+    this._prepare = pipeline.prepare
     this._tests = pipeline.tests
   }
 
@@ -67,6 +70,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
       fallback: UNSET,
     }, {
       parse: null,
+      prepare: [],
       tests: {},
     })
   }
@@ -90,6 +94,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   private get _pipeline(): MapPipeline<TKey, TValue> {
     return {
       parse: this._parse,
+      prepare: this._prepare,
       tests: this._tests,
     }
   }
@@ -189,6 +194,11 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   // PIPELINE
   public parse(fn: ParseFunction): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     return this._updatePipeline({ parse: fn })
+  }
+
+  // PIPELINE
+  public prepare(fn: PrepareFunction<Map<TKey, TValue>>): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ prepare: [...this._prepare, fn] })
   }
 
   // PIPELINE

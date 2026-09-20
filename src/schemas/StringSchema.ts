@@ -1,5 +1,5 @@
 // IMPORTS
-import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, PrepareFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
@@ -16,6 +16,7 @@ interface StringConfig {
 // INTERFACE
 interface StringPipeline {
   parse: ParseFunction | null
+  prepare: Array<PrepareFunction<string>>
   tests: TestObject<string>
 }
 
@@ -31,6 +32,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
 
   // PIPELINE
   protected readonly _parse: ParseFunction | null
+  protected readonly _prepare: Array<PrepareFunction<string>>
   protected readonly _tests: TestObject<string>
 
   // CONSTRUCTOR
@@ -41,6 +43,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
     this._default = config.default
     this._fallback = config.fallback
     this._parse = pipeline.parse
+    this._prepare = pipeline.prepare
     this._tests = pipeline.tests
   }
 
@@ -55,6 +58,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
       fallback: UNSET,
     }, {
       parse: null,
+      prepare: [],
       tests: {},
     })
   }
@@ -75,6 +79,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   private get _pipeline(): StringPipeline {
     return {
       parse: this._parse,
+      prepare: this._prepare,
       tests: this._tests,
     }
   }
@@ -147,6 +152,11 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   // PIPELINE
   public parse(fn: ParseFunction): StringSchema<TOptional, TNullable, TDefault> {
     return this._updatePipeline({ parse: fn })
+  }
+
+  // PIPELINE
+  public prepare(fn: PrepareFunction<string>): StringSchema<TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ prepare: [...this._prepare, fn] })
   }
 
   // PIPELINE

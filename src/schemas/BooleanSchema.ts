@@ -1,5 +1,5 @@
 // IMPORTS
-import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, PrepareFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
@@ -15,6 +15,7 @@ interface BooleanConfig {
 // INTERFACE
 interface BooleanPipeline {
   parse: ParseFunction | null
+  prepare: Array<PrepareFunction<boolean>>
   tests: TestObject<boolean>
 }
 
@@ -30,6 +31,7 @@ export class BooleanSchema<TOptional extends boolean, TNullable extends boolean,
 
   // PIPELINE
   protected readonly _parse: ParseFunction | null
+  protected readonly _prepare: Array<PrepareFunction<boolean>>
   protected readonly _tests: TestObject<boolean>
 
   // CONSTRUCTOR
@@ -40,6 +42,7 @@ export class BooleanSchema<TOptional extends boolean, TNullable extends boolean,
     this._default = config.default
     this._fallback = config.fallback
     this._parse = pipeline.parse
+    this._prepare = pipeline.prepare
     this._tests = pipeline.tests
   }
 
@@ -54,6 +57,7 @@ export class BooleanSchema<TOptional extends boolean, TNullable extends boolean,
       fallback: UNSET,
     }, {
       parse: null,
+      prepare: [],
       tests: {},
     })
   }
@@ -74,6 +78,7 @@ export class BooleanSchema<TOptional extends boolean, TNullable extends boolean,
   private get _pipeline(): BooleanPipeline {
     return {
       parse: this._parse,
+      prepare: this._prepare,
       tests: this._tests,
     }
   }
@@ -147,6 +152,11 @@ export class BooleanSchema<TOptional extends boolean, TNullable extends boolean,
   // PIPELINE
   public parse(fn: ParseFunction): BooleanSchema<TOptional, TNullable, TDefault> {
     return this._updatePipeline({ parse: fn })
+  }
+
+  // PIPELINE
+  public prepare(fn: PrepareFunction<boolean>): BooleanSchema<TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ prepare: [...this._prepare, fn] })
   }
 
   // PIPELINE

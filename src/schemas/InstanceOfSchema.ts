@@ -1,5 +1,5 @@
 // IMPORTS
-import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, PrepareFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
@@ -20,6 +20,7 @@ interface InstanceOfConfig<TConstructor extends AnyConstructor> {
 // INTERFACE
 interface InstanceOfPipeline<TConstructor extends AnyConstructor> {
   parse: ParseFunction | null
+  prepare: Array<PrepareFunction<InstanceType<TConstructor>>>
   tests: TestObject<InstanceType<TConstructor>>
 }
 
@@ -36,6 +37,7 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
 
   // PIPELINE
   protected readonly _parse: ParseFunction | null
+  protected readonly _prepare: Array<PrepareFunction<InstanceType<TConstructor>>>
   protected readonly _tests: TestObject<InstanceType<TConstructor>>
 
   // CONSTRUCTOR
@@ -47,6 +49,7 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
     this._default = config.default
     this._fallback = config.fallback
     this._parse = pipeline.parse
+    this._prepare = pipeline.prepare
     this._tests = pipeline.tests
   }
 
@@ -62,6 +65,7 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
       fallback: UNSET,
     }, {
       parse: null,
+      prepare: [],
       tests: {},
     })
   }
@@ -83,6 +87,7 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
   private get _pipeline(): InstanceOfPipeline<TConstructor> {
     return {
       parse: this._parse,
+      prepare: this._prepare,
       tests: this._tests,
     }
   }
@@ -156,6 +161,11 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
   // PIPELINE
   public parse(fn: ParseFunction): InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault> {
     return this._updatePipeline({ parse: fn })
+  }
+
+  // PIPELINE
+  public prepare(fn: PrepareFunction<InstanceType<TConstructor>>): InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ prepare: [...this._prepare, fn] })
   }
 
   // PIPELINE

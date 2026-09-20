@@ -1,5 +1,5 @@
 // IMPORTS
-import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, PrepareFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
@@ -18,6 +18,7 @@ interface ArrayConfig<TItem> {
 // INTERFACE
 interface ArrayPipeline<TItem> {
   parse: ParseFunction | null
+  prepare: Array<PrepareFunction<Array<TItem>>>
   tests: TestObject<Array<TItem>>
 }
 
@@ -35,6 +36,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
 
   // PIPELINE
   protected readonly _parse: ParseFunction | null
+  protected readonly _prepare: Array<PrepareFunction<Array<TItem>>>
   protected readonly _tests: TestObject<Array<TItem>>
 
   // CONSTRUCTOR
@@ -47,6 +49,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
     this._default = config.default
     this._fallback = config.fallback
     this._parse = pipeline.parse
+    this._prepare = pipeline.prepare
     this._tests = pipeline.tests
   }
 
@@ -63,6 +66,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
       fallback: UNSET,
     }, {
       parse: null,
+      prepare: [],
       tests: {},
     })
   }
@@ -85,6 +89,7 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   private get _pipeline(): ArrayPipeline<TItem> {
     return {
       parse: this._parse,
+      prepare: this._prepare,
       tests: this._tests,
     }
   }
@@ -183,6 +188,11 @@ export class ArraySchema<TItem, TOptional extends boolean, TNullable extends boo
   // PIPELINE
   public parse(fn: ParseFunction): ArraySchema<TItem, TOptional, TNullable, TDefault> {
     return this._updatePipeline({ parse: fn })
+  }
+
+  // PIPELINE
+  public prepare(fn: PrepareFunction<Array<TItem>>): ArraySchema<TItem, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ prepare: [...this._prepare, fn] })
   }
 
   // PIPELINE

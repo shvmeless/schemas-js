@@ -1,5 +1,5 @@
 // IMPORTS
-import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, PrepareFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
@@ -15,6 +15,7 @@ interface UndefinedConfig {
 // INTERFACE
 interface UndefinedPipeline {
   parse: ParseFunction | null
+  prepare: Array<PrepareFunction<undefined>>
   tests: TestObject<undefined>
 }
 
@@ -30,6 +31,7 @@ export class UndefinedSchema<TOptional extends boolean, TNullable extends boolea
 
   // PIPELINE
   protected readonly _parse: ParseFunction | null
+  protected readonly _prepare: Array<PrepareFunction<undefined>>
   protected readonly _tests: TestObject<undefined>
 
   // CONSTRUCTOR
@@ -40,6 +42,7 @@ export class UndefinedSchema<TOptional extends boolean, TNullable extends boolea
     this._default = config.default
     this._fallback = config.fallback
     this._parse = pipeline.parse
+    this._prepare = pipeline.prepare
     this._tests = pipeline.tests
   }
 
@@ -54,6 +57,7 @@ export class UndefinedSchema<TOptional extends boolean, TNullable extends boolea
       fallback: UNSET,
     }, {
       parse: null,
+      prepare: [],
       tests: {},
     })
   }
@@ -74,6 +78,7 @@ export class UndefinedSchema<TOptional extends boolean, TNullable extends boolea
   private get _pipeline(): UndefinedPipeline {
     return {
       parse: this._parse,
+      prepare: this._prepare,
       tests: this._tests,
     }
   }
@@ -147,6 +152,11 @@ export class UndefinedSchema<TOptional extends boolean, TNullable extends boolea
   // PIPELINE
   public parse(fn: ParseFunction): UndefinedSchema<TOptional, TNullable, TDefault> {
     return this._updatePipeline({ parse: fn })
+  }
+
+  // PIPELINE
+  public prepare(fn: PrepareFunction<undefined>): UndefinedSchema<TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ prepare: [...this._prepare, fn] })
   }
 
   // PIPELINE

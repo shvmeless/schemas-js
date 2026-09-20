@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // IMPORTS
-import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, PrepareFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
@@ -22,6 +22,7 @@ interface UnionConfig<TSchemas> {
 // INTERFACE
 interface UnionPipeline<TSchemas> {
   parse: ParseFunction | null
+  prepare: Array<PrepareFunction<TSchemas>>
   tests: TestObject<TSchemas>
 }
 
@@ -38,6 +39,7 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
 
   // PIPELINE
   protected readonly _parse: ParseFunction | null
+  protected readonly _prepare: Array<PrepareFunction<TSchemas>>
   protected readonly _tests: TestObject<TSchemas>
 
   // CONSTRUCTOR
@@ -49,6 +51,7 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
     this._default = config.default
     this._fallback = config.fallback
     this._parse = pipeline.parse
+    this._prepare = pipeline.prepare
     this._tests = pipeline.tests
     if (this._schemas.length < 2) throw new Error('Must provide at least two schemas.')
   }
@@ -65,6 +68,7 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
       fallback: UNSET,
     }, {
       parse: null,
+      prepare: [],
       tests: {},
     })
   }
@@ -86,6 +90,7 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
   private get _pipeline(): UnionPipeline<TSchemas> {
     return {
       parse: this._parse,
+      prepare: this._prepare,
       tests: this._tests,
     }
   }
@@ -164,6 +169,11 @@ export class UnionSchema<TSchemas, TOptional extends boolean, TNullable extends 
   // PIPELINE
   public parse(fn: ParseFunction): UnionSchema<TSchemas, TOptional, TNullable, TDefault> {
     return this._updatePipeline({ parse: fn })
+  }
+
+  // PIPELINE
+  public prepare(fn: PrepareFunction<TSchemas>): UnionSchema<TSchemas, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ prepare: [...this._prepare, fn] })
   }
 
   // PIPELINE

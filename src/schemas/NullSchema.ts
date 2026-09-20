@@ -1,5 +1,5 @@
 // IMPORTS
-import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, PrepareFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
@@ -15,6 +15,7 @@ interface NullConfig {
 // INTERFACE
 interface NullPipeline {
   parse: ParseFunction | null
+  prepare: Array<PrepareFunction<null>>
   tests: TestObject<null>
 }
 
@@ -30,6 +31,7 @@ export class NullSchema<TOptional extends boolean, TNullable extends boolean, TD
 
   // PIPELINE
   protected readonly _parse: ParseFunction | null
+  protected readonly _prepare: Array<PrepareFunction<null>>
   protected readonly _tests: TestObject<null>
 
   // CONSTRUCTOR
@@ -40,6 +42,7 @@ export class NullSchema<TOptional extends boolean, TNullable extends boolean, TD
     this._default = config.default
     this._fallback = config.fallback
     this._parse = pipeline.parse
+    this._prepare = pipeline.prepare
     this._tests = pipeline.tests
   }
 
@@ -54,6 +57,7 @@ export class NullSchema<TOptional extends boolean, TNullable extends boolean, TD
       fallback: UNSET,
     }, {
       parse: null,
+      prepare: [],
       tests: {},
     })
   }
@@ -74,6 +78,7 @@ export class NullSchema<TOptional extends boolean, TNullable extends boolean, TD
   private get _pipeline(): NullPipeline {
     return {
       parse: this._parse,
+      prepare: this._prepare,
       tests: this._tests,
     }
   }
@@ -147,6 +152,11 @@ export class NullSchema<TOptional extends boolean, TNullable extends boolean, TD
   // PIPELINE
   public parse(fn: ParseFunction): NullSchema<TOptional, TNullable, TDefault> {
     return this._updatePipeline({ parse: fn })
+  }
+
+  // PIPELINE
+  public prepare(fn: PrepareFunction<null>): NullSchema<TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ prepare: [...this._prepare, fn] })
   }
 
   // PIPELINE

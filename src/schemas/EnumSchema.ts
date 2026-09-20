@@ -1,5 +1,5 @@
 // IMPORTS
-import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, PrepareFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
@@ -16,6 +16,7 @@ interface EnumConfig<TValues extends string | number> {
 // INTERFACE
 interface EnumPipeline<TValues extends string | number> {
   parse: ParseFunction | null
+  prepare: Array<PrepareFunction<TValues>>
   tests: TestObject<TValues>
 }
 
@@ -32,6 +33,7 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
 
   // PIPELINE
   protected readonly _parse: ParseFunction | null
+  protected readonly _prepare: Array<PrepareFunction<TValues>>
   protected readonly _tests: TestObject<TValues>
 
   // CONSTRUCTOR
@@ -43,6 +45,7 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
     this._default = config.default
     this._fallback = config.fallback
     this._parse = pipeline.parse
+    this._prepare = pipeline.prepare
     this._tests = pipeline.tests
     if (this._values.length === 0) {
       throw new Error('Must provide at least one literal value.')
@@ -61,6 +64,7 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
       fallback: UNSET,
     }, {
       parse: null,
+      prepare: [],
       tests: {},
     })
   }
@@ -82,6 +86,7 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
   private get _pipeline(): EnumPipeline<TValues> {
     return {
       parse: this._parse,
+      prepare: this._prepare,
       tests: this._tests,
     }
   }
@@ -155,6 +160,11 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
   // PIPELINE
   public parse(fn: ParseFunction): EnumSchema<TValues, TOptional, TNullable, TDefault> {
     return this._updatePipeline({ parse: fn })
+  }
+
+  // PIPELINE
+  public prepare(fn: PrepareFunction<TValues>): EnumSchema<TValues, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ prepare: [...this._prepare, fn] })
   }
 
   // PIPELINE

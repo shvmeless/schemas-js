@@ -1,5 +1,5 @@
 // IMPORTS
-import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, PrepareFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
@@ -16,6 +16,7 @@ interface LiteralConfig<TValue extends string | number | boolean> {
 // INTERFACE
 interface LiteralPipeline<TValue extends string | number | boolean> {
   parse: ParseFunction | null
+  prepare: Array<PrepareFunction<TValue>>
   tests: TestObject<TValue>
 }
 
@@ -32,6 +33,7 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
 
   // PIPELINE
   protected readonly _parse: ParseFunction | null
+  protected readonly _prepare: Array<PrepareFunction<TValue>>
   protected readonly _tests: TestObject<TValue>
 
   // CONSTRUCTOR
@@ -43,6 +45,7 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
     this._default = config.default
     this._fallback = config.fallback
     this._parse = pipeline.parse
+    this._prepare = pipeline.prepare
     this._tests = pipeline.tests
   }
 
@@ -58,6 +61,7 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
       fallback: UNSET,
     }, {
       parse: null,
+      prepare: [],
       tests: {},
     })
   }
@@ -79,6 +83,7 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
   private get _pipeline(): LiteralPipeline<TValue> {
     return {
       parse: this._parse,
+      prepare: this._prepare,
       tests: this._tests,
     }
   }
@@ -152,6 +157,11 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
   // PIPELINE
   public parse(fn: ParseFunction): LiteralSchema<TValue, TOptional, TNullable, TDefault> {
     return this._updatePipeline({ parse: fn })
+  }
+
+  // PIPELINE
+  public prepare(fn: PrepareFunction<TValue>): LiteralSchema<TValue, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ prepare: [...this._prepare, fn] })
   }
 
   // PIPELINE

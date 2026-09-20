@@ -1,5 +1,5 @@
 // IMPORTS
-import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, PrepareFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { type Unset, UNSET } from '@/utils/unset'
 
@@ -14,6 +14,7 @@ interface UnknownConfig {
 // INTERFACE
 interface UnknownPipeline {
   parse: ParseFunction | null
+  prepare: Array<PrepareFunction<unknown>>
   tests: TestObject<unknown>
 }
 
@@ -29,6 +30,7 @@ export class UnknownSchema<TOptional extends boolean, TNullable extends boolean,
 
   // PIPELINE
   protected readonly _parse: ParseFunction | null
+  protected readonly _prepare: Array<PrepareFunction<unknown>>
   protected readonly _tests: TestObject<unknown>
 
   // CONSTRUCTOR
@@ -39,6 +41,7 @@ export class UnknownSchema<TOptional extends boolean, TNullable extends boolean,
     this._default = config.default
     this._fallback = config.fallback
     this._parse = pipeline.parse
+    this._prepare = pipeline.prepare
     this._tests = pipeline.tests
   }
 
@@ -53,6 +56,7 @@ export class UnknownSchema<TOptional extends boolean, TNullable extends boolean,
       fallback: UNSET,
     }, {
       parse: null,
+      prepare: [],
       tests: {},
     })
   }
@@ -73,6 +77,7 @@ export class UnknownSchema<TOptional extends boolean, TNullable extends boolean,
   private get _pipeline(): UnknownPipeline {
     return {
       parse: this._parse,
+      prepare: this._prepare,
       tests: this._tests,
     }
   }
@@ -140,6 +145,11 @@ export class UnknownSchema<TOptional extends boolean, TNullable extends boolean,
   // PIPELINE
   public parse(fn: ParseFunction): UnknownSchema<TOptional, TNullable, TDefault> {
     return this._updatePipeline({ parse: fn })
+  }
+
+  // PIPELINE
+  public prepare(fn: PrepareFunction<unknown>): UnknownSchema<TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ prepare: [...this._prepare, fn] })
   }
 
   // PIPELINE

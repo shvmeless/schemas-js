@@ -16,6 +16,7 @@ export type Nullish<TType, TOptional extends boolean, TNullable extends boolean,
 
 // TYPE
 export type ParseFunction = (input: unknown) => unknown
+export type PrepareFunction<TType> = (input: TType) => TType
 export type TestFunction<TType> = (current: TType) => (string | null)
 export type TestObject<TType> = Record<string, TestFunction<TType> | undefined>
 
@@ -28,6 +29,7 @@ export abstract class GenericSchema<TType, TOptional extends boolean, TNullable 
   protected abstract readonly _default: TType | Unset
   protected abstract readonly _fallback: TType | Unset
   protected abstract readonly _parse: ParseFunction | null
+  protected abstract readonly _prepare: Array<PrepareFunction<TType>>
   protected abstract readonly _tests: TestObject<TType>
 
   // ABSTRACT METHODS
@@ -37,6 +39,7 @@ export abstract class GenericSchema<TType, TOptional extends boolean, TNullable 
   public abstract default(value: TType): GenericSchema<TType, TOptional, TNullable, true>
   public abstract fallback(value: TType): GenericSchema<TType, TOptional, TNullable, TDefault>
   public abstract parse(fn: ParseFunction): GenericSchema<TType, TOptional, TNullable, TDefault>
+  public abstract prepare(fn: PrepareFunction<TType>): GenericSchema<TType, TOptional, TNullable, TDefault>
   public abstract test(id: string, test: TestFunction<TType>): GenericSchema<TType, TOptional, TNullable, TDefault>
 
   // PROTECTED
@@ -66,7 +69,11 @@ export abstract class GenericSchema<TType, TOptional extends boolean, TNullable 
       }
 
       resolved = this._parse?.(resolved) ?? resolved
-      const output = fn(resolved)
+      let output = fn(resolved)
+
+      for (const prepare of this._prepare) {
+        output = prepare(output)
+      }
 
       this._runTests(input, output)
 

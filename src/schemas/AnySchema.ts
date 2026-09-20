@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
 // IMPORTS
-import type { ParseFunction, TestFunction } from '@/lib/GenericSchema'
+import type { ParseFunction, PrepareFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { type Unset, UNSET } from '@/utils/unset'
 
@@ -18,6 +18,7 @@ interface AnyConfig {
 // INTERFACE
 interface AnyPipeline {
   parse: ParseFunction | null
+  prepare: Array<PrepareFunction<any>>
   tests: TestObject<any>
 }
 
@@ -33,6 +34,7 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
 
   // PIPELINE
   protected readonly _parse: ParseFunction | null
+  protected readonly _prepare: Array<PrepareFunction<any>>
   protected readonly _tests: TestObject<any>
 
   // CONSTRUCTOR
@@ -43,6 +45,7 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
     this._default = config.default
     this._fallback = config.fallback
     this._parse = pipeline.parse
+    this._prepare = pipeline.prepare
     this._tests = pipeline.tests
   }
 
@@ -57,6 +60,7 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
       fallback: UNSET,
     }, {
       parse: null,
+      prepare: [],
       tests: {},
     })
   }
@@ -77,6 +81,7 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
   private get _pipeline(): AnyPipeline {
     return {
       parse: this._parse,
+      prepare: this._prepare,
       tests: this._tests,
     }
   }
@@ -144,6 +149,11 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
   // PIPELINE
   public parse(fn: ParseFunction): AnySchema<TOptional, TNullable, TDefault> {
     return this._updatePipeline({ parse: fn })
+  }
+
+  // PIPELINE
+  public prepare(fn: PrepareFunction<any>): AnySchema<TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ prepare: [...this._prepare, fn] })
   }
 
   // PIPELINE
