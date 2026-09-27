@@ -1,24 +1,8 @@
 // IMPORTS
-import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
-
-// INTERFACE
-interface BooleanConfig {
-  optional: boolean
-  nullable: boolean
-  default: boolean | Unset
-  fallback: boolean | Unset
-}
-
-// INTERFACE
-interface BooleanPipeline {
-  parse: ParseFunction | null
-  prepare: Array<PrepareFunction<boolean>>
-  tests: TestObject<boolean>
-  refine: Array<RefineFunction<boolean>>
-}
 
 // CLASS
 export class BooleanSchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
@@ -37,7 +21,7 @@ export class BooleanSchema<TOptional extends boolean, TNullable extends boolean,
   protected readonly _refine: Array<RefineFunction<boolean>>
 
   // CONSTRUCTOR
-  private constructor(config: BooleanConfig, pipeline: BooleanPipeline) {
+  private constructor(config: GenericConfig<boolean>, pipeline: GenericPipeline<boolean>) {
     super()
     this._optional = config.optional
     this._nullable = config.nullable
@@ -69,7 +53,7 @@ export class BooleanSchema<TOptional extends boolean, TNullable extends boolean,
   // --------------------------------------------------------------------------
 
   // UTILITY
-  private get _configuration(): BooleanConfig {
+  private get _configuration(): GenericConfig<boolean> {
     return {
       optional: this._optional,
       nullable: this._nullable,
@@ -79,7 +63,7 @@ export class BooleanSchema<TOptional extends boolean, TNullable extends boolean,
   }
 
   // UTILITY
-  private get _pipeline(): BooleanPipeline {
+  private get _pipeline(): GenericPipeline<boolean> {
     return {
       parse: this._parse,
       prepare: this._prepare,
@@ -89,7 +73,7 @@ export class BooleanSchema<TOptional extends boolean, TNullable extends boolean,
   }
 
   // UPDATER
-  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<BooleanConfig>): BooleanSchema<TOptional, TNullable, TDefault> {
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<GenericConfig<boolean>>): BooleanSchema<TOptional, TNullable, TDefault> {
     return new BooleanSchema({
       ...this._configuration,
       ...configuration,
@@ -108,7 +92,7 @@ export class BooleanSchema<TOptional extends boolean, TNullable extends boolean,
   }
 
   // UPDATER
-  private _updatePipeline(pipeline: Partial<BooleanPipeline>): BooleanSchema<TOptional, TNullable, TDefault> {
+  private _updatePipeline(pipeline: Partial<GenericPipeline<boolean>>): BooleanSchema<TOptional, TNullable, TDefault> {
     return new BooleanSchema(this._configuration, {
       ...this._pipeline,
       ...pipeline,

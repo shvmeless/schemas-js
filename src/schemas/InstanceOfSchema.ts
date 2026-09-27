@@ -1,5 +1,5 @@
 // IMPORTS
-import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
@@ -9,20 +9,8 @@ import { type Unset, UNSET } from '@/utils/unset'
 type AnyConstructor<T = unknown> = abstract new (...args: Array<any>) => T
 
 // INTERFACE
-interface InstanceOfConfig<TConstructor extends AnyConstructor> {
+interface InstanceOfConfig<TConstructor extends AnyConstructor> extends GenericConfig<InstanceType<TConstructor>> {
   constructor: TConstructor
-  optional: boolean
-  nullable: boolean
-  default: InstanceType<TConstructor> | Unset
-  fallback: InstanceType<TConstructor> | Unset
-}
-
-// INTERFACE
-interface InstanceOfPipeline<TConstructor extends AnyConstructor> {
-  parse: ParseFunction | null
-  prepare: Array<PrepareFunction<InstanceType<TConstructor>>>
-  tests: TestObject<InstanceType<TConstructor>>
-  refine: Array<RefineFunction<InstanceType<TConstructor>>>
 }
 
 // CLASS
@@ -43,7 +31,7 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
   protected readonly _refine: Array<RefineFunction<InstanceType<TConstructor>>>
 
   // CONSTRUCTOR
-  private constructor(config: InstanceOfConfig<TConstructor>, pipeline: InstanceOfPipeline<TConstructor>) {
+  private constructor(config: InstanceOfConfig<TConstructor>, pipeline: GenericPipeline<InstanceType<TConstructor>>) {
     super()
     this._constructor = config.constructor
     this._optional = config.optional
@@ -61,7 +49,7 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
   // FACTORY
   public static create<TConstructor extends AnyConstructor>(constructor: TConstructor): InstanceOfSchema<TConstructor, false, false, false> {
     return new InstanceOfSchema({
-      constructor,
+      constructor: constructor,
       optional: false,
       nullable: false,
       default: UNSET,
@@ -88,7 +76,7 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
   }
 
   // UTILITY
-  private get _pipeline(): InstanceOfPipeline<TConstructor> {
+  private get _pipeline(): GenericPipeline<InstanceType<TConstructor>> {
     return {
       parse: this._parse,
       prepare: this._prepare,
@@ -117,7 +105,7 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
   }
 
   // UPDATER
-  private _updatePipeline(pipeline: Partial<InstanceOfPipeline<TConstructor>>): InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault> {
+  private _updatePipeline(pipeline: Partial<GenericPipeline<InstanceType<TConstructor>>>): InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault> {
     return new InstanceOfSchema<TConstructor, TOptional, TNullable, TDefault>(this._configuration, {
       ...this._pipeline,
       ...pipeline,

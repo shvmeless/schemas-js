@@ -1,5 +1,5 @@
 // IMPORTS
-import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
@@ -10,21 +10,9 @@ type InferShape<TObject> = {
 }
 
 // INTERFACE
-interface ObjectConfig<TObject> {
-  schema: InferShape<TObject>
+interface ObjectConfig<TObject> extends GenericConfig<TObject> {
+  shape: InferShape<TObject>
   strip: boolean
-  optional: boolean
-  nullable: boolean
-  default: TObject | Unset
-  fallback: TObject | Unset
-}
-
-// INTERFACE
-interface ObjectPipeline<TObject> {
-  parse: ParseFunction | null
-  prepare: Array<PrepareFunction<TObject>>
-  tests: TestObject<TObject>
-  refine: Array<RefineFunction<TObject>>
 }
 
 // CLASS
@@ -32,7 +20,7 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
   extends GenericSchema<TObject, TOptional, TNullable, TDefault> {
 
   // CONFIG
-  protected readonly _schema: InferShape<TObject>
+  protected readonly _shape: InferShape<TObject>
   protected readonly _strip: boolean
   protected readonly _optional: boolean
   protected readonly _nullable: boolean
@@ -46,9 +34,9 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
   protected readonly _refine: Array<RefineFunction<TObject>>
 
   // CONSTRUCTOR
-  private constructor(config: ObjectConfig<TObject>, pipeline: ObjectPipeline<TObject>) {
+  private constructor(config: ObjectConfig<TObject>, pipeline: GenericPipeline<TObject>) {
     super()
-    this._schema = config.schema
+    this._shape = config.shape
     this._strip = config.strip
     this._optional = config.optional
     this._nullable = config.nullable
@@ -63,9 +51,9 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TObject>(schema: InferShape<TObject>): ObjectSchema<TObject, false, false, false> {
+  public static create<TObject>(shape: InferShape<TObject>): ObjectSchema<TObject, false, false, false> {
     return new ObjectSchema<TObject, false, false, false>({
-      schema: schema,
+      shape: shape,
       strip: false,
       optional: false,
       nullable: false,
@@ -84,7 +72,7 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
   // UTILITY
   private get _configuration(): ObjectConfig<TObject> {
     return {
-      schema: this._schema,
+      shape: this._shape,
       strip: this._strip,
       optional: this._optional,
       nullable: this._nullable,
@@ -94,7 +82,7 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
   }
 
   // UTILITY
-  private get _pipeline(): ObjectPipeline<TObject> {
+  private get _pipeline(): GenericPipeline<TObject> {
     return {
       parse: this._parse,
       prepare: this._prepare,
@@ -123,7 +111,7 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
   }
 
   // UPDATER
-  private _updatePipeline(pipeline: Partial<ObjectPipeline<TObject>>): ObjectSchema<TObject, TOptional, TNullable, TDefault> {
+  private _updatePipeline(pipeline: Partial<GenericPipeline<TObject>>): ObjectSchema<TObject, TOptional, TNullable, TDefault> {
     return new ObjectSchema(this._configuration, {
       ...this._pipeline,
       ...pipeline,
@@ -144,19 +132,19 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
       const result: Record<string, unknown> = {}
       const errors = ValidationError.prepare()
 
-      const keys = new Set([...Object.keys(this._schema), ...Object.keys(resolved)])
+      const keys = new Set([...Object.keys(this._shape), ...Object.keys(resolved)])
       for (const key of keys) {
         try {
 
           const value = resolved[key]
-          const schema = this._schema[key as keyof TObject]
+          const shape = this._shape[key as keyof TObject]
 
-          if (schema === undefined) {
+          if (shape === undefined) {
             if (this._strip) continue
             throw new ValidationError(value, 'Unexpected property.')
           }
 
-          result[key] = schema.validate(value)
+          result[key] = shape.validate(value)
 
         } catch (error) {
           if (error instanceof ValidationError) errors.add(key, error)
@@ -165,8 +153,8 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
       }
 
       if (errors.size > 0) {
-        const message = (Object.keys(resolved as object).length !== Object.keys(this._schema).length)
-          ? (Object.keys(resolved as object).length < Object.keys(this._schema).length)
+        const message = (Object.keys(resolved as object).length !== Object.keys(this._shape).length)
+          ? (Object.keys(resolved as object).length < Object.keys(this._shape).length)
               ? 'The object is missing one or more required properties.'
               : 'The object contains one or more unexpected properties.'
           : 'At least one property does not match the given schema.'

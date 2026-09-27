@@ -1,27 +1,15 @@
 // IMPORTS
-import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
 import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
-interface MapConfig<TKey, TValue> {
+interface MapConfig<TKey, TValue> extends GenericConfig<Map<TKey, TValue>> {
   keySchema: GenericSchema<TKey, boolean, boolean, boolean>
   valueSchema: GenericSchema<TValue, boolean, boolean, boolean>
   prune: boolean
-  optional: boolean
-  nullable: boolean
-  default: Map<TKey, TValue> | Unset
-  fallback: Map<TKey, TValue> | Unset
-}
-
-// INTERFACE
-interface MapPipeline<TKey, TValue> {
-  parse: ParseFunction | null
-  prepare: Array<PrepareFunction<Map<TKey, TValue>>>
-  tests: TestObject<Map<TKey, TValue>>
-  refine: Array<RefineFunction<Map<TKey, TValue>>>
 }
 
 // CLASS
@@ -44,7 +32,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   protected readonly _refine: Array<RefineFunction<Map<TKey, TValue>>>
 
   // CONSTRUCTOR
-  private constructor(config: MapConfig<TKey, TValue>, pipeline: MapPipeline<TKey, TValue>) {
+  private constructor(config: MapConfig<TKey, TValue>, pipeline: GenericPipeline<Map<TKey, TValue>>) {
     super()
     this._keySchema = config.keySchema
     this._valueSchema = config.valueSchema
@@ -95,7 +83,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   }
 
   // UTILITY
-  private get _pipeline(): MapPipeline<TKey, TValue> {
+  private get _pipeline(): GenericPipeline<Map<TKey, TValue>> {
     return {
       parse: this._parse,
       prepare: this._prepare,
@@ -124,7 +112,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   }
 
   // UPDATER
-  private _updatePipeline(pipeline: Partial<MapPipeline<TKey, TValue>>): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
+  private _updatePipeline(pipeline: Partial<GenericPipeline<Map<TKey, TValue>>>): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     return new MapSchema<TKey, TValue, TOptional, TNullable, TDefault>(this._configuration, {
       ...this._pipeline,
       ...pipeline,
@@ -218,76 +206,73 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
 
   // --------------------------------------------------------------------------
 
-  // METHOD
-  public size(length: number): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
-    if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
-    if (length < 0) throw new Error('The length value must be zero or positive.')
+  // TEST
+  public size(size: number): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
+    if (Number.isNaN(size) || size < 0) throw new Error('The size value must be zero or positive.')
     return this._updateTests({
       min: undefined,
       max: undefined,
-      size: (current) => {
-        if (current.size !== length) return `The value must be ${stringify(length)} entries long.`
-        return null
+      size: (current, initial) => {
+        if (current.size !== size)
+          throw new ValidationError(initial, `The value must be ${stringify(size)} entries long.`)
       },
     })
   }
 
-  // METHOD
-  public min(length: number): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
-    if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
-    if (length < 0) throw new Error('The length value must be zero or positive.')
+  // TEST
+  public min(size: number): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
+    if (Number.isNaN(size) || size < 0) throw new Error('The size value must be zero or positive.')
     return this._updateTests({
-      min: (current) => {
-        if (current.size < length) return `The value must be at least ${stringify(length)} entries long.`
-        return null
+      min: (current, initial) => {
+        if (current.size < size)
+          throw new ValidationError(initial, `The value must be at least ${stringify(size)} entries long.`)
       },
     })
   }
 
-  // METHOD
-  public max(length: number): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
-    if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
-    if (length < 0) throw new Error('The length value must be zero or positive.')
+  // TEST
+  public max(size: number): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
+    if (Number.isNaN(size) || size < 0) throw new Error('The size value must be zero or positive.')
     return this._updateTests({
-      max: (current) => {
-        if (current.size > length) return `The value must be at most ${stringify(length)} entries long.`
-        return null
+      max: (current, initial) => {
+        if (current.size > size)
+          throw new ValidationError(initial, `The value must be at most ${stringify(size)} entries long.`)
       },
     })
   }
 
-  // METHOD
+  // TEST
   public some(callback: (value: TValue, key: TKey, map: Map<TKey, TValue>) => boolean): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({
-      some: (current) => {
+      some: (current, initial) => {
         for (const [key, value] of current) {
-          if (callback(value, key, current)) return null
+          if (callback(value, key, current)) return
         }
-        return 'No entry satisfies the given validation function.'
+        throw new ValidationError(initial, 'No entry satisfies the given validation function.')
       },
     })
   }
 
-  // METHOD
+  // TEST
   public every(callback: (value: TValue, key: TKey, map: Map<TKey, TValue>) => boolean): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({
-      every: (current) => {
+      every: (current, initial) => {
         for (const [key, value] of current) {
-          if (!callback(value, key, current)) return 'At least one entry does not satisfy the given validation function.'
+          if (!callback(value, key, current))
+            throw new ValidationError(initial, 'At least one entry does not satisfy the given validation function.')
         }
-        return null
       },
     })
   }
 
-  // METHOD
+  // TEST
   public none(callback: (value: TValue, key: TKey, map: Map<TKey, TValue>) => boolean): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({
-      none: (current) => {
+      none: (current, initial) => {
         for (const [key, value] of current) {
-          if (callback(value, key, current)) return 'At least one entry satisfies the given validation function.'
+          if (callback(value, key, current))
+            throw new ValidationError(initial, 'At least one entry satisfies the given validation function.')
         }
-        return null
       },
     })
   }

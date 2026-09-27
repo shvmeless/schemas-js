@@ -1,24 +1,12 @@
 // IMPORTS
-import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
-interface LiteralConfig<TValue extends string | number | boolean> {
+interface LiteralConfig<TValue extends string | number | boolean> extends GenericConfig<TValue> {
   literal: TValue
-  optional: boolean
-  nullable: boolean
-  default: TValue | Unset
-  fallback: TValue | Unset
-}
-
-// INTERFACE
-interface LiteralPipeline<TValue extends string | number | boolean> {
-  parse: ParseFunction | null
-  prepare: Array<PrepareFunction<TValue>>
-  tests: TestObject<TValue>
-  refine: Array<RefineFunction<TValue>>
 }
 
 // CLASS
@@ -39,7 +27,7 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
   protected readonly _refine: Array<RefineFunction<TValue>>
 
   // CONSTRUCTOR
-  private constructor(config: LiteralConfig<TValue>, pipeline: LiteralPipeline<TValue>) {
+  private constructor(config: LiteralConfig<TValue>, pipeline: GenericPipeline<TValue>) {
     super()
     this._literal = config.literal
     this._optional = config.optional
@@ -57,7 +45,7 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
   // FACTORY
   public static create<TValue extends string | number | boolean>(literal: TValue): LiteralSchema<TValue, false, false, false> {
     return new LiteralSchema({
-      literal,
+      literal: literal,
       optional: false,
       nullable: false,
       default: UNSET,
@@ -84,7 +72,7 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
   }
 
   // UTILITY
-  private get _pipeline(): LiteralPipeline<TValue> {
+  private get _pipeline(): GenericPipeline<TValue> {
     return {
       parse: this._parse,
       prepare: this._prepare,
@@ -113,7 +101,7 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
   }
 
   // UPDATER
-  private _updatePipeline(pipeline: Partial<LiteralPipeline<TValue>>): LiteralSchema<TValue, TOptional, TNullable, TDefault> {
+  private _updatePipeline(pipeline: Partial<GenericPipeline<TValue>>): LiteralSchema<TValue, TOptional, TNullable, TDefault> {
     return new LiteralSchema(this._configuration, {
       ...this._pipeline,
       ...pipeline,

@@ -8,13 +8,10 @@ import { ValidationError } from '@/errors/ValidationError'
 // NOTE -----------------------------------------------------------------------
 
 // `GenericSchema` is abstract, so `StringSchema` is used as a concrete
-// implementation to test the behaviour inherited by every schema:
-// `.optional()`, `.nullable()`, `.default(value)`, `.fallback(value)` and
-// `.test(id, test)`.
-// These methods are not tested again in each concrete schema.
+// implementation to test the behaviour inherited by every schema.
 
 // METHOD ---------------------------------------------------------------------
-describe('.optional()', () => {
+describe('An "optional" schema', () => {
 
   const base = StringSchema.create()
   const schema = base.optional()
@@ -24,7 +21,7 @@ describe('.optional()', () => {
     expect(schema).not.toBe(base)
   })
 
-  it('returns when `input` is valid.', () => {
+  it('returns when `input` satisfies the base schema.', () => {
     expectValidation(schema, 'string').toReturn('string')
   })
 
@@ -32,15 +29,16 @@ describe('.optional()', () => {
     expectValidation(schema, undefined).toReturn(undefined)
   })
 
-  it('throws when `input` is invalid.', () => {
+  it('throws when `input` does not satisfy the base schema.', () => {
     DataTypeGenerator.skip('strings', 'undefined').forEach((value) => {
       expectValidation(schema, value).toThrow('The value must be a string.')
     })
   })
+
 })
 
 // METHOD ---------------------------------------------------------------------
-describe('.nullable()', () => {
+describe('A "nullable" schema', () => {
 
   const base = StringSchema.create()
   const schema = base.nullable()
@@ -50,7 +48,7 @@ describe('.nullable()', () => {
     expect(schema).not.toBe(base)
   })
 
-  it('returns when `input` is valid.', () => {
+  it('returns when `input` satisfies the base schema.', () => {
     expectValidation(schema, 'string').toReturn('string')
   })
 
@@ -58,7 +56,7 @@ describe('.nullable()', () => {
     expectValidation(schema, null).toReturn(null)
   })
 
-  it('throws when `input` is invalid.', () => {
+  it('throws when `input` does not satisfy the base schema.', () => {
     DataTypeGenerator.skip('strings', 'null').forEach((value) => {
       expectValidation(schema, value).toThrow('The value must be a string.')
     })
@@ -66,9 +64,39 @@ describe('.nullable()', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
-describe('.default(value)', () => {
+describe('A "nullish" schema', () => {
 
-  const base = StringSchema.create().optional()
+  const base = StringSchema.create()
+  const schema = base.nullable().optional()
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(StringSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when `input` satisfies the base schema.', () => {
+    expectValidation(schema, 'string').toReturn('string')
+  })
+
+  it('returns when `input` is `undefined`.', () => {
+    expectValidation(schema, undefined).toReturn(undefined)
+  })
+
+  it('returns when `input` is `null`.', () => {
+    expectValidation(schema, null).toReturn(null)
+  })
+
+  it('throws when `input` does not satisfy the base schema.', () => {
+    DataTypeGenerator.skip('strings', 'undefined', 'null').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must be a string.')
+    })
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
+describe('A schema with a "default" value', () => {
+
+  const base = StringSchema.create()
   const schema = base.default('default-string')
 
   it('returns a new instance of the schema.', () => {
@@ -76,31 +104,35 @@ describe('.default(value)', () => {
     expect(schema).not.toBe(base)
   })
 
-  it('returns when `input` is valid.', () => {
+  it('returns when `input` satisfies the base schema.', () => {
     expectValidation(schema, 'string').toReturn('string')
   })
 
-  it('returns the `default` value when `input` is `undefined`.', () => {
-    expectValidation(schema, undefined).toReturn('default-string')
+  it('returns the `default` value when `input` is `undefined` and the schema is optional.', () => {
+    const optional = schema.optional()
+    expectValidation(optional, undefined).toReturn('default-string')
   })
 
   it('returns the `default` value when `input` is `null` and the schema is nullable.', () => {
-    expectValidation(schema.nullable(), null).toReturn('default-string')
+    const nullable = schema.nullable()
+    expectValidation(nullable, null).toReturn('default-string')
   })
 
-  it('returns the `default` value when `input` is `undefined` and the schema is nullable.', () => {
-    expectValidation(StringSchema.create().optional().nullable().default('default-string'), undefined).toReturn('default-string')
+  it('returns the `default` value when `input` is `undefined` and the schema is nullish.', () => {
+    const nullish = schema.nullable().optional()
+    expectValidation(nullish, undefined).toReturn('default-string')
   })
 
-  it('throws when `input` is invalid.', () => {
-    DataTypeGenerator.skip('strings', 'undefined').forEach((value) => {
-      expectValidation(schema, value).toThrow('The value must be a string.')
+  it('throws when `input` does not satisfy the base schema.', () => {
+    const nullish = schema.nullable().optional()
+    DataTypeGenerator.skip('strings', 'undefined', 'null').forEach((value) => {
+      expectValidation(nullish, value).toThrow('The value must be a string.')
     })
   })
 })
 
 // METHOD ---------------------------------------------------------------------
-describe('.fallback(value)', () => {
+describe('A schema with a "fallback" value', () => {
 
   const base = StringSchema.create()
   const schema = base.fallback('fallback')
@@ -110,27 +142,28 @@ describe('.fallback(value)', () => {
     expect(schema).not.toBe(base)
   })
 
-  it('returns when `input` is valid.', () => {
+  it('returns when `input` satisfies the base schema.', () => {
     expectValidation(schema, 'string').toReturn('string')
   })
 
-  it('returns the `fallback` value when `input` is invalid.', () => {
+  it('returns the `fallback` value when `input` does not satisfy the base schema.', () => {
     DataTypeGenerator.skip('strings').forEach((value) => {
       expectValidation(schema, value).toReturn('fallback')
     })
   })
 
-  it('returns the `fallback` value when `input` does not satisfy the validations.', () => {
-    const constrained = StringSchema.create().min(8).fallback('fallback')
-    expectValidation(constrained, 'short').toReturn('fallback')
+  it('returns the `fallback` value when a `parse` function throws an error.', () => {
+    const copy = schema.parse((input) => {
+      throw new ValidationError(input, 'This schema always fails.')
+    })
+    expectValidation(copy, 'string').toReturn('fallback')
   })
 
-  it('returns when `input` is `undefined` and the schema is optional.', () => {
-    expectValidation(schema.optional(), undefined).toReturn(undefined)
-  })
-
-  it('returns when `input` is `null` and the schema is nullable.', () => {
-    expectValidation(schema.nullable(), null).toReturn(null)
+  it('returns the `fallback` value when a `prepare` function throws an error.', () => {
+    const copy = schema.prepare((input) => {
+      throw new ValidationError(input, 'This schema always fails.')
+    })
+    expectValidation(copy, 'string').toReturn('fallback')
   })
 })
 
@@ -205,6 +238,33 @@ describe('.prepare(callback)', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
+describe('.test(id, test)', () => {
+
+  const base = StringSchema.create()
+  const schema = base.test('allowed', (current, initial) => {
+    if (current !== 'allowed')
+      throw new ValidationError(initial, 'The value must be "allowed".')
+  })
+
+  it('returns a new instance of the schema.', () => {
+    expect(schema).toBeInstanceOf(StringSchema)
+    expect(schema).not.toBe(base)
+  })
+
+  it('returns when the test is satisfied.', () => {
+    expectValidation(schema, 'allowed').toReturn('allowed')
+  })
+
+  it('throws when the test is not satisfied.', () => {
+    expectValidation(schema, 'string').toThrow('The value must be "allowed".')
+  })
+
+  it('returns when the test is not satisfied but `fallback` is provided.', () => {
+    expectValidation(schema.fallback('fallback'), 'string').toReturn('fallback')
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
 describe('.refine(callback)', () => {
 
   const base = StringSchema.create()
@@ -229,32 +289,5 @@ describe('.refine(callback)', () => {
 
   it('returns when `refine` throws but `fallback` is provided.', () => {
     expectValidation(schema.fallback('fallback'), '').toReturn('fallback')
-  })
-})
-
-// METHOD ---------------------------------------------------------------------
-describe('.test(id, test)', () => {
-
-  const base = StringSchema.create()
-  const schema = base.test('allowed', (current) => {
-    if (current !== 'allowed') return 'The value must be "allowed".'
-    return null
-  })
-
-  it('returns a new instance of the schema.', () => {
-    expect(schema).toBeInstanceOf(StringSchema)
-    expect(schema).not.toBe(base)
-  })
-
-  it('returns when the test is satisfied.', () => {
-    expectValidation(schema, 'allowed').toReturn('allowed')
-  })
-
-  it('throws when the test is not satisfied.', () => {
-    expectValidation(schema, 'string').toThrow('The value must be "allowed".')
-  })
-
-  it('returns when the test is not satisfied but `fallback` is provided.', () => {
-    expectValidation(schema.fallback('fallback'), 'string').toReturn('fallback')
   })
 })

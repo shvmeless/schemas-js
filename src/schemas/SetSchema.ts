@@ -1,26 +1,14 @@
 // IMPORTS
-import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
 import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
-interface SetConfig<TValue> {
+interface SetConfig<TValue> extends GenericConfig<Set<TValue>> {
   schema: GenericSchema<TValue, boolean, boolean, boolean>
   prune: boolean
-  optional: boolean
-  nullable: boolean
-  default: Set<TValue> | Unset
-  fallback: Set<TValue> | Unset
-}
-
-// INTERFACE
-interface SetPipeline<TValue> {
-  parse: ParseFunction | null
-  prepare: Array<PrepareFunction<Set<TValue>>>
-  tests: TestObject<Set<TValue>>
-  refine: Array<RefineFunction<Set<TValue>>>
 }
 
 // CLASS
@@ -42,7 +30,7 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
   protected readonly _refine: Array<RefineFunction<Set<TValue>>>
 
   // CONSTRUCTOR
-  private constructor(config: SetConfig<TValue>, pipeline: SetPipeline<TValue>) {
+  private constructor(config: SetConfig<TValue>, pipeline: GenericPipeline<Set<TValue>>) {
     super()
     this._schema = config.schema
     this._prune = config.prune
@@ -90,7 +78,7 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
   }
 
   // UTILITY
-  private get _pipeline(): SetPipeline<TValue> {
+  private get _pipeline(): GenericPipeline<Set<TValue>> {
     return {
       parse: this._parse,
       prepare: this._prepare,
@@ -119,7 +107,7 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
   }
 
   // UPDATER
-  private _updatePipeline(pipeline: Partial<SetPipeline<TValue>>): SetSchema<TValue, TOptional, TNullable, TDefault> {
+  private _updatePipeline(pipeline: Partial<GenericPipeline<Set<TValue>>>): SetSchema<TValue, TOptional, TNullable, TDefault> {
     return new SetSchema<TValue, TOptional, TNullable, TDefault>(this._configuration, {
       ...this._pipeline,
       ...pipeline,
@@ -212,76 +200,73 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
 
   // --------------------------------------------------------------------------
 
-  // METHOD
-  public size(length: number): SetSchema<TValue, TOptional, TNullable, TDefault> {
-    if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
-    if (length < 0) throw new Error('The length value must be zero or positive.')
+  // TEST
+  public size(size: number): SetSchema<TValue, TOptional, TNullable, TDefault> {
+    if (Number.isNaN(size) || size < 0) throw new Error('The size value must be zero or positive.')
     return this._updateTests({
       min: undefined,
       max: undefined,
-      size: (current) => {
-        if (current.size !== length) return `The value must be ${stringify(length)} elements long.`
-        return null
+      size: (current, initial) => {
+        if (current.size !== size)
+          throw new ValidationError(initial, `The value must be ${stringify(size)} elements long.`)
       },
     })
   }
 
-  // METHOD
-  public min(length: number): SetSchema<TValue, TOptional, TNullable, TDefault> {
-    if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
-    if (length < 0) throw new Error('The length value must be zero or positive.')
+  // TEST
+  public min(size: number): SetSchema<TValue, TOptional, TNullable, TDefault> {
+    if (Number.isNaN(size) || size < 0) throw new Error('The size value must be zero or positive.')
     return this._updateTests({
-      min: (current) => {
-        if (current.size < length) return `The value must be at least ${stringify(length)} elements long.`
-        return null
+      min: (current, initial) => {
+        if (current.size < size)
+          throw new ValidationError(initial, `The value must be at least ${stringify(size)} elements long.`)
       },
     })
   }
 
-  // METHOD
-  public max(length: number): SetSchema<TValue, TOptional, TNullable, TDefault> {
-    if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
-    if (length < 0) throw new Error('The length value must be zero or positive.')
+  // TEST
+  public max(size: number): SetSchema<TValue, TOptional, TNullable, TDefault> {
+    if (Number.isNaN(size) || size < 0) throw new Error('The size value must be zero or positive.')
     return this._updateTests({
-      max: (current) => {
-        if (current.size > length) return `The value must be at most ${stringify(length)} elements long.`
-        return null
+      max: (current, initial) => {
+        if (current.size > size)
+          throw new ValidationError(initial, `The value must be at most ${stringify(size)} elements long.`)
       },
     })
   }
 
-  // METHOD
+  // TEST
   public some(callback: (value: TValue, set: Set<TValue>) => boolean): SetSchema<TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({
-      some: (current) => {
+      some: (current, initial) => {
         for (const value of current) {
-          if (callback(value, current)) return null
+          if (callback(value, current)) return
         }
-        return 'No element satisfies the given validation function.'
+        throw new ValidationError(initial, 'No element satisfies the given validation function.')
       },
     })
   }
 
-  // METHOD
+  // TEST
   public every(callback: (value: TValue, set: Set<TValue>) => boolean): SetSchema<TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({
-      every: (current) => {
+      every: (current, initial) => {
         for (const value of current) {
-          if (!callback(value, current)) return 'At least one element does not satisfy the given validation function.'
+          if (!callback(value, current))
+            throw new ValidationError(initial, 'At least one element does not satisfy the given validation function.')
         }
-        return null
       },
     })
   }
 
-  // METHOD
+  // TEST
   public none(callback: (value: TValue, set: Set<TValue>) => boolean): SetSchema<TValue, TOptional, TNullable, TDefault> {
     return this._updateTests({
-      none: (current) => {
+      none: (current, initial) => {
         for (const value of current) {
-          if (callback(value, current)) return 'At least one element satisfies the given validation function.'
+          if (callback(value, current))
+            throw new ValidationError(initial, 'At least one element satisfies the given validation function.')
         }
-        return null
       },
     })
   }

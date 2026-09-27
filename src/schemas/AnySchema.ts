@@ -3,25 +3,9 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
 // IMPORTS
-import type { ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { type Unset, UNSET } from '@/utils/unset'
-
-// INTERFACE
-interface AnyConfig {
-  optional: boolean
-  nullable: boolean
-  default: any | Unset
-  fallback: any | Unset
-}
-
-// INTERFACE
-interface AnyPipeline {
-  parse: ParseFunction | null
-  prepare: Array<PrepareFunction<any>>
-  tests: TestObject<any>
-  refine: Array<RefineFunction<any>>
-}
 
 // CLASS
 export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
@@ -40,7 +24,7 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
   protected readonly _refine: Array<RefineFunction<any>>
 
   // CONSTRUCTOR
-  private constructor(config: AnyConfig, pipeline: AnyPipeline) {
+  private constructor(config: GenericConfig<any>, pipeline: GenericPipeline<any>) {
     super()
     this._optional = config.optional
     this._nullable = config.nullable
@@ -72,7 +56,7 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
   // --------------------------------------------------------------------------
 
   // UTILITY
-  private get _configuration(): AnyConfig {
+  private get _configuration(): GenericConfig<any> {
     return {
       optional: this._optional,
       nullable: this._nullable,
@@ -82,7 +66,7 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
   }
 
   // UTILITY
-  private get _pipeline(): AnyPipeline {
+  private get _pipeline(): GenericPipeline<any> {
     return {
       parse: this._parse,
       prepare: this._prepare,
@@ -92,7 +76,7 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
   }
 
   // UPDATER
-  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<AnyConfig>): AnySchema<TOptional, TNullable, TDefault> {
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<GenericConfig<any>>): AnySchema<TOptional, TNullable, TDefault> {
     return new AnySchema({
       ...this._configuration,
       ...configuration,
@@ -111,7 +95,7 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
   }
 
   // UPDATER
-  private _updatePipeline(pipeline: Partial<AnyPipeline>): AnySchema<TOptional, TNullable, TDefault> {
+  private _updatePipeline(pipeline: Partial<GenericPipeline<any>>): AnySchema<TOptional, TNullable, TDefault> {
     return new AnySchema(this._configuration, {
       ...this._pipeline,
       ...pipeline,
@@ -140,12 +124,12 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
   }
 
   // CONFIG
-  public default(value: unknown): AnySchema<TOptional, TNullable, true> {
+  public default(value: any): AnySchema<TOptional, TNullable, true> {
     return this._updateConfig({ default: value })
   }
 
   // CONFIG
-  public fallback(value: unknown): AnySchema<TOptional, TNullable, TDefault> {
+  public fallback(value: any): AnySchema<TOptional, TNullable, TDefault> {
     return this._updateConfig({ fallback: value })
   }
 
