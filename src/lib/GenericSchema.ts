@@ -77,22 +77,12 @@ export abstract class GenericSchema<TType, TOptional extends boolean, TNullable 
 
   // PROTECTED
   protected _runParse(initial: unknown): unknown {
-    try {
-      return this._parse === UNSET ? initial : this._parse(initial)
-    } catch (error) {
-      if (error instanceof ValidationError) throw error
-      throw new ValidationError(initial, 'An unexpected error occurred while parsing the input.')
-    }
+    return this._parse === UNSET ? initial : this._parse(initial)
   }
 
   // PROTECTED
   protected _runPrepare(initial: unknown, current: TType): TType {
-    try {
-      return this._prepare.reduce((current, prepare) => prepare(current, initial), current)
-    } catch (error) {
-      if (error instanceof ValidationError) throw error
-      throw new ValidationError(initial, 'An unexpected error occurred while preparing the input.')
-    }
+    return this._prepare.reduce((current, prepare) => prepare(current, initial), current)
   }
 
   // PROTECTED
@@ -100,23 +90,13 @@ export abstract class GenericSchema<TType, TOptional extends boolean, TNullable 
     const tests = Object.values(this._tests)
     for (const test of tests) {
       if (test === undefined) continue
-      try {
-        test(current, initial)
-      } catch (error) {
-        if (error instanceof ValidationError) throw error
-        throw new ValidationError(initial, 'An unexpected error occurred while running a validation.')
-      }
+      test(current, initial)
     }
   }
 
   // PROTECTED
   protected _runRefine(initial: unknown, current: TType): TType {
-    try {
-      return this._refine.reduce((current, refine) => refine(current, initial), current)
-    } catch (error) {
-      if (error instanceof ValidationError) throw error
-      throw new ValidationError(initial, 'An unexpected error occurred while refining the input.')
-    }
+    return this._refine.reduce((current, refine) => refine(current, initial), current)
   }
 
   // PROTECTED
@@ -143,7 +123,7 @@ export abstract class GenericSchema<TType, TOptional extends boolean, TNullable 
       return output
 
     } catch (error) {
-      if (this._fallback === UNSET) throw error
+      if (this._fallback === UNSET || !(error instanceof ValidationError)) throw error
       return this._fallback as Output
     }
   }
