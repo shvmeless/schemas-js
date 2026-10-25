@@ -22,7 +22,7 @@ import {
 } from '@/classes'
 
 // ERRORS
-export { type ValidationErrorLocation as ValidationErrorIndex, ValidationError } from '@/errors/ValidationError'
+export { type ValidationErrorLocation, ValidationError } from '@/errors/ValidationError'
 
 // SCHEMAS
 export const schemas = {

@@ -1,17 +1,17 @@
 // IMPORTS
-import type { GenericConfig, GenericPipeline, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, GenericSchemaLike, InferSchema, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
 
 // TYPE
-type InferShape<TTuple extends ReadonlyArray<unknown>> = {
-  [K in keyof TTuple]: GenericSchema<TTuple[K], boolean, boolean, boolean>
+type InferShape<TShape extends ReadonlyArray<GenericSchemaLike>> = {
+  -readonly [K in keyof TShape]: InferSchema<TShape[K]>
 }
 
 // INTERFACE
 interface TupleConfig<TTuple extends ReadonlyArray<unknown>> extends GenericConfig<TTuple> {
-  shape: InferShape<TTuple>
+  shape: ReadonlyArray<GenericSchemaLike>
   strip: boolean
 }
 
@@ -20,7 +20,7 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
   extends GenericSchema<TTuple, TOptional, TNullable, TDefault> {
 
   // CONFIG
-  protected readonly _shape: InferShape<TTuple>
+  protected readonly _shape: ReadonlyArray<GenericSchemaLike>
   protected readonly _strip: boolean
   protected readonly _optional: boolean
   protected readonly _nullable: boolean
@@ -28,7 +28,7 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
   protected readonly _fallback: TTuple | Unset
 
   // PIPELINE
-  protected readonly _parse: ParseFunction | null
+  protected readonly _parse: ParseFunction | Unset
   protected readonly _prepare: Array<PrepareFunction<TTuple>>
   protected readonly _tests: TestObject<TTuple>
   protected readonly _refine: Array<RefineFunction<TTuple>>
@@ -51,8 +51,8 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TTuple extends ReadonlyArray<unknown>>(shape: InferShape<TTuple>): TupleSchema<TTuple, false, false, false> {
-    return new TupleSchema<TTuple, false, false, false>({
+  public static create<const TShape extends ReadonlyArray<GenericSchemaLike>>(shape: TShape): TupleSchema<InferShape<TShape>, false, false, false> {
+    return new TupleSchema<InferShape<TShape>, false, false, false>({
       shape: shape,
       strip: false,
       optional: false,
@@ -60,7 +60,7 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
       default: UNSET,
       fallback: UNSET,
     }, {
-      parse: null,
+      parse: UNSET,
       prepare: [],
       tests: {},
       refine: [],
@@ -133,11 +133,15 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
       const errors = ValidationError.prepare()
 
       const longest = Math.max(this._shape.length, resolved.length)
+      let missing = false
+      let unexpected = false
       for (let index = 0; index < longest; index++) {
+        const hasShape = Object.hasOwn(this._shape, index)
+        const hasValue = Object.hasOwn(resolved, index)
         try {
 
           const value = resolved[index]
-          const shape = this._shape[index]
+          const shape = hasShape ? this._shape[index] : undefined
 
           if (shape === undefined) {
             if (this._strip) continue
@@ -147,17 +151,20 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
           result[index] = shape.validate(value)
 
         } catch (error) {
-          if (error instanceof ValidationError) errors.add(index, error)
-          else throw error
+          if (error instanceof ValidationError) {
+            errors.add(index, error)
+            if (!hasShape) unexpected = true
+            else if (!hasValue) missing = true
+          } else throw error
         }
       }
 
       if (errors.size > 0) {
-        const message = (resolved.length !== this._shape.length)
-          ? (resolved.length < this._shape.length)
-              ? 'The tuple is missing one or more required elements.'
-              : 'The tuple contains one or more unexpected elements.'
-          : 'At least one element does not match the given schema.'
+        const message = missing
+          ? 'The tuple is missing one or more required elements.'
+          : unexpected
+            ? 'The tuple contains one or more unexpected elements.'
+            : 'At least one element does not match the given schema.'
         errors.throw(input, message)
       }
 

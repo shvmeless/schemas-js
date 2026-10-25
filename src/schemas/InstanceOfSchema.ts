@@ -25,7 +25,7 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
   protected readonly _fallback: InstanceType<TConstructor> | Unset
 
   // PIPELINE
-  protected readonly _parse: ParseFunction | null
+  protected readonly _parse: ParseFunction | Unset
   protected readonly _prepare: Array<PrepareFunction<InstanceType<TConstructor>>>
   protected readonly _tests: TestObject<InstanceType<TConstructor>>
   protected readonly _refine: Array<RefineFunction<InstanceType<TConstructor>>>
@@ -55,7 +55,7 @@ export class InstanceOfSchema<TConstructor extends AnyConstructor, TOptional ext
       default: UNSET,
       fallback: UNSET,
     }, {
-      parse: null,
+      parse: UNSET,
       prepare: [],
       tests: {},
       refine: [],

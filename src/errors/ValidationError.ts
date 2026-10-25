@@ -41,6 +41,9 @@ class ValidationErrorCollector {
 export class ValidationError extends Error {
 
   // PROPERTIES
+  public override readonly name = 'ValidationError'
+
+  // PROPERTIES
   public readonly value: unknown
   public readonly location: ValidationErrorLocation | null
 

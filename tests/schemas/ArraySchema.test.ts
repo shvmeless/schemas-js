@@ -51,6 +51,17 @@ describe('.validate(input)', () => {
       }],
     ])
   })
+
+  it('throws when the `input` is a sparse array.', () => {
+    // eslint-disable-next-line no-sparse-arrays
+    const input = ['a',,'c']
+    expectValidation(schema, input).toThrow('At least one element does not match the given schema.', [
+      [1, {
+        value: undefined,
+        message: 'The value must be a string.',
+      }],
+    ])
+  })
 })
 
 // METHOD ---------------------------------------------------------------------

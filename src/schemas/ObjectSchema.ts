@@ -1,17 +1,22 @@
 // IMPORTS
-import type { GenericConfig, GenericPipeline, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, GenericSchemaLike, InferSchema, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
 
 // TYPE
-type InferShape<TObject> = {
-  [K in keyof TObject]: GenericSchema<TObject[K], boolean, boolean, boolean>
+type InferShape<TShape> = {
+  [K in keyof TShape]: InferSchema<TShape[K]>
+}
+
+// TYPE
+type ShapeLike<TObject> = {
+  [K in keyof TObject]: GenericSchemaLike
 }
 
 // INTERFACE
 interface ObjectConfig<TObject> extends GenericConfig<TObject> {
-  shape: InferShape<TObject>
+  shape: ShapeLike<TObject>
   strip: boolean
 }
 
@@ -20,7 +25,7 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
   extends GenericSchema<TObject, TOptional, TNullable, TDefault> {
 
   // CONFIG
-  protected readonly _shape: InferShape<TObject>
+  protected readonly _shape: ShapeLike<TObject>
   protected readonly _strip: boolean
   protected readonly _optional: boolean
   protected readonly _nullable: boolean
@@ -28,7 +33,7 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
   protected readonly _fallback: TObject | Unset
 
   // PIPELINE
-  protected readonly _parse: ParseFunction | null
+  protected readonly _parse: ParseFunction | Unset
   protected readonly _prepare: Array<PrepareFunction<TObject>>
   protected readonly _tests: TestObject<TObject>
   protected readonly _refine: Array<RefineFunction<TObject>>
@@ -36,7 +41,7 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
   // CONSTRUCTOR
   private constructor(config: ObjectConfig<TObject>, pipeline: GenericPipeline<TObject>) {
     super()
-    this._shape = config.shape
+    this._shape = { ...config.shape }
     this._strip = config.strip
     this._optional = config.optional
     this._nullable = config.nullable
@@ -51,8 +56,8 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TObject>(shape: InferShape<TObject>): ObjectSchema<TObject, false, false, false> {
-    return new ObjectSchema<TObject, false, false, false>({
+  public static create<TShape extends Record<string, GenericSchemaLike>>(shape: TShape): ObjectSchema<InferShape<TShape>, false, false, false> {
+    return new ObjectSchema<InferShape<TShape>, false, false, false>({
       shape: shape,
       strip: false,
       optional: false,
@@ -60,7 +65,7 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
       default: UNSET,
       fallback: UNSET,
     }, {
-      parse: null,
+      parse: UNSET,
       prepare: [],
       tests: {},
       refine: [],
@@ -133,31 +138,46 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
       const errors = ValidationError.prepare()
 
       const keys = new Set([...Object.keys(this._shape), ...Object.keys(resolved)])
+      let missing = false
+      let unexpected = false
       for (const key of keys) {
+        const hasShape = Object.hasOwn(this._shape, key)
+        const hasValue = Object.hasOwn(resolved, key)
         try {
 
-          const value = resolved[key]
-          const shape = this._shape[key as keyof TObject]
+          const value = hasValue ? resolved[key] : undefined
+          const shape = hasShape ? this._shape[key as keyof TObject] : undefined
 
           if (shape === undefined) {
             if (this._strip) continue
             throw new ValidationError(value, 'Unexpected property.')
           }
 
-          result[key] = shape.validate(value)
+          const output = shape.validate(value)
+          if (output === undefined) continue
+
+          Object.defineProperty(result, key, {
+            value: output,
+            enumerable: true,
+            writable: true,
+            configurable: true,
+          })
 
         } catch (error) {
-          if (error instanceof ValidationError) errors.add(key, error)
-          else throw error
+          if (error instanceof ValidationError) {
+            errors.add(key, error)
+            if (!hasShape) unexpected = true
+            else if (!hasValue) missing = true
+          } else throw error
         }
       }
 
       if (errors.size > 0) {
-        const message = (Object.keys(resolved as object).length !== Object.keys(this._shape).length)
-          ? (Object.keys(resolved as object).length < Object.keys(this._shape).length)
-              ? 'The object is missing one or more required properties.'
-              : 'The object contains one or more unexpected properties.'
-          : 'At least one property does not match the given schema.'
+        const message = missing
+          ? 'The object is missing one or more required properties.'
+          : unexpected
+            ? 'The object contains one or more unexpected properties.'
+            : 'At least one property does not match the given schema.'
         errors.throw(input, message)
       }
 

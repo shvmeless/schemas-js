@@ -1,5 +1,5 @@
 // IMPORTS
-import type { GenericConfig, GenericPipeline, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, GenericSchemaLike, InferSchema, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
@@ -7,7 +7,7 @@ import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
 interface ArrayConfig<TValue> extends GenericConfig<Array<TValue>> {
-  schema: GenericSchema<TValue, boolean, boolean, boolean>
+  schema: GenericSchemaLike
   prune: boolean
 }
 
@@ -16,7 +16,7 @@ export class ArraySchema<TValue, TOptional extends boolean, TNullable extends bo
   extends GenericSchema<Array<TValue>, TOptional, TNullable, TDefault> {
 
   // CONFIG
-  protected readonly _schema: GenericSchema<TValue, boolean, boolean, boolean>
+  protected readonly _schema: GenericSchemaLike
   protected readonly _prune: boolean
   protected readonly _optional: boolean
   protected readonly _nullable: boolean
@@ -24,7 +24,7 @@ export class ArraySchema<TValue, TOptional extends boolean, TNullable extends bo
   protected readonly _fallback: Array<TValue> | Unset
 
   // PIPELINE
-  protected readonly _parse: ParseFunction | null
+  protected readonly _parse: ParseFunction | Unset
   protected readonly _prepare: Array<PrepareFunction<Array<TValue>>>
   protected readonly _tests: TestObject<Array<TValue>>
   protected readonly _refine: Array<RefineFunction<Array<TValue>>>
@@ -49,7 +49,7 @@ export class ArraySchema<TValue, TOptional extends boolean, TNullable extends bo
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TValue>(schema: GenericSchema<TValue, boolean, boolean, boolean>): ArraySchema<TValue, false, false, false> {
+  public static create<TSchema extends GenericSchemaLike>(schema: TSchema): ArraySchema<InferSchema<TSchema>, false, false, false> {
     return new ArraySchema({
       schema: schema,
       prune: false,
@@ -58,7 +58,7 @@ export class ArraySchema<TValue, TOptional extends boolean, TNullable extends bo
       default: UNSET,
       fallback: UNSET,
     }, {
-      parse: null,
+      parse: UNSET,
       prepare: [],
       tests: {},
       refine: [],
@@ -130,17 +130,17 @@ export class ArraySchema<TValue, TOptional extends boolean, TNullable extends bo
       const output: Array<TValue> = []
       const errors = ValidationError.prepare()
 
-      resolved.forEach((element, index) => {
+      for (let index = 0; index < resolved.length; index++) {
         try {
-          const value = this._schema.validate(element)
+          const value = this._schema.validate(resolved[index])
           output.push(value as TValue)
         } catch (error) {
           if (error instanceof ValidationError) {
-            if (this._prune) return
+            if (this._prune) continue
             errors.add(index, error)
           } else throw error
         }
-      })
+      }
 
       if (errors.size > 0) {
         errors.throw(input, 'At least one element does not match the given schema.')
@@ -219,6 +219,7 @@ export class ArraySchema<TValue, TOptional extends boolean, TNullable extends bo
   public min(length: number): ArraySchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
     return this._updateTests({
+      length: undefined,
       min: (current, initial) => {
         if (current.length < length)
           throw new ValidationError(initial, `The value must be at least ${stringify(length)} elements long.`)
@@ -230,6 +231,7 @@ export class ArraySchema<TValue, TOptional extends boolean, TNullable extends bo
   public max(length: number): ArraySchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
     return this._updateTests({
+      length: undefined,
       max: (current, initial) => {
         if (current.length > length)
           throw new ValidationError(initial, `The value must be at most ${stringify(length)} elements long.`)

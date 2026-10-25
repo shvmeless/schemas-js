@@ -15,6 +15,17 @@ export type Nullish<TType, TOptional extends boolean, TNullable extends boolean,
   = Optional<Nullable<TType, TNullable, TDefault>, TOptional, TDefault>
 
 // TYPE
+export type InferSchema<TSchema> = TSchema extends { readonly _output: infer TOutput }
+  ? TOutput
+  : never
+
+// INTERFACE
+export interface GenericSchemaLike {
+  readonly _output: unknown
+  validate(input: unknown): unknown
+}
+
+// TYPE
 export type ParseFunction = (initial: unknown) => unknown
 export type PrepareFunction<TType> = (current: TType, initial: unknown) => TType
 export type TestFunction<TType> = (current: TType, initial: unknown) => void
@@ -31,7 +42,7 @@ export interface GenericConfig<TType> {
 
 // INTERFACE
 export interface GenericPipeline<TType> {
-  parse: ParseFunction | null
+  parse: ParseFunction | Unset
   prepare: Array<PrepareFunction<TType>>
   tests: TestObject<TType>
   refine: Array<RefineFunction<TType>>
@@ -45,10 +56,13 @@ export abstract class GenericSchema<TType, TOptional extends boolean, TNullable 
   protected abstract readonly _nullable: boolean
   protected abstract readonly _default: TType | Unset
   protected abstract readonly _fallback: TType | Unset
-  protected abstract readonly _parse: ParseFunction | null
+  protected abstract readonly _parse: ParseFunction | Unset
   protected abstract readonly _prepare: Array<PrepareFunction<TType>>
   protected abstract readonly _tests: TestObject<TType>
   protected abstract readonly _refine: Array<RefineFunction<TType>>
+
+  // TYPE
+  public declare readonly _output: Nullish<TType, TOptional, TNullable, TDefault>
 
   // ABSTRACT METHODS
   public abstract validate(input: unknown): Nullish<TType, TOptional, TNullable, TDefault>
@@ -63,22 +77,12 @@ export abstract class GenericSchema<TType, TOptional extends boolean, TNullable 
 
   // PROTECTED
   protected _runParse(initial: unknown): unknown {
-    try {
-      return this._parse?.(initial) ?? initial
-    } catch (error) {
-      if (error instanceof ValidationError) throw error
-      throw new ValidationError(initial, 'An unexpected error occurred while parsing the input.')
-    }
+    return this._parse === UNSET ? initial : this._parse(initial)
   }
 
   // PROTECTED
   protected _runPrepare(initial: unknown, current: TType): TType {
-    try {
-      return this._prepare.reduce((current, prepare) => prepare(current, initial), current)
-    } catch (error) {
-      if (error instanceof ValidationError) throw error
-      throw new ValidationError(initial, 'An unexpected error occurred while preparing the input.')
-    }
+    return this._prepare.reduce((current, prepare) => prepare(current, initial), current)
   }
 
   // PROTECTED
@@ -86,23 +90,13 @@ export abstract class GenericSchema<TType, TOptional extends boolean, TNullable 
     const tests = Object.values(this._tests)
     for (const test of tests) {
       if (test === undefined) continue
-      try {
-        test(current, initial)
-      } catch (error) {
-        if (error instanceof ValidationError) throw error
-        throw new ValidationError(initial, 'An unexpected error occurred while running a validation.')
-      }
+      test(current, initial)
     }
   }
 
   // PROTECTED
   protected _runRefine(initial: unknown, current: TType): TType {
-    try {
-      return this._refine.reduce((current, refine) => refine(current, initial), current)
-    } catch (error) {
-      if (error instanceof ValidationError) throw error
-      throw new ValidationError(initial, 'An unexpected error occurred while refining the input.')
-    }
+    return this._refine.reduce((current, refine) => refine(current, initial), current)
   }
 
   // PROTECTED
@@ -129,7 +123,7 @@ export abstract class GenericSchema<TType, TOptional extends boolean, TNullable 
       return output
 
     } catch (error) {
-      if (this._fallback === UNSET) throw error
+      if (this._fallback === UNSET || !(error instanceof ValidationError)) throw error
       return this._fallback as Output
     }
   }

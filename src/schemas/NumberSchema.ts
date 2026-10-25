@@ -16,7 +16,7 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
   protected readonly _fallback: number | Unset
 
   // PIPELINE
-  protected readonly _parse: ParseFunction | null
+  protected readonly _parse: ParseFunction | Unset
   protected readonly _prepare: Array<PrepareFunction<number>>
   protected readonly _tests: TestObject<number>
   protected readonly _refine: Array<RefineFunction<number>>
@@ -44,7 +44,7 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
       default: UNSET,
       fallback: UNSET,
     }, {
-      parse: null,
+      parse: UNSET,
       prepare: [],
       tests: {},
       refine: [],
@@ -208,7 +208,7 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
   // TEST
   public negative(): NumberSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
-      min: (current, initial) => {
+      max: (current, initial) => {
         if (current >= 0)
           throw new ValidationError(initial, 'The value must be a negative number.')
       },
@@ -218,7 +218,7 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
   // TEST
   public positive(): NumberSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
-      max: (current, initial) => {
+      min: (current, initial) => {
         if (current <= 0)
           throw new ValidationError(initial, 'The value must be a positive number.')
       },

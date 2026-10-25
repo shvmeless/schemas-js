@@ -1,5 +1,5 @@
 // IMPORTS
-import type { GenericConfig, GenericPipeline, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, GenericSchemaLike, InferSchema, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
@@ -7,7 +7,7 @@ import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
 interface RecordConfig<TValue> extends GenericConfig<Record<string, TValue>> {
-  schema: GenericSchema<TValue, boolean, boolean, boolean>
+  schema: GenericSchemaLike
   prune: boolean
 }
 
@@ -16,7 +16,7 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
   extends GenericSchema<Record<string, TValue>, TOptional, TNullable, TDefault> {
 
   // CONFIG
-  protected readonly _schema: GenericSchema<TValue, boolean, boolean, boolean>
+  protected readonly _schema: GenericSchemaLike
   protected readonly _prune: boolean
   protected readonly _optional: boolean
   protected readonly _nullable: boolean
@@ -24,7 +24,7 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
   protected readonly _fallback: Record<string, TValue> | Unset
 
   // PIPELINE
-  protected readonly _parse: ParseFunction | null
+  protected readonly _parse: ParseFunction | Unset
   protected readonly _prepare: Array<PrepareFunction<Record<string, TValue>>>
   protected readonly _tests: TestObject<Record<string, TValue>>
   protected readonly _refine: Array<RefineFunction<Record<string, TValue>>>
@@ -47,8 +47,8 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TValue>(schema: GenericSchema<TValue, boolean, boolean, boolean>): RecordSchema<TValue, false, false, false> {
-    return new RecordSchema<TValue, false, false, false>({
+  public static create<TSchema extends GenericSchemaLike>(schema: TSchema): RecordSchema<InferSchema<TSchema>, false, false, false> {
+    return new RecordSchema<InferSchema<TSchema>, false, false, false>({
       schema: schema,
       prune: false,
       optional: false,
@@ -56,7 +56,7 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
       default: UNSET,
       fallback: UNSET,
     }, {
-      parse: null,
+      parse: UNSET,
       prepare: [],
       tests: {},
       refine: [],
@@ -130,7 +130,12 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
 
       for (const [key, value] of Object.entries(resolved)) {
         try {
-          result[key] = this._schema.validate(value) as TValue
+          Object.defineProperty(result, key, {
+            value: this._schema.validate(value),
+            enumerable: true,
+            writable: true,
+            configurable: true,
+          })
         } catch (error) {
           if (error instanceof ValidationError) {
             if (this._prune) continue
@@ -216,6 +221,7 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
   public min(length: number): RecordSchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
     return this._updateTests({
+      length: undefined,
       min: (current, initial) => {
         if (Object.entries(current).length < length)
           throw new ValidationError(initial, `The value must be at least ${stringify(length)} entries long.`)
@@ -227,6 +233,7 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
   public max(length: number): RecordSchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
     return this._updateTests({
+      length: undefined,
       max: (current, initial) => {
         if (Object.entries(current).length > length)
           throw new ValidationError(initial, `The value must be at most ${stringify(length)} entries long.`)

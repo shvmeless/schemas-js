@@ -15,7 +15,7 @@ export class UndefinedSchema<TOptional extends boolean, TNullable extends boolea
   protected readonly _fallback: undefined | Unset
 
   // PIPELINE
-  protected readonly _parse: ParseFunction | null
+  protected readonly _parse: ParseFunction | Unset
   protected readonly _prepare: Array<PrepareFunction<undefined>>
   protected readonly _tests: TestObject<undefined>
   protected readonly _refine: Array<RefineFunction<undefined>>
@@ -43,7 +43,7 @@ export class UndefinedSchema<TOptional extends boolean, TNullable extends boolea
       default: UNSET,
       fallback: UNSET,
     }, {
-      parse: null,
+      parse: UNSET,
       prepare: [],
       tests: {},
       refine: [],

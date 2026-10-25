@@ -16,7 +16,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   protected readonly _fallback: string | Unset
 
   // PIPELINE
-  protected readonly _parse: ParseFunction | null
+  protected readonly _parse: ParseFunction | Unset
   protected readonly _prepare: Array<PrepareFunction<string>>
   protected readonly _tests: TestObject<string>
   protected readonly _refine: Array<RefineFunction<string>>
@@ -44,7 +44,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
       default: UNSET,
       fallback: UNSET,
     }, {
-      parse: null,
+      parse: UNSET,
       prepare: [],
       tests: {},
       refine: [],
@@ -177,6 +177,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   public min(length: number): StringSchema<TOptional, TNullable, TDefault> {
     if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
     return this._updateTests({
+      length: undefined,
       min: (current, initial) => {
         if (current.length < length)
           throw new ValidationError(initial, `The value must be at least ${stringify(length)} characters long.`)
@@ -188,6 +189,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   public max(length: number): StringSchema<TOptional, TNullable, TDefault> {
     if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
     return this._updateTests({
+      length: undefined,
       max: (current, initial) => {
         if (current.length > length)
           throw new ValidationError(initial, `The value must be at most ${stringify(length)} characters long.`)
@@ -269,9 +271,11 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
 
   // TEST
   public match(pattern: RegExp): StringSchema<TOptional, TNullable, TDefault> {
+    const regex = new RegExp(pattern)
     return this._updateTests({
       pattern: (current, initial) => {
-        if (!pattern.test(current))
+        regex.lastIndex = 0
+        if (!regex.test(current))
           throw new ValidationError(initial, `The value must match the pattern ${stringify(pattern)}.`)
       },
     })

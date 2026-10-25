@@ -2,6 +2,7 @@
 import { describe, it, expect } from 'vitest'
 import { RecordSchema } from '@/schemas/RecordSchema'
 import { NumberSchema } from '@/schemas/NumberSchema'
+import { AnySchema } from '@/schemas/AnySchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectValidation, expectError } from '@tests/helpers/expect'
 
@@ -36,6 +37,18 @@ describe('.validate(input)', () => {
     const input = { a: 1, b: 2, c: 3 }
     const expected = { a: 1, b: 2, c: 3 }
     expectValidation(schema, input).toReturnNew(expected)
+  })
+
+  it('does not pollute the prototype with `__proto__` keys.', () => {
+    const anySchema = RecordSchema.create(AnySchema.create())
+    const input = JSON.parse('{"a":1,"__proto__":{"isAdmin":true}}') as Record<string, unknown>
+    const result = anySchema.validate(input)
+
+    expect(Object.keys(result)).toEqual(['a', '__proto__'])
+    expect(Object.getPrototypeOf(result)).toBe(Object.prototype)
+    expect(Object.hasOwn(result, '__proto__')).toBe(true)
+    expect((result as Record<string, unknown>)['isAdmin']).toBeUndefined()
+    expect(anySchema.validate(result)).toEqual(result)
   })
 
   it('throws when at least one `input` entry does not match the `shape` schema.', () => {

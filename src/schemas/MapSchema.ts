@@ -1,5 +1,5 @@
 // IMPORTS
-import type { GenericConfig, GenericPipeline, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, GenericSchemaLike, InferSchema, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
@@ -7,8 +7,8 @@ import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
 interface MapConfig<TKey, TValue> extends GenericConfig<Map<TKey, TValue>> {
-  keySchema: GenericSchema<TKey, boolean, boolean, boolean>
-  valueSchema: GenericSchema<TValue, boolean, boolean, boolean>
+  keySchema: GenericSchemaLike
+  valueSchema: GenericSchemaLike
   prune: boolean
 }
 
@@ -17,8 +17,8 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   extends GenericSchema<Map<TKey, TValue>, TOptional, TNullable, TDefault> {
 
   // CONFIG
-  protected readonly _keySchema: GenericSchema<TKey, boolean, boolean, boolean>
-  protected readonly _valueSchema: GenericSchema<TValue, boolean, boolean, boolean>
+  protected readonly _keySchema: GenericSchemaLike
+  protected readonly _valueSchema: GenericSchemaLike
   protected readonly _prune: boolean
   protected readonly _optional: boolean
   protected readonly _nullable: boolean
@@ -26,7 +26,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   protected readonly _fallback: Map<TKey, TValue> | Unset
 
   // PIPELINE
-  protected readonly _parse: ParseFunction | null
+  protected readonly _parse: ParseFunction | Unset
   protected readonly _prepare: Array<PrepareFunction<Map<TKey, TValue>>>
   protected readonly _tests: TestObject<Map<TKey, TValue>>
   protected readonly _refine: Array<RefineFunction<Map<TKey, TValue>>>
@@ -50,8 +50,8 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TKey, TValue>(keySchema: GenericSchema<TKey, boolean, boolean, boolean>, valueSchema: GenericSchema<TValue, boolean, boolean, boolean>): MapSchema<TKey, TValue, false, false, false> {
-    return new MapSchema<TKey, TValue, false, false, false>({
+  public static create<TKeySchema extends GenericSchemaLike, TValueSchema extends GenericSchemaLike>(keySchema: TKeySchema, valueSchema: TValueSchema): MapSchema<InferSchema<TKeySchema>, InferSchema<TValueSchema>, false, false, false> {
+    return new MapSchema<InferSchema<TKeySchema>, InferSchema<TValueSchema>, false, false, false>({
       keySchema: keySchema,
       valueSchema: valueSchema,
       prune: false,
@@ -60,7 +60,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
       default: UNSET,
       fallback: UNSET,
     }, {
-      parse: null,
+      parse: UNSET,
       prepare: [],
       tests: {},
       refine: [],
@@ -223,6 +223,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   public min(size: number): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(size) || size < 0) throw new Error('The size value must be zero or positive.')
     return this._updateTests({
+      size: undefined,
       min: (current, initial) => {
         if (current.size < size)
           throw new ValidationError(initial, `The value must be at least ${stringify(size)} entries long.`)
@@ -234,6 +235,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   public max(size: number): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(size) || size < 0) throw new Error('The size value must be zero or positive.')
     return this._updateTests({
+      size: undefined,
       max: (current, initial) => {
         if (current.size > size)
           throw new ValidationError(initial, `The value must be at most ${stringify(size)} entries long.`)
