@@ -85,6 +85,17 @@ describe('.validate(input)', () => {
       }],
     ])
   })
+
+  it('does not pollute the prototype with `__proto__` keys.', () => {
+    const protoSchema = ObjectSchema.create({ ['__proto__']: StringSchema.create() })
+    const input = JSON.parse('{"__proto__":"value"}') as { __proto__: string }
+    const result = protoSchema.validate(input)
+
+    expect(Object.keys(result)).toEqual(['__proto__'])
+    expect(Object.getPrototypeOf(result)).toBe(Object.prototype)
+    expect(Object.hasOwn(result, '__proto__')).toBe(true)
+    expect(protoSchema.validate(result)).toEqual(result)
+  })
 })
 
 // METHOD ---------------------------------------------------------------------

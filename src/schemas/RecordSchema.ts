@@ -130,7 +130,12 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
 
       for (const [key, value] of Object.entries(resolved)) {
         try {
-          result[key] = this._schema.validate(value) as TValue
+          Object.defineProperty(result, key, {
+            value: this._schema.validate(value),
+            enumerable: true,
+            writable: true,
+            configurable: true,
+          })
         } catch (error) {
           if (error instanceof ValidationError) {
             if (this._prune) continue

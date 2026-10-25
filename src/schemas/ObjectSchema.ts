@@ -144,7 +144,12 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
             throw new ValidationError(value, 'Unexpected property.')
           }
 
-          result[key] = shape.validate(value)
+          Object.defineProperty(result, key, {
+            value: shape.validate(value),
+            enumerable: true,
+            writable: true,
+            configurable: true,
+          })
 
         } catch (error) {
           if (error instanceof ValidationError) errors.add(key, error)
