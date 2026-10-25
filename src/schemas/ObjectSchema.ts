@@ -33,7 +33,7 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
   protected readonly _fallback: TObject | Unset
 
   // PIPELINE
-  protected readonly _parse: ParseFunction | null
+  protected readonly _parse: ParseFunction | Unset
   protected readonly _prepare: Array<PrepareFunction<TObject>>
   protected readonly _tests: TestObject<TObject>
   protected readonly _refine: Array<RefineFunction<TObject>>
@@ -65,7 +65,7 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
       default: UNSET,
       fallback: UNSET,
     }, {
-      parse: null,
+      parse: UNSET,
       prepare: [],
       tests: {},
       refine: [],

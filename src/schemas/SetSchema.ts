@@ -24,7 +24,7 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
   protected readonly _fallback: Set<TValue> | Unset
 
   // PIPELINE
-  protected readonly _parse: ParseFunction | null
+  protected readonly _parse: ParseFunction | Unset
   protected readonly _prepare: Array<PrepareFunction<Set<TValue>>>
   protected readonly _tests: TestObject<Set<TValue>>
   protected readonly _refine: Array<RefineFunction<Set<TValue>>>
@@ -56,7 +56,7 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
       default: UNSET,
       fallback: UNSET,
     }, {
-      parse: null,
+      parse: UNSET,
       prepare: [],
       tests: {},
       refine: [],

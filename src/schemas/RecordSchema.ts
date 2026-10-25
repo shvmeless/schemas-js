@@ -24,7 +24,7 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
   protected readonly _fallback: Record<string, TValue> | Unset
 
   // PIPELINE
-  protected readonly _parse: ParseFunction | null
+  protected readonly _parse: ParseFunction | Unset
   protected readonly _prepare: Array<PrepareFunction<Record<string, TValue>>>
   protected readonly _tests: TestObject<Record<string, TValue>>
   protected readonly _refine: Array<RefineFunction<Record<string, TValue>>>
@@ -56,7 +56,7 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
       default: UNSET,
       fallback: UNSET,
     }, {
-      parse: null,
+      parse: UNSET,
       prepare: [],
       tests: {},
       refine: [],

@@ -21,7 +21,7 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
   protected readonly _fallback: TValue | Unset
 
   // PIPELINE
-  protected readonly _parse: ParseFunction | null
+  protected readonly _parse: ParseFunction | Unset
   protected readonly _prepare: Array<PrepareFunction<TValue>>
   protected readonly _tests: TestObject<TValue>
   protected readonly _refine: Array<RefineFunction<TValue>>
@@ -51,7 +51,7 @@ export class LiteralSchema<TValue extends string | number | boolean, TOptional e
       default: UNSET,
       fallback: UNSET,
     }, {
-      parse: null,
+      parse: UNSET,
       prepare: [],
       tests: {},
       refine: [],

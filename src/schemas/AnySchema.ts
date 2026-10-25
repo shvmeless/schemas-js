@@ -18,7 +18,7 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
   protected readonly _fallback: any | Unset
 
   // PIPELINE
-  protected readonly _parse: ParseFunction | null
+  protected readonly _parse: ParseFunction | Unset
   protected readonly _prepare: Array<PrepareFunction<any>>
   protected readonly _tests: TestObject<any>
   protected readonly _refine: Array<RefineFunction<any>>
@@ -46,7 +46,7 @@ export class AnySchema<TOptional extends boolean, TNullable extends boolean, TDe
       default: UNSET,
       fallback: UNSET,
     }, {
-      parse: null,
+      parse: UNSET,
       prepare: [],
       tests: {},
       refine: [],

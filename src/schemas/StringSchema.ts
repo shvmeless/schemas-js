@@ -16,7 +16,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   protected readonly _fallback: string | Unset
 
   // PIPELINE
-  protected readonly _parse: ParseFunction | null
+  protected readonly _parse: ParseFunction | Unset
   protected readonly _prepare: Array<PrepareFunction<string>>
   protected readonly _tests: TestObject<string>
   protected readonly _refine: Array<RefineFunction<string>>
@@ -44,7 +44,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
       default: UNSET,
       fallback: UNSET,
     }, {
-      parse: null,
+      parse: UNSET,
       prepare: [],
       tests: {},
       refine: [],

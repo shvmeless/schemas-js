@@ -42,7 +42,7 @@ export interface GenericConfig<TType> {
 
 // INTERFACE
 export interface GenericPipeline<TType> {
-  parse: ParseFunction | null
+  parse: ParseFunction | Unset
   prepare: Array<PrepareFunction<TType>>
   tests: TestObject<TType>
   refine: Array<RefineFunction<TType>>
@@ -56,7 +56,7 @@ export abstract class GenericSchema<TType, TOptional extends boolean, TNullable 
   protected abstract readonly _nullable: boolean
   protected abstract readonly _default: TType | Unset
   protected abstract readonly _fallback: TType | Unset
-  protected abstract readonly _parse: ParseFunction | null
+  protected abstract readonly _parse: ParseFunction | Unset
   protected abstract readonly _prepare: Array<PrepareFunction<TType>>
   protected abstract readonly _tests: TestObject<TType>
   protected abstract readonly _refine: Array<RefineFunction<TType>>
@@ -78,7 +78,7 @@ export abstract class GenericSchema<TType, TOptional extends boolean, TNullable 
   // PROTECTED
   protected _runParse(initial: unknown): unknown {
     try {
-      return this._parse?.(initial) ?? initial
+      return this._parse === UNSET ? initial : this._parse(initial)
     } catch (error) {
       if (error instanceof ValidationError) throw error
       throw new ValidationError(initial, 'An unexpected error occurred while parsing the input.')

@@ -26,7 +26,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   protected readonly _fallback: Map<TKey, TValue> | Unset
 
   // PIPELINE
-  protected readonly _parse: ParseFunction | null
+  protected readonly _parse: ParseFunction | Unset
   protected readonly _prepare: Array<PrepareFunction<Map<TKey, TValue>>>
   protected readonly _tests: TestObject<Map<TKey, TValue>>
   protected readonly _refine: Array<RefineFunction<Map<TKey, TValue>>>
@@ -60,7 +60,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
       default: UNSET,
       fallback: UNSET,
     }, {
-      parse: null,
+      parse: UNSET,
       prepare: [],
       tests: {},
       refine: [],

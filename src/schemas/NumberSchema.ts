@@ -16,7 +16,7 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
   protected readonly _fallback: number | Unset
 
   // PIPELINE
-  protected readonly _parse: ParseFunction | null
+  protected readonly _parse: ParseFunction | Unset
   protected readonly _prepare: Array<PrepareFunction<number>>
   protected readonly _tests: TestObject<number>
   protected readonly _refine: Array<RefineFunction<number>>
@@ -44,7 +44,7 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
       default: UNSET,
       fallback: UNSET,
     }, {
-      parse: null,
+      parse: UNSET,
       prepare: [],
       tests: {},
       refine: [],

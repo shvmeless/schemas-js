@@ -24,7 +24,7 @@ export class ArraySchema<TValue, TOptional extends boolean, TNullable extends bo
   protected readonly _fallback: Array<TValue> | Unset
 
   // PIPELINE
-  protected readonly _parse: ParseFunction | null
+  protected readonly _parse: ParseFunction | Unset
   protected readonly _prepare: Array<PrepareFunction<Array<TValue>>>
   protected readonly _tests: TestObject<Array<TValue>>
   protected readonly _refine: Array<RefineFunction<Array<TValue>>>
@@ -58,7 +58,7 @@ export class ArraySchema<TValue, TOptional extends boolean, TNullable extends bo
       default: UNSET,
       fallback: UNSET,
     }, {
-      parse: null,
+      parse: UNSET,
       prepare: [],
       tests: {},
       refine: [],

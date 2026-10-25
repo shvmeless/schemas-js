@@ -28,7 +28,7 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
   protected readonly _fallback: TTuple | Unset
 
   // PIPELINE
-  protected readonly _parse: ParseFunction | null
+  protected readonly _parse: ParseFunction | Unset
   protected readonly _prepare: Array<PrepareFunction<TTuple>>
   protected readonly _tests: TestObject<TTuple>
   protected readonly _refine: Array<RefineFunction<TTuple>>
@@ -60,7 +60,7 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
       default: UNSET,
       fallback: UNSET,
     }, {
-      parse: null,
+      parse: UNSET,
       prepare: [],
       tests: {},
       refine: [],

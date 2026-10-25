@@ -27,7 +27,7 @@ export class UnionSchema<TUnion, TOptional extends boolean, TNullable extends bo
   protected readonly _fallback: TUnion | Unset
 
   // PIPELINE
-  protected readonly _parse: ParseFunction | null
+  protected readonly _parse: ParseFunction | Unset
   protected readonly _prepare: Array<PrepareFunction<TUnion>>
   protected readonly _tests: TestObject<TUnion>
   protected readonly _refine: Array<RefineFunction<TUnion>>
@@ -58,7 +58,7 @@ export class UnionSchema<TUnion, TOptional extends boolean, TNullable extends bo
       default: UNSET,
       fallback: UNSET,
     }, {
-      parse: null,
+      parse: UNSET,
       prepare: [],
       tests: {},
       refine: [],

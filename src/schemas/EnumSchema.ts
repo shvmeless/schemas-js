@@ -21,7 +21,7 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
   protected readonly _fallback: TValues | Unset
 
   // PIPELINE
-  protected readonly _parse: ParseFunction | null
+  protected readonly _parse: ParseFunction | Unset
   protected readonly _prepare: Array<PrepareFunction<TValues>>
   protected readonly _tests: TestObject<TValues>
   protected readonly _refine: Array<RefineFunction<TValues>>
@@ -54,7 +54,7 @@ export class EnumSchema<TValues extends string | number, TOptional extends boole
       default: UNSET,
       fallback: UNSET,
     }, {
-      parse: null,
+      parse: UNSET,
       prepare: [],
       tests: {},
       refine: [],
