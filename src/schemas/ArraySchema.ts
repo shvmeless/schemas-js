@@ -219,6 +219,7 @@ export class ArraySchema<TValue, TOptional extends boolean, TNullable extends bo
   public min(length: number): ArraySchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
     return this._updateTests({
+      length: undefined,
       min: (current, initial) => {
         if (current.length < length)
           throw new ValidationError(initial, `The value must be at least ${stringify(length)} elements long.`)
@@ -230,6 +231,7 @@ export class ArraySchema<TValue, TOptional extends boolean, TNullable extends bo
   public max(length: number): ArraySchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
     return this._updateTests({
+      length: undefined,
       max: (current, initial) => {
         if (current.length > length)
           throw new ValidationError(initial, `The value must be at most ${stringify(length)} elements long.`)

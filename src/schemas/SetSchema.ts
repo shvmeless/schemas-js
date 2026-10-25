@@ -217,6 +217,7 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
   public min(size: number): SetSchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(size) || size < 0) throw new Error('The size value must be zero or positive.')
     return this._updateTests({
+      size: undefined,
       min: (current, initial) => {
         if (current.size < size)
           throw new ValidationError(initial, `The value must be at least ${stringify(size)} elements long.`)
@@ -228,6 +229,7 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
   public max(size: number): SetSchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(size) || size < 0) throw new Error('The size value must be zero or positive.')
     return this._updateTests({
+      size: undefined,
       max: (current, initial) => {
         if (current.size > size)
           throw new ValidationError(initial, `The value must be at most ${stringify(size)} elements long.`)

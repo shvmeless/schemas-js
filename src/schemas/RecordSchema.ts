@@ -221,6 +221,7 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
   public min(length: number): RecordSchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
     return this._updateTests({
+      length: undefined,
       min: (current, initial) => {
         if (Object.entries(current).length < length)
           throw new ValidationError(initial, `The value must be at least ${stringify(length)} entries long.`)
@@ -232,6 +233,7 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
   public max(length: number): RecordSchema<TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
     return this._updateTests({
+      length: undefined,
       max: (current, initial) => {
         if (Object.entries(current).length > length)
           throw new ValidationError(initial, `The value must be at most ${stringify(length)} entries long.`)

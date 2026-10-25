@@ -208,7 +208,7 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
   // TEST
   public negative(): NumberSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
-      min: (current, initial) => {
+      max: (current, initial) => {
         if (current >= 0)
           throw new ValidationError(initial, 'The value must be a negative number.')
       },
@@ -218,7 +218,7 @@ export class NumberSchema<TOptional extends boolean, TNullable extends boolean, 
   // TEST
   public positive(): NumberSchema<TOptional, TNullable, TDefault> {
     return this._updateTests({
-      max: (current, initial) => {
+      min: (current, initial) => {
         if (current <= 0)
           throw new ValidationError(initial, 'The value must be a positive number.')
       },

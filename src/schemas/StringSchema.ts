@@ -177,6 +177,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   public min(length: number): StringSchema<TOptional, TNullable, TDefault> {
     if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
     return this._updateTests({
+      length: undefined,
       min: (current, initial) => {
         if (current.length < length)
           throw new ValidationError(initial, `The value must be at least ${stringify(length)} characters long.`)
@@ -188,6 +189,7 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
   public max(length: number): StringSchema<TOptional, TNullable, TDefault> {
     if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
     return this._updateTests({
+      length: undefined,
       max: (current, initial) => {
         if (current.length > length)
           throw new ValidationError(initial, `The value must be at most ${stringify(length)} characters long.`)

@@ -223,6 +223,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   public min(size: number): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(size) || size < 0) throw new Error('The size value must be zero or positive.')
     return this._updateTests({
+      size: undefined,
       min: (current, initial) => {
         if (current.size < size)
           throw new ValidationError(initial, `The value must be at least ${stringify(size)} entries long.`)
@@ -234,6 +235,7 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   public max(size: number): MapSchema<TKey, TValue, TOptional, TNullable, TDefault> {
     if (Number.isNaN(size) || size < 0) throw new Error('The size value must be zero or positive.')
     return this._updateTests({
+      size: undefined,
       max: (current, initial) => {
         if (current.size > size)
           throw new ValidationError(initial, `The value must be at most ${stringify(size)} entries long.`)
