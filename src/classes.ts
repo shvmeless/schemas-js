@@ -1,5 +1,5 @@
-// GENEIRIC
-export { GenericSchema } from '@/schemas/GenericSchema'
+// GENERIC
+export type { GenericSchema } from '@/lib/GenericSchema'
 
 // BASIC
 export { UnknownSchema } from '@/schemas/UnknownSchema'
@@ -7,11 +7,14 @@ export { AnySchema } from '@/schemas/AnySchema'
 export { StringSchema } from '@/schemas/StringSchema'
 export { NumberSchema } from '@/schemas/NumberSchema'
 export { BooleanSchema } from '@/schemas/BooleanSchema'
-export { LiteralSchema } from '@/schemas/LiteralSchema'
-export { EnumSchema } from '@/schemas/EnumSchema'
+
+// NULLISH
 export { NullSchema } from '@/schemas/NullSchema'
 export { UndefinedSchema } from '@/schemas/UndefinedSchema'
-export { InstanceOfSchema } from '@/schemas/InstanceOfSchema'
+
+// LITERALS
+export { LiteralSchema } from '@/schemas/LiteralSchema'
+export { EnumSchema } from '@/schemas/EnumSchema'
 
 // STRUCTURED
 export { ArraySchema } from '@/schemas/ArraySchema'
@@ -22,8 +25,5 @@ export { SetSchema } from '@/schemas/SetSchema'
 export { MapSchema } from '@/schemas/MapSchema'
 
 // SPECIAL
-export { OptionalSchema } from '@/schemas/OptionalSchema'
-export { NullableSchema } from '@/schemas/NullableSchema'
+export { InstanceOfSchema } from '@/schemas/InstanceOfSchema'
 export { UnionSchema } from '@/schemas/UnionSchema'
-export { FallbackSchema } from '@/schemas/FallbackSchema'
-export { TransformSchema } from '@/schemas/TransformSchema'

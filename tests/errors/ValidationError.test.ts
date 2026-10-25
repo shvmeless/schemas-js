@@ -30,7 +30,7 @@ describe('ValidationErrorIndex', () => {
     set: SetSchema.create(StringSchema.create()),
   })
 
-  it('contains a deep index for each element that fails.', () => {
+  it('contains a deep location for each element that fails.', () => {
 
     const input = {
       string: 255,
@@ -64,55 +64,55 @@ describe('ValidationErrorIndex', () => {
       ['array', {
         value: [100, 200, 300],
         message: 'At least one element does not match the given schema.',
-        index: new Map([
-          [0, { value: 100, message: 'The value must be a string.', index: null }],
-          [1, { value: 200, message: 'The value must be a string.', index: null }],
-          [2, { value: 300, message: 'The value must be a string.', index: null }],
+        location: new Map([
+          [0, { value: 100, message: 'The value must be a string.', location: null }],
+          [1, { value: 200, message: 'The value must be a string.', location: null }],
+          [2, { value: 300, message: 'The value must be a string.', location: null }],
         ]),
       }],
       ['tuple', {
         value: [true, 'NOT A NUMBER', 255],
         message: 'At least one element does not match the given schema.',
-        index: new Map([
-          [0, { value: true, message: 'The value must be a string.', index: null }],
-          [1, { value: 'NOT A NUMBER', message: 'The value must be a number.', index: null }],
-          [2, { value: 255, message: 'The value must be a boolean.', index: null }],
+        location: new Map([
+          [0, { value: true, message: 'The value must be a string.', location: null }],
+          [1, { value: 'NOT A NUMBER', message: 'The value must be a number.', location: null }],
+          [2, { value: 255, message: 'The value must be a boolean.', location: null }],
         ]),
       }],
       ['record', {
         value: { a: '1', b: '2', c: '3' },
         message: 'At least one entry does not match the given schema.',
-        index: new Map([
-          ['a', { value: '1', message: 'The value must be a number.', index: null }],
-          ['b', { value: '2', message: 'The value must be a number.', index: null }],
-          ['c', { value: '3', message: 'The value must be a number.', index: null }],
+        location: new Map([
+          ['a', { value: '1', message: 'The value must be a number.', location: null }],
+          ['b', { value: '2', message: 'The value must be a number.', location: null }],
+          ['c', { value: '3', message: 'The value must be a number.', location: null }],
         ]),
       }],
       ['object', {
         value: { string: true, number: 'NOT A NUMBER', boolean: 255 },
         message: 'At least one property does not match the given schema.',
-        index: new Map([
-          ['string', { value: true, message: 'The value must be a string.', index: null }],
-          ['number', { value: 'NOT A NUMBER', message: 'The value must be a number.', index: null }],
-          ['boolean', { value: 255, message: 'The value must be a boolean.', index: null }],
+        location: new Map([
+          ['string', { value: true, message: 'The value must be a string.', location: null }],
+          ['number', { value: 'NOT A NUMBER', message: 'The value must be a number.', location: null }],
+          ['boolean', { value: 255, message: 'The value must be a boolean.', location: null }],
         ]),
       }],
       ['map', {
         value: new Map([['a', '1'], ['b', '2'], ['c', '3']]),
         message: 'At least one entry does not match the given schema.',
-        index: new Map([
-          ['a', { value: '1', message: 'The value must be a number.', index: null }],
-          ['b', { value: '2', message: 'The value must be a number.', index: null }],
-          ['c', { value: '3', message: 'The value must be a number.', index: null }],
+        location: new Map([
+          ['a', { value: '1', message: 'The value must be a number.', location: null }],
+          ['b', { value: '2', message: 'The value must be a number.', location: null }],
+          ['c', { value: '3', message: 'The value must be a number.', location: null }],
         ]),
       }],
       ['set', {
         value: new Set([100, 200, 300]),
         message: 'At least one element does not match the given schema.',
-        index: new Map([
-          [100, { value: 100, message: 'The value must be a string.', index: null }],
-          [200, { value: 200, message: 'The value must be a string.', index: null }],
-          [300, { value: 300, message: 'The value must be a string.', index: null }],
+        location: new Map([
+          [100, { value: 100, message: 'The value must be a string.', location: null }],
+          [200, { value: 200, message: 'The value must be a string.', location: null }],
+          [300, { value: 300, message: 'The value must be a string.', location: null }],
         ]),
       }],
     ])

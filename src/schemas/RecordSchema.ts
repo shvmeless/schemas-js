@@ -1,184 +1,279 @@
 // IMPORTS
+import type { GenericConfig, GenericPipeline, GenericSchemaLike, InferSchema, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import { GenericSchema } from '@/schemas/GenericSchema'
-import { OptionalSchema } from '@/schemas/OptionalSchema'
-import { NullableSchema } from '@/schemas/NullableSchema'
-import { UnionSchema } from '@/schemas/UnionSchema'
-import { FallbackSchema } from '@/schemas/FallbackSchema'
-import { TransformSchema } from '@/schemas/TransformSchema'
 import { stringify } from '@/utils/stringify'
+import { type Unset, UNSET } from '@/utils/unset'
+
+// INTERFACE
+interface RecordConfig<TValue> extends GenericConfig<Record<string, TValue>> {
+  schema: GenericSchemaLike
+  prune: boolean
+}
 
 // CLASS
-export class RecordSchema<T> implements GenericSchema<Record<string, T>> {
+export class RecordSchema<TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
+  extends GenericSchema<Record<string, TValue>, TOptional, TNullable, TDefault> {
 
-  // PROPERTIES
-  private readonly _schema: GenericSchema<T>
-  private readonly _queue: Array<(original: Record<string, T>, output: Record<string, T>) => Record<string, T>>
-  private readonly _prune: boolean
+  // CONFIG
+  protected readonly _schema: GenericSchemaLike
+  protected readonly _prune: boolean
+  protected readonly _optional: boolean
+  protected readonly _nullable: boolean
+  protected readonly _default: Record<string, TValue> | Unset
+  protected readonly _fallback: Record<string, TValue> | Unset
 
-  // CONSTRUCTOR
-  private constructor(schema: GenericSchema<T>, queue: Array<(original: Record<string, T>, output: Record<string, T>) => Record<string, T>>, prune: boolean) {
-    this._schema = schema
-    this._queue = queue
-    this._prune = prune
-  }
-
-  // CONSTRUCTOR
-  public static create<T>(schema: GenericSchema<T>): RecordSchema<T> {
-    return new RecordSchema<T>(schema, [], false)
-  }
+  // PIPELINE
+  protected readonly _parse: ParseFunction | Unset
+  protected readonly _prepare: Array<PrepareFunction<Record<string, TValue>>>
+  protected readonly _tests: TestObject<Record<string, TValue>>
+  protected readonly _refine: Array<RefineFunction<Record<string, TValue>>>
 
   // CONSTRUCTOR
-  private push(fn: (original: Record<string, T>, output: Record<string, T>) => Record<string, T>): RecordSchema<T> {
-    return new RecordSchema<T>(this._schema, [...this._queue, fn], this._prune)
+  private constructor(config: RecordConfig<TValue>, pipeline: GenericPipeline<Record<string, TValue>>) {
+    super()
+    this._schema = config.schema
+    this._prune = config.prune
+    this._optional = config.optional
+    this._nullable = config.nullable
+    this._default = config.default
+    this._fallback = config.fallback
+    this._parse = pipeline.parse
+    this._prepare = pipeline.prepare
+    this._tests = pipeline.tests
+    this._refine = pipeline.refine
   }
 
-  // CONSTRUCTOR
-  private clone(params: {
-    schema?: GenericSchema<T>
-    queue?: Array<(original: Record<string, T>, output: Record<string, T>) => Record<string, T>>
-    prune?: boolean
-  } = {}): RecordSchema<T> {
-    return new RecordSchema<T>(
-      params.schema ?? this._schema,
-      params.queue ?? this._queue,
-      params.prune ?? this._prune,
-    )
+  // --------------------------------------------------------------------------
+
+  // FACTORY
+  public static create<TSchema extends GenericSchemaLike>(schema: TSchema): RecordSchema<InferSchema<TSchema>, false, false, false> {
+    return new RecordSchema<InferSchema<TSchema>, false, false, false>({
+      schema: schema,
+      prune: false,
+      optional: false,
+      nullable: false,
+      default: UNSET,
+      fallback: UNSET,
+    }, {
+      parse: UNSET,
+      prepare: [],
+      tests: {},
+      refine: [],
+    })
   }
 
-  // METHOD
-  public validate(input: unknown): Record<string, T> {
+  // --------------------------------------------------------------------------
 
-    if (typeof input !== 'object' || input === null || Array.isArray(input) || (Object.getPrototypeOf(input) !== Object.prototype && Object.getPrototypeOf(input) !== null)) {
-      throw new ValidationError(input, 'The value must be an object.')
+  // UTILITY
+  private get _configuration(): RecordConfig<TValue> {
+    return {
+      schema: this._schema,
+      prune: this._prune,
+      optional: this._optional,
+      nullable: this._nullable,
+      default: this._default,
+      fallback: this._fallback,
     }
+  }
 
-    let result: Record<string, T> = {}
-    const errors = ValidationError.prepare()
-
-    for (const [key, value] of Object.entries(input)) {
-      try {
-        result[key] = this._schema.validate(value)
-      } catch (error) {
-        if (error instanceof ValidationError) {
-          if (this._prune) continue
-          errors.add(key, error)
-        } else throw error
-      }
+  // UTILITY
+  private get _pipeline(): GenericPipeline<Record<string, TValue>> {
+    return {
+      parse: this._parse,
+      prepare: this._prepare,
+      tests: this._tests,
+      refine: this._refine,
     }
-
-    if (errors.size > 0) {
-      errors.throw(input, 'At least one entry does not match the given schema.')
-    }
-
-    for (const fn of this._queue) {
-      result = fn(input as Record<string, T>, result)
-    }
-
-    return result
-
   }
 
-  // METHOD
-  public isValid(input: unknown): boolean {
-    return GenericSchema.isValid(this, input)
+  // UPDATER
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<RecordConfig<TValue>>): RecordSchema<TValue, TOptional, TNullable, TDefault> {
+    return new RecordSchema({
+      ...this._configuration,
+      ...configuration,
+    }, this._pipeline)
   }
 
-  // METHOD
-  public optional(): OptionalSchema<Record<string, T>, undefined> {
-    return OptionalSchema.create(this)
-  }
-
-  // METHOD
-  public nullable(): NullableSchema<Record<string, T>, null> {
-    return NullableSchema.create(this)
-  }
-
-  // METHOD
-  public or<NT>(schema: GenericSchema<NT>): UnionSchema<Record<string, T> | NT> {
-    return UnionSchema.create(this as GenericSchema<Record<string, T>>, schema)
-  }
-
-  // METHOD
-  public fallback(value: Record<string, T>): FallbackSchema<Record<string, T>> {
-    return FallbackSchema.create(this, value)
-  }
-
-  // METHOD
-  public transform<V>(fn: (value: Record<string, T>) => V): TransformSchema<Record<string, T>, V> {
-    return TransformSchema.create(this, fn)
-  }
-
-  // METHOD
-  public prune(): RecordSchema<T> {
-    return this.clone({ prune: true })
-  }
-
-  // METHOD
-  public length(length: number): RecordSchema<T> {
-    if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
-    if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this.push((original, output) => {
-      if (Object.entries(output).length !== length) throw new ValidationError(original, `The value must be ${stringify(length)} entries long.`)
-      return output
+  // UPDATER
+  private _updateTests(tests: TestObject<Record<string, TValue>>): RecordSchema<TValue, TOptional, TNullable, TDefault> {
+    return new RecordSchema<TValue, TOptional, TNullable, TDefault>(this._configuration, {
+      ...this._pipeline,
+      tests: {
+        ...this._tests,
+        ...tests,
+      },
     })
   }
 
-  // METHOD
-  public min(length: number): RecordSchema<T> {
-    if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
-    if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this.push((original, output) => {
-      if (Object.entries(output).length < length) throw new ValidationError(original, `The value must be at least ${stringify(length)} entries long.`)
-      return output
+  // UPDATER
+  private _updatePipeline(pipeline: Partial<GenericPipeline<Record<string, TValue>>>): RecordSchema<TValue, TOptional, TNullable, TDefault> {
+    return new RecordSchema<TValue, TOptional, TNullable, TDefault>(this._configuration, {
+      ...this._pipeline,
+      ...pipeline,
     })
   }
 
-  // METHOD
-  public max(length: number): RecordSchema<T> {
-    if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
-    if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this.push((original, output) => {
-      if (Object.entries(output).length > length) throw new ValidationError(original, `The value must be at most ${stringify(length)} entries long.`)
-      return output
-    })
-  }
+  // --------------------------------------------------------------------------
 
-  // METHOD
-  public filter(callback: (value: T, key: string, array: Record<string, T>) => boolean): RecordSchema<T> {
-    return this.push((_, output) => {
-      const entries = Object.entries(output).filter(([key, value]) => callback(value, key, output))
-      return Object.fromEntries(entries)
-    })
-  }
+  // VALIDATOR
+  public validate(input: unknown): Nullish<Record<string, TValue>, TOptional, TNullable, TDefault> {
+    return this._runSchema((current) => {
 
-  // METHOD
-  public some(callback: (value: T, key: string, array: Record<string, T>) => boolean): RecordSchema<T> {
-    return this.push((original, output) => {
-      for (const [key, value] of Object.entries(output)) {
-        if (callback(value, key, output)) return output
+      if (typeof current !== 'object' || current === null || Array.isArray(current) || (Object.getPrototypeOf(current) !== Object.prototype && Object.getPrototypeOf(current) !== null)) {
+        throw new ValidationError(input, 'The value must be an object.')
       }
-      throw new ValidationError(original, 'No entry satisfies the given validation function.')
+
+      const resolved = current as Record<string, unknown>
+      const result: Record<string, TValue> = {}
+      const errors = ValidationError.prepare()
+
+      for (const [key, value] of Object.entries(resolved)) {
+        try {
+          Object.defineProperty(result, key, {
+            value: this._schema.validate(value),
+            enumerable: true,
+            writable: true,
+            configurable: true,
+          })
+        } catch (error) {
+          if (error instanceof ValidationError) {
+            if (this._prune) continue
+            errors.add(key, error)
+          } else throw error
+        }
+      }
+
+      if (errors.size > 0) {
+        errors.throw(input, 'At least one entry does not match the given schema.')
+      }
+
+      return result
+
+    }, input)
+  }
+
+  // --------------------------------------------------------------------------
+
+  // CONFIG
+  public prune(): RecordSchema<TValue, TOptional, TNullable, TDefault> {
+    return this._updateConfig({ prune: true })
+  }
+
+  // CONFIG
+  public optional(): RecordSchema<TValue, true, TNullable, TDefault> {
+    return this._updateConfig({ optional: true })
+  }
+
+  // CONFIG
+  public nullable(): RecordSchema<TValue, TOptional, true, TDefault> {
+    return this._updateConfig({ nullable: true })
+  }
+
+  // CONFIG
+  public default(value: Record<string, TValue>): RecordSchema<TValue, TOptional, TNullable, true> {
+    return this._updateConfig({ default: value })
+  }
+
+  // CONFIG
+  public fallback(value: Record<string, TValue>): RecordSchema<TValue, TOptional, TNullable, TDefault> {
+    return this._updateConfig({ fallback: value })
+  }
+
+  // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public parse(fn: ParseFunction): RecordSchema<TValue, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ parse: fn })
+  }
+
+  // PIPELINE
+  public prepare(fn: PrepareFunction<Record<string, TValue>>): RecordSchema<TValue, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ prepare: [...this._prepare, fn] })
+  }
+
+  // PIPELINE
+  public test(id: string, test: TestFunction<Record<string, TValue>>): RecordSchema<TValue, TOptional, TNullable, TDefault> {
+    return this._updateTests({ [`_${id}`]: test })
+  }
+
+  // PIPELINE
+  public refine(fn: RefineFunction<Record<string, TValue>>): RecordSchema<TValue, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ refine: [...this._refine, fn] })
+  }
+
+  // --------------------------------------------------------------------------
+
+  // TEST
+  public length(length: number): RecordSchema<TValue, TOptional, TNullable, TDefault> {
+    if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
+    return this._updateTests({
+      min: undefined,
+      max: undefined,
+      length: (current, initial) => {
+        if (Object.entries(current).length !== length)
+          throw new ValidationError(initial, `The value must be ${stringify(length)} entries long.`)
+      },
     })
   }
 
-  // METHOD
-  public every(callback: (value: T, key: string, array: Record<string, T>) => boolean): RecordSchema<T> {
-    return this.push((original, output) => {
-      for (const [key, value] of Object.entries(output)) {
-        if (!callback(value, key, output)) throw new ValidationError(original, 'At least one entry does not satisfy the given validation function.')
-      }
-      return output
+  // TEST
+  public min(length: number): RecordSchema<TValue, TOptional, TNullable, TDefault> {
+    if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
+    return this._updateTests({
+      length: undefined,
+      min: (current, initial) => {
+        if (Object.entries(current).length < length)
+          throw new ValidationError(initial, `The value must be at least ${stringify(length)} entries long.`)
+      },
     })
   }
 
-  // METHOD
-  public none(callback: (value: T, key: string, array: Record<string, T>) => boolean): RecordSchema<T> {
-    return this.push((original, output) => {
-      for (const [key, value] of Object.entries(output)) {
-        if (callback(value, key, output)) throw new ValidationError(original, 'At least one entry satisfies the given validation function.')
-      }
-      return output
+  // TEST
+  public max(length: number): RecordSchema<TValue, TOptional, TNullable, TDefault> {
+    if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
+    return this._updateTests({
+      length: undefined,
+      max: (current, initial) => {
+        if (Object.entries(current).length > length)
+          throw new ValidationError(initial, `The value must be at most ${stringify(length)} entries long.`)
+      },
+    })
+  }
+
+  // TEST
+  public some(callback: (value: TValue, key: string, record: Record<string, TValue>) => boolean): RecordSchema<TValue, TOptional, TNullable, TDefault> {
+    return this._updateTests({
+      some: (current, initial) => {
+        for (const [key, value] of Object.entries(current)) {
+          if (callback(value, key, current)) return
+        }
+        throw new ValidationError(initial, 'No entry satisfies the given validation function.')
+      },
+    })
+  }
+
+  // TEST
+  public every(callback: (value: TValue, key: string, record: Record<string, TValue>) => boolean): RecordSchema<TValue, TOptional, TNullable, TDefault> {
+    return this._updateTests({
+      every: (current, initial) => {
+        for (const [key, value] of Object.entries(current)) {
+          if (!callback(value, key, current))
+            throw new ValidationError(initial, 'At least one entry does not satisfy the given validation function.')
+        }
+      },
+    })
+  }
+
+  // TEST
+  public none(callback: (value: TValue, key: string, record: Record<string, TValue>) => boolean): RecordSchema<TValue, TOptional, TNullable, TDefault> {
+    return this._updateTests({
+      none: (current, initial) => {
+        for (const [key, value] of Object.entries(current)) {
+          if (callback(value, key, current))
+            throw new ValidationError(initial, 'At least one entry satisfies the given validation function.')
+        }
+      },
     })
   }
 

@@ -1,187 +1,280 @@
 // IMPORTS
+import type { GenericConfig, GenericPipeline, GenericSchemaLike, InferSchema, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import { GenericSchema } from '@/schemas/GenericSchema'
-import { FallbackSchema } from '@/schemas/FallbackSchema'
-import { NullableSchema } from '@/schemas/NullableSchema'
-import { OptionalSchema } from '@/schemas/OptionalSchema'
-import { TransformSchema } from '@/schemas/TransformSchema'
-import { UnionSchema } from '@/schemas/UnionSchema'
 import { stringify } from '@/utils/stringify'
+import { type Unset, UNSET } from '@/utils/unset'
+
+// INTERFACE
+interface ArrayConfig<TValue> extends GenericConfig<Array<TValue>> {
+  schema: GenericSchemaLike
+  prune: boolean
+}
 
 // CLASS
-export class ArraySchema<T> implements GenericSchema<Array<T>> {
+export class ArraySchema<TValue, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
+  extends GenericSchema<Array<TValue>, TOptional, TNullable, TDefault> {
 
-  // PROPERTIES
-  private readonly _schema: GenericSchema<T>
-  private readonly _queue: Array<(original: Array<T>, output: Array<T>) => Array<T>>
-  private readonly _prune: boolean
+  // CONFIG
+  protected readonly _schema: GenericSchemaLike
+  protected readonly _prune: boolean
+  protected readonly _optional: boolean
+  protected readonly _nullable: boolean
+  protected readonly _default: Array<TValue> | Unset
+  protected readonly _fallback: Array<TValue> | Unset
 
-  // CONSTRUCTOR
-  private constructor(schema: GenericSchema<T>, queue: Array<(original: Array<T>, output: Array<T>) => Array<T>>, prune: boolean) {
-    this._schema = schema
-    this._queue = queue
-    this._prune = prune
-  }
-
-  // CONSTRUCTOR
-  public static create<T>(schema: GenericSchema<T>): ArraySchema<T> {
-    return new ArraySchema<T>(schema, [], false)
-  }
+  // PIPELINE
+  protected readonly _parse: ParseFunction | Unset
+  protected readonly _prepare: Array<PrepareFunction<Array<TValue>>>
+  protected readonly _tests: TestObject<Array<TValue>>
+  protected readonly _refine: Array<RefineFunction<Array<TValue>>>
 
   // CONSTRUCTOR
-  private clone(params: {
-    schema?: GenericSchema<T>
-    queue?: Array<(original: Array<T>, output: Array<T>) => Array<T>>
-    prune?: boolean
-  } = {}): ArraySchema<T> {
-    return new ArraySchema<T>(
-      params.schema ?? this._schema,
-      params.queue ?? this._queue,
-      params.prune ?? this._prune,
-    )
+  private constructor(config: ArrayConfig<TValue>, pipeline: GenericPipeline<Array<TValue>>) {
+    super()
+
+    this._schema = config.schema
+    this._prune = config.prune
+    this._optional = config.optional
+    this._nullable = config.nullable
+    this._default = config.default
+    this._fallback = config.fallback
+
+    this._parse = pipeline.parse
+    this._prepare = pipeline.prepare
+    this._tests = pipeline.tests
+    this._refine = pipeline.refine
   }
 
-  // CONSTRUCTOR
-  private push(fn: (original: Array<T>, output: Array<T>) => Array<T>): ArraySchema<T> {
-    return new ArraySchema<T>(this._schema, [...this._queue, fn], this._prune)
+  // --------------------------------------------------------------------------
+
+  // FACTORY
+  public static create<TSchema extends GenericSchemaLike>(schema: TSchema): ArraySchema<InferSchema<TSchema>, false, false, false> {
+    return new ArraySchema({
+      schema: schema,
+      prune: false,
+      optional: false,
+      nullable: false,
+      default: UNSET,
+      fallback: UNSET,
+    }, {
+      parse: UNSET,
+      prepare: [],
+      tests: {},
+      refine: [],
+    })
   }
 
-  // METHOD
-  public validate(input: unknown): Array<T> {
+  // --------------------------------------------------------------------------
 
-    if (!Array.isArray(input)) {
-      throw new ValidationError(input, 'The value must be an array.')
+  // UTILITY
+  private get _configuration(): ArrayConfig<TValue> {
+    return {
+      schema: this._schema,
+      prune: this._prune,
+      optional: this._optional,
+      nullable: this._nullable,
+      default: this._default,
+      fallback: this._fallback,
     }
+  }
 
-    let result: Array<T> = []
-    const errors = ValidationError.prepare()
-
-    input.forEach((element, index) => {
-      try {
-        const value = this._schema.validate(element)
-        result.push(value)
-      } catch (error) {
-        if (error instanceof ValidationError) {
-          if (this._prune) return
-          errors.add(index, error)
-        } else throw error
-      }
-    })
-
-    if (errors.size > 0) {
-      errors.throw(input, 'At least one element does not match the given schema.')
+  // UTILITY
+  private get _pipeline(): GenericPipeline<Array<TValue>> {
+    return {
+      parse: this._parse,
+      prepare: this._prepare,
+      tests: this._tests,
+      refine: this._refine,
     }
-
-    for (const fn of this._queue) {
-      result = fn(input as Array<T>, result)
-    }
-
-    return result
-
   }
 
-  // METHOD
-  public isValid(input: unknown): boolean {
-    return GenericSchema.isValid(this, input)
+  // UPDATER
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<ArrayConfig<TValue>>): ArraySchema<TValue, TOptional, TNullable, TDefault> {
+    return new ArraySchema({
+      ...this._configuration,
+      ...configuration,
+    }, this._pipeline)
   }
 
-  // METHOD
-  public optional(): OptionalSchema<Array<T>, undefined> {
-    return OptionalSchema.create(this)
-  }
-
-  // METHOD
-  public nullable(): NullableSchema<Array<T>, null> {
-    return NullableSchema.create(this)
-  }
-
-  // METHOD
-  public or<NT>(schema: GenericSchema<NT>): UnionSchema<Array<T> | NT> {
-    return UnionSchema.create(this as GenericSchema<Array<T>>, schema)
-  }
-
-  // METHOD
-  public fallback(value: Array<T>): FallbackSchema<Array<T>> {
-    return FallbackSchema.create(this, value)
-  }
-
-  // METHOD
-  public transform<V>(fn: (value: Array<T>) => V): TransformSchema<Array<T>, V> {
-    return TransformSchema.create(this, fn)
-  }
-
-  // METHOD
-  public prune(): ArraySchema<T> {
-    return this.clone({ prune: true })
-  }
-
-  // METHOD
-  public length(length: number): ArraySchema<T> {
-    if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
-    if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this.push((original, output) => {
-      if (output.length !== length) throw new ValidationError(original, `The value must be ${stringify(length)} elements long.`)
-      return output
+  // UPDATER
+  private _updateTests(tests: TestObject<Array<TValue>>): ArraySchema<TValue, TOptional, TNullable, TDefault> {
+    return new ArraySchema(this._configuration, {
+      ...this._pipeline,
+      tests: {
+        ...this._tests,
+        ...tests,
+      },
     })
   }
 
-  // METHOD
-  public min(length: number): ArraySchema<T> {
-    if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
-    if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this.push((original, output) => {
-      if (output.length < length) throw new ValidationError(original, `The value must be at least ${stringify(length)} elements long.`)
-      return output
+  // UPDATER
+  private _updatePipeline(pipeline: Partial<GenericPipeline<Array<TValue>>>): ArraySchema<TValue, TOptional, TNullable, TDefault> {
+    return new ArraySchema(this._configuration, {
+      ...this._pipeline,
+      ...pipeline,
     })
   }
 
-  // METHOD
-  public max(length: number): ArraySchema<T> {
-    if (Number.isNaN(length)) throw new Error('The length value must be zero or positive.')
-    if (length < 0) throw new Error('The length value must be zero or positive.')
-    return this.push((original, output) => {
-      if (output.length > length) throw new ValidationError(original, `The value must be at most ${stringify(length)} elements long.`)
-      return output
-    })
-  }
+  // --------------------------------------------------------------------------
 
-  // METHOD
-  public filter(callback: (value: T, index: number, array: Array<T>) => boolean): ArraySchema<T> {
-    return this.push((output) => {
-      return output.filter(callback)
-    })
-  }
+  // VALIDATOR
+  public validate(input: unknown): Nullish<Array<TValue>, TOptional, TNullable, TDefault> {
+    return this._runSchema((current) => {
 
-  // METHOD
-  public some(callback: (value: T, index: number, array: Array<T>) => boolean): ArraySchema<T> {
-    return this.push((original, output) => {
-      for (let index = 0; index < output.length; index++) {
-        const value = output[index] as T
-        if (callback(value, index, output)) return output
+      if (!Array.isArray(current)) {
+        throw new ValidationError(input, 'The value must be an array.')
       }
-      throw new ValidationError(original, 'No element satisfies the given validation function.')
+
+      const resolved = current as Array<unknown>
+      const output: Array<TValue> = []
+      const errors = ValidationError.prepare()
+
+      for (let index = 0; index < resolved.length; index++) {
+        try {
+          const value = this._schema.validate(resolved[index])
+          output.push(value as TValue)
+        } catch (error) {
+          if (error instanceof ValidationError) {
+            if (this._prune) continue
+            errors.add(index, error)
+          } else throw error
+        }
+      }
+
+      if (errors.size > 0) {
+        errors.throw(input, 'At least one element does not match the given schema.')
+      }
+
+      return output
+
+    }, input)
+  }
+
+  // --------------------------------------------------------------------------
+
+  // CONFIG
+  public prune(): ArraySchema<TValue, TOptional, TNullable, TDefault> {
+    return this._updateConfig({ prune: true })
+  }
+
+  // CONFIG
+  public optional(): ArraySchema<TValue, true, TNullable, TDefault> {
+    return this._updateConfig({ optional: true })
+  }
+
+  // CONFIG
+  public nullable(): ArraySchema<TValue, TOptional, true, TDefault> {
+    return this._updateConfig({ nullable: true })
+  }
+
+  // CONFIG
+  public default(value: Array<TValue>): ArraySchema<TValue, TOptional, TNullable, true> {
+    return this._updateConfig({ default: value })
+  }
+
+  // CONFIG
+  public fallback(value: Array<TValue>): ArraySchema<TValue, TOptional, TNullable, TDefault> {
+    return this._updateConfig({ fallback: value })
+  }
+
+  // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public parse(fn: ParseFunction): ArraySchema<TValue, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ parse: fn })
+  }
+
+  // PIPELINE
+  public prepare(fn: PrepareFunction<Array<TValue>>): ArraySchema<TValue, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ prepare: [...this._prepare, fn] })
+  }
+
+  // PIPELINE
+  public test(id: string, test: TestFunction<Array<TValue>>): ArraySchema<TValue, TOptional, TNullable, TDefault> {
+    return this._updateTests({ [`_${id}`]: test })
+  }
+
+  // PIPELINE
+  public refine(fn: RefineFunction<Array<TValue>>): ArraySchema<TValue, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ refine: [...this._refine, fn] })
+  }
+
+  // --------------------------------------------------------------------------
+
+  // TEST
+  public length(length: number): ArraySchema<TValue, TOptional, TNullable, TDefault> {
+    if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
+    return this._updateTests({
+      min: undefined,
+      max: undefined,
+      length: (current, initial) => {
+        if (current.length !== length)
+          throw new ValidationError(initial, `The value must be ${stringify(length)} elements long.`)
+      },
     })
   }
 
-  // METHOD
-  public every(callback: (value: T, index: number, array: Array<T>) => boolean): ArraySchema<T> {
-    return this.push((original, output) => {
-      for (let index = 0; index < output.length; index++) {
-        const value = output[index] as T
-        if (!callback(value, index, output)) throw new ValidationError(original, 'At least one element does not satisfy the given validation function.')
-      }
-      return output
+  // TEST
+  public min(length: number): ArraySchema<TValue, TOptional, TNullable, TDefault> {
+    if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
+    return this._updateTests({
+      length: undefined,
+      min: (current, initial) => {
+        if (current.length < length)
+          throw new ValidationError(initial, `The value must be at least ${stringify(length)} elements long.`)
+      },
     })
   }
 
-  // METHOD
-  public none(callback: (value: T, index: number, array: Array<T>) => boolean): ArraySchema<T> {
-    return this.push((original, output) => {
-      for (let index = 0; index < output.length; index++) {
-        const value = output[index] as T
-        if (callback(value, index, output)) throw new ValidationError(original, 'At least one element satisfies the given validation function.')
-      }
-      return output
+  // TEST
+  public max(length: number): ArraySchema<TValue, TOptional, TNullable, TDefault> {
+    if (Number.isNaN(length) || length < 0) throw new Error('The length value must be zero or positive.')
+    return this._updateTests({
+      length: undefined,
+      max: (current, initial) => {
+        if (current.length > length)
+          throw new ValidationError(initial, `The value must be at most ${stringify(length)} elements long.`)
+      },
+    })
+  }
+
+  // TEST
+  public some(callback: (value: TValue, index: number, array: Array<TValue>) => boolean): ArraySchema<TValue, TOptional, TNullable, TDefault> {
+    return this._updateTests({
+      some: (current, initial) => {
+        for (let index = 0; index < current.length; index++) {
+          const value = current[index] as TValue
+          if (callback(value, index, current)) return
+        }
+        throw new ValidationError(initial, 'No element satisfies the given validation function.')
+      },
+    })
+  }
+
+  // TEST
+  public every(callback: (value: TValue, index: number, array: Array<TValue>) => boolean): ArraySchema<TValue, TOptional, TNullable, TDefault> {
+    return this._updateTests({
+      every: (current, initial) => {
+        for (let index = 0; index < current.length; index++) {
+          const value = current[index] as TValue
+          if (!callback(value, index, current))
+            throw new ValidationError(initial, 'At least one element does not satisfy the given validation function.')
+        }
+      },
+    })
+  }
+
+  // TEST
+  public none(callback: (value: TValue, index: number, array: Array<TValue>) => boolean): ArraySchema<TValue, TOptional, TNullable, TDefault> {
+    return this._updateTests({
+      none: (current, initial) => {
+        for (let index = 0; index < current.length; index++) {
+          const value = current[index] as TValue
+          if (callback(value, index, current))
+            throw new ValidationError(initial, 'At least one element satisfies the given validation function.')
+        }
+      },
     })
   }
 

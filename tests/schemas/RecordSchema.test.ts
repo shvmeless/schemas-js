@@ -2,6 +2,7 @@
 import { describe, it, expect } from 'vitest'
 import { RecordSchema } from '@/schemas/RecordSchema'
 import { NumberSchema } from '@/schemas/NumberSchema'
+import { AnySchema } from '@/schemas/AnySchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectValidation, expectError } from '@tests/helpers/expect'
 
@@ -36,6 +37,18 @@ describe('.validate(input)', () => {
     const input = { a: 1, b: 2, c: 3 }
     const expected = { a: 1, b: 2, c: 3 }
     expectValidation(schema, input).toReturnNew(expected)
+  })
+
+  it('does not pollute the prototype with `__proto__` keys.', () => {
+    const anySchema = RecordSchema.create(AnySchema.create())
+    const input = JSON.parse('{"a":1,"__proto__":{"isAdmin":true}}') as Record<string, unknown>
+    const result = anySchema.validate(input)
+
+    expect(Object.keys(result)).toEqual(['a', '__proto__'])
+    expect(Object.getPrototypeOf(result)).toBe(Object.prototype)
+    expect(Object.hasOwn(result, '__proto__')).toBe(true)
+    expect((result as Record<string, unknown>)['isAdmin']).toBeUndefined()
+    expect(anySchema.validate(result)).toEqual(result)
   })
 
   it('throws when at least one `input` entry does not match the `shape` schema.', () => {
@@ -293,36 +306,6 @@ describe('.max(length)', () => {
       const input = { a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7 }
       expectValidation(schema, input).toThrow('The value must be at most 5 entries long.')
     })
-  })
-})
-
-// METHOD ---------------------------------------------------------------------
-describe('.filter(callback)', () => {
-
-  const base = RecordSchema.create(NumberSchema.create())
-  const schema = base.filter((value) => (value % 10 === 0))
-
-  it('returns a new instance of the schema.', () => {
-    expect(schema).toBeInstanceOf(RecordSchema)
-    expect(schema).not.toBe(base)
-  })
-
-  it('returns when `callback` returns `true` for all `input` entries.', () => {
-    const input = { a: 10, b: 20, c: 30 }
-    const expected = { a: 10, b: 20, c: 30 }
-    expectValidation(schema, input).toReturnNew(expected)
-  })
-
-  it('filters when `callback` returns `false` for some `input` entries.', () => {
-    const input = { a: 10, b: 22, c: 30 }
-    const expected = { a: 10, c: 30 }
-    expectValidation(schema, input).toReturnNew(expected)
-  })
-
-  it('filters when `callback` returns `false` for all `input` entries.', () => {
-    const input = { a: 11, b: 22, c: 33 }
-    const expected: Record<string, number> = {}
-    expectValidation(schema, input).toReturnNew(expected)
   })
 })
 

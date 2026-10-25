@@ -1,71 +1,173 @@
 // IMPORTS
+import type { GenericConfig, GenericPipeline, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import { GenericSchema } from '@/schemas/GenericSchema'
-import { OptionalSchema } from '@/schemas/OptionalSchema'
-import { NullableSchema } from '@/schemas/NullableSchema'
-import { UnionSchema } from '@/schemas/UnionSchema'
-import { FallbackSchema } from '@/schemas/FallbackSchema'
-import { TransformSchema } from '@/schemas/TransformSchema'
+import { type Unset, UNSET } from '@/utils/unset'
+
+// INTERFACE
+interface EnumConfig<TValues extends string | number> extends GenericConfig<TValues> {
+  values: ReadonlyArray<TValues>
+}
 
 // CLASS
-export class EnumSchema<T extends string | number = never> implements GenericSchema<T> {
+export class EnumSchema<TValues extends string | number, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
+  extends GenericSchema<TValues, TOptional, TNullable, TDefault> {
 
-  // PROPERTIES
-  private readonly _values: ReadonlyArray<T>
+  // CONFIG
+  protected readonly _values: ReadonlyArray<TValues>
+  protected readonly _optional: boolean
+  protected readonly _nullable: boolean
+  protected readonly _default: TValues | Unset
+  protected readonly _fallback: TValues | Unset
+
+  // PIPELINE
+  protected readonly _parse: ParseFunction | Unset
+  protected readonly _prepare: Array<PrepareFunction<TValues>>
+  protected readonly _tests: TestObject<TValues>
+  protected readonly _refine: Array<RefineFunction<TValues>>
 
   // CONSTRUCTOR
-  private constructor(...values: ReadonlyArray<T>) {
-    this._values = values
+  private constructor(config: EnumConfig<TValues>, pipeline: GenericPipeline<TValues>) {
+    super()
+    this._values = config.values
+    this._optional = config.optional
+    this._nullable = config.nullable
+    this._default = config.default
+    this._fallback = config.fallback
+    this._parse = pipeline.parse
+    this._prepare = pipeline.prepare
+    this._tests = pipeline.tests
+    this._refine = pipeline.refine
     if (this._values.length === 0) {
       throw new Error('Must provide at least one literal value.')
     }
   }
 
-  // CONSTRUCTOR
-  public static create<T extends string | number = never>(...values: ReadonlyArray<T>): EnumSchema<T> {
-    return new EnumSchema(...values)
+  // --------------------------------------------------------------------------
+
+  // FACTORY
+  public static create<TValues extends string | number>(...values: ReadonlyArray<TValues>): EnumSchema<TValues, false, false, false> {
+    return new EnumSchema({
+      values: values,
+      optional: false,
+      nullable: false,
+      default: UNSET,
+      fallback: UNSET,
+    }, {
+      parse: UNSET,
+      prepare: [],
+      tests: {},
+      refine: [],
+    })
   }
 
-  // METHOD
-  public validate(input: unknown): T {
+  // --------------------------------------------------------------------------
 
-    if (!this._values.includes(input as T)) {
-      const valuesStr = this._values.map((v) => JSON.stringify(v)).join(', ')
-      throw new ValidationError(input, `The value must be one of ${valuesStr}.`)
+  // UTILITY
+  private get _configuration(): EnumConfig<TValues> {
+    return {
+      values: this._values,
+      optional: this._optional,
+      nullable: this._nullable,
+      default: this._default,
+      fallback: this._fallback,
     }
-
-    return input as T
-
   }
 
-  // METHOD
-  public isValid(input: unknown): boolean {
-    return GenericSchema.isValid(this, input)
+  // UTILITY
+  private get _pipeline(): GenericPipeline<TValues> {
+    return {
+      parse: this._parse,
+      prepare: this._prepare,
+      tests: this._tests,
+      refine: this._refine,
+    }
   }
 
-  // METHOD
-  public optional(): OptionalSchema<T, undefined> {
-    return OptionalSchema.create(this)
+  // UPDATER
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<EnumConfig<TValues>>): EnumSchema<TValues, TOptional, TNullable, TDefault> {
+    return new EnumSchema({
+      ...this._configuration,
+      ...configuration,
+    }, this._pipeline)
   }
 
-  // METHOD
-  public nullable(): NullableSchema<T, null> {
-    return NullableSchema.create(this)
+  // UPDATER
+  private _updateTests(tests: TestObject<TValues>): EnumSchema<TValues, TOptional, TNullable, TDefault> {
+    return new EnumSchema(this._configuration, {
+      ...this._pipeline,
+      tests: {
+        ...this._tests,
+        ...tests,
+      },
+    })
   }
 
-  // METHOD
-  public or<NT>(schema: GenericSchema<NT>): UnionSchema<T | NT> {
-    return UnionSchema.create(this as GenericSchema<T>, schema)
+  // UPDATER
+  private _updatePipeline(pipeline: Partial<GenericPipeline<TValues>>): EnumSchema<TValues, TOptional, TNullable, TDefault> {
+    return new EnumSchema(this._configuration, {
+      ...this._pipeline,
+      ...pipeline,
+    })
   }
 
-  // METHOD
-  public fallback(value: T): FallbackSchema<T> {
-    return FallbackSchema.create(this, value)
+  // --------------------------------------------------------------------------
+
+  // VALIDATOR
+  public validate(input: unknown): Nullish<TValues, TOptional, TNullable, TDefault> {
+    return this._runSchema((current) => {
+
+      if (!this._values.includes(current as TValues)) {
+        throw new ValidationError(input, 'The value must match one of the allowed literal values.')
+      }
+
+      return current as TValues
+
+    }, input)
   }
 
-  // METHOD
-  public transform<V>(fn: (value: T) => V): TransformSchema<T, V> {
-    return TransformSchema.create(this, fn)
+  // --------------------------------------------------------------------------
+
+  // CONFIG
+  public optional(): EnumSchema<TValues, true, TNullable, TDefault> {
+    return this._updateConfig({ optional: true })
+  }
+
+  // CONFIG
+  public nullable(): EnumSchema<TValues, TOptional, true, TDefault> {
+    return this._updateConfig({ nullable: true })
+  }
+
+  // CONFIG
+  public default(value: TValues): EnumSchema<TValues, TOptional, TNullable, true> {
+    return this._updateConfig({ default: value })
+  }
+
+  // CONFIG
+  public fallback(value: TValues): EnumSchema<TValues, TOptional, TNullable, TDefault> {
+    return this._updateConfig({ fallback: value })
+  }
+
+  // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public parse(fn: ParseFunction): EnumSchema<TValues, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ parse: fn })
+  }
+
+  // PIPELINE
+  public prepare(fn: PrepareFunction<TValues>): EnumSchema<TValues, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ prepare: [...this._prepare, fn] })
+  }
+
+  // PIPELINE
+  public test(id: string, test: TestFunction<TValues>): EnumSchema<TValues, TOptional, TNullable, TDefault> {
+    return this._updateTests({ [`_${id}`]: test })
+  }
+
+  // PIPELINE
+  public refine(fn: RefineFunction<TValues>): EnumSchema<TValues, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ refine: [...this._refine, fn] })
   }
 
 }

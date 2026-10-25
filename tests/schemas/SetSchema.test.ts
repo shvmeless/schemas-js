@@ -91,24 +91,24 @@ describe('.prune()', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
-describe('.size(length)', () => {
-  describe('when `length` is `NaN`', () => {
+describe('.size(size)', () => {
+  describe('when `size` is `NaN`', () => {
     it('throws when the schema is being built.', () => {
       expectError(() => {
         SetSchema.create(StringSchema.create()).size(NaN)
-      }).toHaveMessage('The length value must be zero or positive.')
+      }).toHaveMessage('The size value must be zero or positive.')
     })
   })
 
-  describe('when `length` is a negative number', () => {
+  describe('when `size` is a negative number', () => {
     it('throws when the schema is being built.', () => {
       expectError(() => {
         SetSchema.create(StringSchema.create()).size(-8)
-      }).toHaveMessage('The length value must be zero or positive.')
+      }).toHaveMessage('The size value must be zero or positive.')
     })
   })
 
-  describe('when `length` is zero', () => {
+  describe('when `size` is zero', () => {
 
     const base = SetSchema.create(StringSchema.create())
     const schema = base.size(0)
@@ -130,7 +130,7 @@ describe('.size(length)', () => {
     })
   })
 
-  describe('when `length` is a positive number', () => {
+  describe('when `size` is a positive number', () => {
 
     const base = SetSchema.create(StringSchema.create())
     const schema = base.size(5)
@@ -159,24 +159,24 @@ describe('.size(length)', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
-describe('.min(length)', () => {
-  describe('when `length` is `NaN`', () => {
+describe('.min(size)', () => {
+  describe('when `size` is `NaN`', () => {
     it('throws when the schema is being built.', () => {
       expectError(() => {
         SetSchema.create(StringSchema.create()).min(NaN)
-      }).toHaveMessage('The length value must be zero or positive.')
+      }).toHaveMessage('The size value must be zero or positive.')
     })
   })
 
-  describe('when `length` is a negative number', () => {
+  describe('when `size` is a negative number', () => {
     it('throws when the schema is being built.', () => {
       expectError(() => {
         SetSchema.create(StringSchema.create()).min(-8)
-      }).toHaveMessage('The length value must be zero or positive.')
+      }).toHaveMessage('The size value must be zero or positive.')
     })
   })
 
-  describe('when `length` is zero', () => {
+  describe('when `size` is zero', () => {
 
     const base = SetSchema.create(StringSchema.create())
     const schema = base.min(0)
@@ -199,7 +199,7 @@ describe('.min(length)', () => {
     })
   })
 
-  describe('when `length` is a positive number', () => {
+  describe('when `size` is a positive number', () => {
 
     const base = SetSchema.create(StringSchema.create())
     const schema = base.min(5)
@@ -229,24 +229,24 @@ describe('.min(length)', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
-describe('.max(length)', () => {
-  describe('when `length` is `NaN`', () => {
+describe('.max(size)', () => {
+  describe('when `size` is `NaN`', () => {
     it('throws when the schema is being built.', () => {
       expectError(() => {
         SetSchema.create(StringSchema.create()).max(NaN)
-      }).toHaveMessage('The length value must be zero or positive.')
+      }).toHaveMessage('The size value must be zero or positive.')
     })
   })
 
-  describe('when `length` is a negative number', () => {
+  describe('when `size` is a negative number', () => {
     it('throws when the schema is being built.', () => {
       expectError(() => {
         SetSchema.create(StringSchema.create()).max(-8)
-      }).toHaveMessage('The length value must be zero or positive.')
+      }).toHaveMessage('The size value must be zero or positive.')
     })
   })
 
-  describe('when `length` is zero', () => {
+  describe('when `size` is zero', () => {
 
     const base = SetSchema.create(StringSchema.create())
     const schema = base.max(0)
@@ -268,7 +268,7 @@ describe('.max(length)', () => {
     })
   })
 
-  describe('when `length` is a positive number', () => {
+  describe('when `size` is a positive number', () => {
 
     const base = SetSchema.create(StringSchema.create())
     const schema = base.max(5)
@@ -294,36 +294,6 @@ describe('.max(length)', () => {
       const input = new Set(['A', 'B', 'C', 'D', 'E', 'F', 'G'])
       expectValidation(schema, input).toThrow('The value must be at most 5 elements long.')
     })
-  })
-})
-
-// METHOD ---------------------------------------------------------------------
-describe('.filter(callback)', () => {
-
-  const base = SetSchema.create(StringSchema.create())
-  const schema = base.filter((value) => (value !== ''))
-
-  it('returns a new instance of the schema.', () => {
-    expect(schema).toBeInstanceOf(SetSchema)
-    expect(schema).not.toBe(base)
-  })
-
-  it('returns when `callback` returns `true` for all `input` elements.', () => {
-    const input = new Set(['A', 'B', 'C'])
-    const expected = new Set(['A', 'B', 'C'])
-    expectValidation(schema, input).toReturnNew(expected)
-  })
-
-  it('filters when `callback` returns `false` for some `input` elements.', () => {
-    const input = new Set(['A', '', 'C'])
-    const expected = new Set(['A', 'C'])
-    expectValidation(schema, input).toReturnNew(expected)
-  })
-
-  it('filters when `callback` returns `false` for all `input` elements.', () => {
-    const input = new Set(['', '', ''])
-    const expected: Set<string> = new Set([])
-    expectValidation(schema, input).toReturnNew(expected)
   })
 })
 

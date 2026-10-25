@@ -1,0 +1,72 @@
+// IMPORTS
+import { describe, it, expect } from 'vitest'
+import { EnumSchema } from '@/schemas/EnumSchema'
+import { DataTypeGenerator } from '@tests/helpers/generator'
+import { expectValidation, expectError } from '@tests/helpers/expect'
+
+// METHOD ---------------------------------------------------------------------
+describe('.create(...literals)', () => {
+
+  it('throws when no `literals` are provided.', () => {
+    expectError(() => {
+      EnumSchema.create()
+    }).toHaveMessage('Must provide at least one literal value.')
+  })
+
+  it('initializes with `Infinity` values', () => {
+    const schema = EnumSchema.create(-Infinity, Infinity)
+    expect(schema).toBeInstanceOf(EnumSchema)
+    expectValidation(schema, -Infinity).toReturn(-Infinity)
+    expectValidation(schema, Infinity).toReturn(Infinity)
+  })
+
+  it('initializes with `0` values', () => {
+    const schema = EnumSchema.create(-0, 0)
+    expect(schema).toBeInstanceOf(EnumSchema)
+    expectValidation(schema, -0).toReturn(-0)
+    expectValidation(schema, 0).toReturn(0)
+  })
+
+  it('initializes with decimal number values', () => {
+    const schema = EnumSchema.create(-0.1, 0.1)
+    expect(schema).toBeInstanceOf(EnumSchema)
+    expectValidation(schema, -0.1).toReturn(-0.1)
+    expectValidation(schema, 0.1).toReturn(0.1)
+  })
+
+  it('initializes with integer number values', () => {
+    const schema = EnumSchema.create(-100, 100)
+    expect(schema).toBeInstanceOf(EnumSchema)
+    expectValidation(schema, -100).toReturn(-100)
+    expectValidation(schema, 100).toReturn(100)
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
+
+describe('.validate(input)', () => {
+
+  const schema = EnumSchema.create(-1000, 0, 1000)
+
+  it('throws when `input` is not a number.', () => {
+    DataTypeGenerator.skip('numbers').forEach((value) => {
+      expectValidation(schema, value).toThrow('The value must match one of the allowed literal values.')
+    })
+  })
+
+  it('returns when `input` matches one of the `literals`.', () => {
+    expectValidation(schema, -1000).toReturn(-1000)
+    expectValidation(schema, 0).toReturn(0)
+    expectValidation(schema, 1000).toReturn(1000)
+  })
+
+  it('throws when `input` does not match any of the `literals`.', () => {
+    expectValidation(schema, NaN).toThrow('The value must match one of the allowed literal values.')
+    expectValidation(schema, -Infinity).toThrow('The value must match one of the allowed literal values.')
+    expectValidation(schema, -100).toThrow('The value must match one of the allowed literal values.')
+    expectValidation(schema, -0.1).toThrow('The value must match one of the allowed literal values.')
+    expectValidation(schema, 0.1).toThrow('The value must match one of the allowed literal values.')
+    expectValidation(schema, 100).toThrow('The value must match one of the allowed literal values.')
+    expectValidation(schema, Infinity).toThrow('The value must match one of the allowed literal values.')
+  })
+})

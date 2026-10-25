@@ -1,38 +1,38 @@
 // TYPE
-export type ValidationErrorIndex = Map<unknown, {
+export type ValidationErrorLocation = Map<unknown, {
   value: unknown
   message: string
-  index: ValidationErrorIndex | null
+  location: ValidationErrorLocation | null
 }>
 
 // CLASS
-class ValidationErrorPreparator {
+class ValidationErrorCollector {
 
   // PROPERTIES
-  private readonly index: ValidationErrorIndex
+  private readonly location: ValidationErrorLocation
 
   // CONSTRUCTOR
   public constructor() {
-    this.index = new Map()
+    this.location = new Map()
   }
 
   // METHOD
   public get size(): number {
-    return this.index.size
+    return this.location.size
   }
 
   // METHOD
-  public add(index: unknown, error: ValidationError): void {
-    this.index.set(index, {
+  public add(location: unknown, error: ValidationError): void {
+    this.location.set(location, {
       value: error.value,
       message: error.message,
-      index: error.index,
+      location: error.location,
     })
   }
 
   // METHOD
   public throw(input: unknown, message: string): ValidationError {
-    throw new ValidationError(input, message, this.index)
+    throw new ValidationError(input, message, this.location)
   }
 
 }
@@ -41,19 +41,22 @@ class ValidationErrorPreparator {
 export class ValidationError extends Error {
 
   // PROPERTIES
+  public override readonly name = 'ValidationError'
+
+  // PROPERTIES
   public readonly value: unknown
-  public readonly index: ValidationErrorIndex | null
+  public readonly location: ValidationErrorLocation | null
 
   // CONSTRUCTOR
-  public constructor(value: unknown, message: string, index?: ValidationErrorIndex | null) {
+  public constructor(value: unknown, message: string, location?: ValidationErrorLocation | null) {
     super(message)
     this.value = value
-    this.index = index ?? null
+    this.location = location ?? null
   }
 
   // STATIC
-  public static prepare(): ValidationErrorPreparator {
-    return new ValidationErrorPreparator()
+  public static prepare(): ValidationErrorCollector {
+    return new ValidationErrorCollector()
   }
 
 }

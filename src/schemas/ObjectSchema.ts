@@ -1,107 +1,238 @@
 // IMPORTS
+import type { GenericConfig, GenericPipeline, GenericSchemaLike, InferSchema, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import { GenericSchema } from '@/schemas/GenericSchema'
-import { FallbackSchema } from '@/schemas/FallbackSchema'
-import { NullableSchema } from '@/schemas/NullableSchema'
-import { OptionalSchema } from '@/schemas/OptionalSchema'
-import { TransformSchema } from '@/schemas/TransformSchema'
-import { UnionSchema } from '@/schemas/UnionSchema'
+import { type Unset, UNSET } from '@/utils/unset'
+
+// TYPE
+type InferShape<TShape> = {
+  [K in keyof TShape]: InferSchema<TShape[K]>
+}
+
+// TYPE
+type ShapeLike<TObject> = {
+  [K in keyof TObject]: GenericSchemaLike
+}
+
+// INTERFACE
+interface ObjectConfig<TObject> extends GenericConfig<TObject> {
+  shape: ShapeLike<TObject>
+  strip: boolean
+}
 
 // CLASS
-export class ObjectSchema<T> implements GenericSchema<T> {
+export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
+  extends GenericSchema<TObject, TOptional, TNullable, TDefault> {
 
-  // PROPERTIES
-  private readonly _schema: { [K in keyof T]: GenericSchema<T[K]> }
-  private readonly _strip: boolean
+  // CONFIG
+  protected readonly _shape: ShapeLike<TObject>
+  protected readonly _strip: boolean
+  protected readonly _optional: boolean
+  protected readonly _nullable: boolean
+  protected readonly _default: TObject | Unset
+  protected readonly _fallback: TObject | Unset
+
+  // PIPELINE
+  protected readonly _parse: ParseFunction | Unset
+  protected readonly _prepare: Array<PrepareFunction<TObject>>
+  protected readonly _tests: TestObject<TObject>
+  protected readonly _refine: Array<RefineFunction<TObject>>
 
   // CONSTRUCTOR
-  private constructor(schema: { [K in keyof T]: GenericSchema<T[K]> }, strip: boolean) {
-    this._schema = schema
-    this._strip = strip
+  private constructor(config: ObjectConfig<TObject>, pipeline: GenericPipeline<TObject>) {
+    super()
+    this._shape = { ...config.shape }
+    this._strip = config.strip
+    this._optional = config.optional
+    this._nullable = config.nullable
+    this._default = config.default
+    this._fallback = config.fallback
+    this._parse = pipeline.parse
+    this._prepare = pipeline.prepare
+    this._tests = pipeline.tests
+    this._refine = pipeline.refine
   }
+
+  // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<T>(schema: { [K in keyof T]: GenericSchema<T[K]> }): ObjectSchema<T> {
-    return new ObjectSchema(schema, false)
+  public static create<TShape extends Record<string, GenericSchemaLike>>(shape: TShape): ObjectSchema<InferShape<TShape>, false, false, false> {
+    return new ObjectSchema<InferShape<TShape>, false, false, false>({
+      shape: shape,
+      strip: false,
+      optional: false,
+      nullable: false,
+      default: UNSET,
+      fallback: UNSET,
+    }, {
+      parse: UNSET,
+      prepare: [],
+      tests: {},
+      refine: [],
+    })
   }
 
-  // METHOD
-  public validate(input: unknown): T {
+  // --------------------------------------------------------------------------
 
-    if (typeof input !== 'object' || input === null || Array.isArray(input) || (Object.getPrototypeOf(input) !== Object.prototype && Object.getPrototypeOf(input) !== null)) {
-      throw new ValidationError(input, 'The value must be an object.')
+  // UTILITY
+  private get _configuration(): ObjectConfig<TObject> {
+    return {
+      shape: this._shape,
+      strip: this._strip,
+      optional: this._optional,
+      nullable: this._nullable,
+      default: this._default,
+      fallback: this._fallback,
     }
+  }
 
-    const object = input as Record<string, unknown>
-    const result: Record<string, unknown> = {}
-    const errors = ValidationError.prepare()
+  // UTILITY
+  private get _pipeline(): GenericPipeline<TObject> {
+    return {
+      parse: this._parse,
+      prepare: this._prepare,
+      tests: this._tests,
+      refine: this._refine,
+    }
+  }
 
-    const keys = new Set([...Object.keys(this._schema), ...Object.keys(input)])
-    for (const key of keys) {
-      try {
+  // UPDATER
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<ObjectConfig<TObject>>): ObjectSchema<TObject, TOptional, TNullable, TDefault> {
+    return new ObjectSchema({
+      ...this._configuration,
+      ...configuration,
+    }, this._pipeline)
+  }
 
-        const value = object[key]
-        const schema = this._schema[key as keyof T]
+  // UPDATER
+  private _updateTests(tests: TestObject<TObject>): ObjectSchema<TObject, TOptional, TNullable, TDefault> {
+    return new ObjectSchema(this._configuration, {
+      ...this._pipeline,
+      tests: {
+        ...this._tests,
+        ...tests,
+      },
+    })
+  }
 
-        if (schema === undefined) {
-          if (this._strip) continue
-          throw new ValidationError(value, 'Unexpected property.')
-        }
+  // UPDATER
+  private _updatePipeline(pipeline: Partial<GenericPipeline<TObject>>): ObjectSchema<TObject, TOptional, TNullable, TDefault> {
+    return new ObjectSchema(this._configuration, {
+      ...this._pipeline,
+      ...pipeline,
+    })
+  }
 
-        result[key] = schema.validate(value)
+  // --------------------------------------------------------------------------
 
-      } catch (error) {
-        if (error instanceof ValidationError) errors.add(key, error)
-        else throw error
+  // VALIDATOR
+  public validate(input: unknown): Nullish<TObject, TOptional, TNullable, TDefault> {
+    return this._runSchema((current) => {
+
+      if (typeof current !== 'object' || current === null || Array.isArray(current) || (Object.getPrototypeOf(current) !== Object.prototype && Object.getPrototypeOf(current) !== null)) {
+        throw new ValidationError(input, 'The value must be an object.')
       }
-    }
 
-    if (errors.size > 0) {
-      const message = (Object.keys(input as object).length !== Object.keys(this._schema).length)
-        ? (Object.keys(input as object).length < Object.keys(this._schema).length)
-            ? 'The object is missing one or more required properties.'
-            : 'The object contains one or more unexpected properties.'
-        : 'At least one property does not match the given schema.'
-      errors.throw(input, message)
-    }
+      const resolved = current as Record<string, unknown>
+      const result: Record<string, unknown> = {}
+      const errors = ValidationError.prepare()
 
-    return result as T
+      const keys = new Set([...Object.keys(this._shape), ...Object.keys(resolved)])
+      let missing = false
+      let unexpected = false
+      for (const key of keys) {
+        const hasShape = Object.hasOwn(this._shape, key)
+        const hasValue = Object.hasOwn(resolved, key)
+        try {
 
+          const value = hasValue ? resolved[key] : undefined
+          const shape = hasShape ? this._shape[key as keyof TObject] : undefined
+
+          if (shape === undefined) {
+            if (this._strip) continue
+            throw new ValidationError(value, 'Unexpected property.')
+          }
+
+          const output = shape.validate(value)
+          if (output === undefined) continue
+
+          Object.defineProperty(result, key, {
+            value: output,
+            enumerable: true,
+            writable: true,
+            configurable: true,
+          })
+
+        } catch (error) {
+          if (error instanceof ValidationError) {
+            errors.add(key, error)
+            if (!hasShape) unexpected = true
+            else if (!hasValue) missing = true
+          } else throw error
+        }
+      }
+
+      if (errors.size > 0) {
+        const message = missing
+          ? 'The object is missing one or more required properties.'
+          : unexpected
+            ? 'The object contains one or more unexpected properties.'
+            : 'At least one property does not match the given schema.'
+        errors.throw(input, message)
+      }
+
+      return result as TObject
+
+    }, input)
   }
 
-  // METHOD
-  public isValid(input: unknown): boolean {
-    return GenericSchema.isValid(this, input)
+  // --------------------------------------------------------------------------
+
+  // CONFIG
+  public strip(): ObjectSchema<TObject, TOptional, TNullable, TDefault> {
+    return this._updateConfig({ strip: true })
   }
 
-  // METHOD
-  public strip(): ObjectSchema<T> {
-    return new ObjectSchema(this._schema, true)
+  // CONFIG
+  public optional(): ObjectSchema<TObject, true, TNullable, TDefault> {
+    return this._updateConfig({ optional: true })
   }
 
-  // METHOD
-  public optional(): OptionalSchema<T, undefined> {
-    return OptionalSchema.create(this)
+  // CONFIG
+  public nullable(): ObjectSchema<TObject, TOptional, true, TDefault> {
+    return this._updateConfig({ nullable: true })
   }
 
-  // METHOD
-  public nullable(): NullableSchema<T, null> {
-    return NullableSchema.create(this)
+  // CONFIG
+  public default(value: TObject): ObjectSchema<TObject, TOptional, TNullable, true> {
+    return this._updateConfig({ default: value })
   }
 
-  // METHOD
-  public or<NT>(schema: GenericSchema<NT>): UnionSchema<T | NT> {
-    return UnionSchema.create(this as GenericSchema<T>, schema)
+  // CONFIG
+  public fallback(value: TObject): ObjectSchema<TObject, TOptional, TNullable, TDefault> {
+    return this._updateConfig({ fallback: value })
   }
 
-  // METHOD
-  public fallback(value: T): FallbackSchema<T> {
-    return FallbackSchema.create(this, value)
+  // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public parse(fn: ParseFunction): ObjectSchema<TObject, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ parse: fn })
   }
 
-  // METHOD
-  public transform<V>(fn: (value: T) => V): TransformSchema<T, V> {
-    return TransformSchema.create(this, fn)
+  // PIPELINE
+  public prepare(fn: PrepareFunction<TObject>): ObjectSchema<TObject, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ prepare: [...this._prepare, fn] })
+  }
+
+  // PIPELINE
+  public test(id: string, test: TestFunction<TObject>): ObjectSchema<TObject, TOptional, TNullable, TDefault> {
+    return this._updateTests({ [`_${id}`]: test })
+  }
+
+  // PIPELINE
+  public refine(fn: RefineFunction<TObject>): ObjectSchema<TObject, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ refine: [...this._refine, fn] })
   }
 
 }

@@ -51,6 +51,17 @@ describe('.validate(input)', () => {
       }],
     ])
   })
+
+  it('throws when the `input` is a sparse array.', () => {
+    // eslint-disable-next-line no-sparse-arrays
+    const input = ['a',,'c']
+    expectValidation(schema, input).toThrow('At least one element does not match the given schema.', [
+      [1, {
+        value: undefined,
+        message: 'The value must be a string.',
+      }],
+    ])
+  })
 })
 
 // METHOD ---------------------------------------------------------------------
@@ -293,36 +304,6 @@ describe('.max(length)', () => {
       const input = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
       expectValidation(schema, input).toThrow('The value must be at most 5 elements long.')
     })
-  })
-})
-
-// METHOD ---------------------------------------------------------------------
-describe('.filter(callback)', () => {
-
-  const base = ArraySchema.create(StringSchema.create())
-  const schema = base.filter((value) => (value !== ''))
-
-  it('returns a new instance of the schema.', () => {
-    expect(schema).toBeInstanceOf(ArraySchema)
-    expect(schema).not.toBe(base)
-  })
-
-  it('returns when `callback` returns `true` for all `input` elements.', () => {
-    const input = ['A', 'B', 'C']
-    const expected = ['A', 'B', 'C']
-    expectValidation(schema, input).toReturnNew(expected)
-  })
-
-  it('filters when `callback` returns `false` for some `input` elements.', () => {
-    const input = ['A', '', 'C']
-    const expected = ['A', 'C']
-    expectValidation(schema, input).toReturnNew(expected)
-  })
-
-  it('filters when `callback` returns `false` for all `input` elements.', () => {
-    const input = ['', '', '']
-    const expected: Array<string> = []
-    expectValidation(schema, input).toReturnNew(expected)
   })
 })
 

@@ -1,106 +1,225 @@
 // IMPORTS
+import type { GenericConfig, GenericPipeline, GenericSchemaLike, InferSchema, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
-import { GenericSchema } from '@/schemas/GenericSchema'
-import { OptionalSchema } from '@/schemas/OptionalSchema'
-import { NullableSchema } from '@/schemas/NullableSchema'
-import { UnionSchema } from '@/schemas/UnionSchema'
-import { FallbackSchema } from '@/schemas/FallbackSchema'
-import { TransformSchema } from '@/schemas/TransformSchema'
+import { type Unset, UNSET } from '@/utils/unset'
+
+// TYPE
+type InferShape<TShape extends ReadonlyArray<GenericSchemaLike>> = {
+  -readonly [K in keyof TShape]: InferSchema<TShape[K]>
+}
+
+// INTERFACE
+interface TupleConfig<TTuple extends ReadonlyArray<unknown>> extends GenericConfig<TTuple> {
+  shape: ReadonlyArray<GenericSchemaLike>
+  strip: boolean
+}
 
 // CLASS
-export class TupleSchema<T extends ReadonlyArray<unknown>> implements GenericSchema<T> {
+export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>
+  extends GenericSchema<TTuple, TOptional, TNullable, TDefault> {
 
-  // PROPERTIES
-  private readonly _shape: { [K in keyof T]: GenericSchema<T[K]> }
-  private readonly _strip: boolean
+  // CONFIG
+  protected readonly _shape: ReadonlyArray<GenericSchemaLike>
+  protected readonly _strip: boolean
+  protected readonly _optional: boolean
+  protected readonly _nullable: boolean
+  protected readonly _default: TTuple | Unset
+  protected readonly _fallback: TTuple | Unset
+
+  // PIPELINE
+  protected readonly _parse: ParseFunction | Unset
+  protected readonly _prepare: Array<PrepareFunction<TTuple>>
+  protected readonly _tests: TestObject<TTuple>
+  protected readonly _refine: Array<RefineFunction<TTuple>>
 
   // CONSTRUCTOR
-  private constructor(shape: { [K in keyof T]: GenericSchema<T[K]> }, strip: boolean) {
-    this._shape = [...shape] as unknown as { [K in keyof T]: GenericSchema<T[K]> }
-    this._strip = strip
+  private constructor(config: TupleConfig<TTuple>, pipeline: GenericPipeline<TTuple>) {
+    super()
+    this._shape = config.shape
+    this._strip = config.strip
+    this._optional = config.optional
+    this._nullable = config.nullable
+    this._default = config.default
+    this._fallback = config.fallback
+    this._parse = pipeline.parse
+    this._prepare = pipeline.prepare
+    this._tests = pipeline.tests
+    this._refine = pipeline.refine
   }
 
-  // CONSTRUCTOR
-  public static create<T extends ReadonlyArray<unknown>>(shape: { [K in keyof T]: GenericSchema<T[K]> }): TupleSchema<T> {
-    return new TupleSchema(shape, false)
+  // --------------------------------------------------------------------------
+
+  // FACTORY
+  public static create<const TShape extends ReadonlyArray<GenericSchemaLike>>(shape: TShape): TupleSchema<InferShape<TShape>, false, false, false> {
+    return new TupleSchema<InferShape<TShape>, false, false, false>({
+      shape: shape,
+      strip: false,
+      optional: false,
+      nullable: false,
+      default: UNSET,
+      fallback: UNSET,
+    }, {
+      parse: UNSET,
+      prepare: [],
+      tests: {},
+      refine: [],
+    })
   }
 
-  // METHOD
-  public validate(input: unknown): T {
+  // --------------------------------------------------------------------------
 
-    if (!Array.isArray(input)) {
-      throw new ValidationError(input, 'The value must be an array.')
+  // UTILITY
+  private get _configuration(): TupleConfig<TTuple> {
+    return {
+      shape: this._shape,
+      strip: this._strip,
+      optional: this._optional,
+      nullable: this._nullable,
+      default: this._default,
+      fallback: this._fallback,
     }
+  }
 
-    const result: Array<unknown> = []
-    const errors = ValidationError.prepare()
+  // UTILITY
+  private get _pipeline(): GenericPipeline<TTuple> {
+    return {
+      parse: this._parse,
+      prepare: this._prepare,
+      tests: this._tests,
+      refine: this._refine,
+    }
+  }
 
-    const longest = Math.max(this._shape.length, input.length)
-    for (let index = 0; index < longest; index++) {
-      try {
+  // UPDATER
+  private _updateConfig<TOptional extends boolean, TNullable extends boolean, TDefault extends boolean>(configuration: Partial<TupleConfig<TTuple>>): TupleSchema<TTuple, TOptional, TNullable, TDefault> {
+    return new TupleSchema({
+      ...this._configuration,
+      ...configuration,
+    }, this._pipeline)
+  }
 
-        const value = input[index] as unknown
-        const shape = this._shape[index]
+  // UPDATER
+  private _updateTests(tests: TestObject<TTuple>): TupleSchema<TTuple, TOptional, TNullable, TDefault> {
+    return new TupleSchema(this._configuration, {
+      ...this._pipeline,
+      tests: {
+        ...this._tests,
+        ...tests,
+      },
+    })
+  }
 
-        if (shape === undefined) {
-          if (this._strip) continue
-          throw new ValidationError(value, 'Unexpected element.')
-        }
+  // UPDATER
+  private _updatePipeline(pipeline: Partial<GenericPipeline<TTuple>>): TupleSchema<TTuple, TOptional, TNullable, TDefault> {
+    return new TupleSchema(this._configuration, {
+      ...this._pipeline,
+      ...pipeline,
+    })
+  }
 
-        result[index] = shape.validate(value)
+  // --------------------------------------------------------------------------
 
-      } catch (error) {
-        if (error instanceof ValidationError) errors.add(index, error)
-        else throw error
+  // VALIDATOR
+  public validate(input: unknown): Nullish<TTuple, TOptional, TNullable, TDefault> {
+    return this._runSchema((current) => {
+
+      if (!Array.isArray(current)) {
+        throw new ValidationError(input, 'The value must be an array.')
       }
-    }
 
-    if (errors.size > 0) {
-      const message = (input.length !== this._shape.length)
-        ? (input.length < this._shape.length)
-            ? 'The tuple is missing one or more required elements.'
-            : 'The tuple contains one or more unexpected elements.'
-        : 'At least one element does not match the given schema.'
-      errors.throw(input, message)
-    }
+      const resolved = current as Array<unknown>
+      const result: Array<unknown> = []
+      const errors = ValidationError.prepare()
 
-    return result as unknown as T
+      const longest = Math.max(this._shape.length, resolved.length)
+      let missing = false
+      let unexpected = false
+      for (let index = 0; index < longest; index++) {
+        const hasShape = Object.hasOwn(this._shape, index)
+        const hasValue = Object.hasOwn(resolved, index)
+        try {
 
+          const value = resolved[index]
+          const shape = hasShape ? this._shape[index] : undefined
+
+          if (shape === undefined) {
+            if (this._strip) continue
+            throw new ValidationError(value, 'Unexpected element.')
+          }
+
+          result[index] = shape.validate(value)
+
+        } catch (error) {
+          if (error instanceof ValidationError) {
+            errors.add(index, error)
+            if (!hasShape) unexpected = true
+            else if (!hasValue) missing = true
+          } else throw error
+        }
+      }
+
+      if (errors.size > 0) {
+        const message = missing
+          ? 'The tuple is missing one or more required elements.'
+          : unexpected
+            ? 'The tuple contains one or more unexpected elements.'
+            : 'At least one element does not match the given schema.'
+        errors.throw(input, message)
+      }
+
+      return result as unknown as TTuple
+
+    }, input)
   }
 
-  // METHOD
-  public isValid(input: unknown): boolean {
-    return GenericSchema.isValid(this, input)
+  // --------------------------------------------------------------------------
+
+  // TEST
+  public strip(): TupleSchema<TTuple, TOptional, TNullable, TDefault> {
+    return this._updateConfig({ strip: true })
   }
 
-  // METHOD
-  public strip(): TupleSchema<T> {
-    return new TupleSchema(this._shape, true)
+  // CONFIG
+  public optional(): TupleSchema<TTuple, true, TNullable, TDefault> {
+    return this._updateConfig({ optional: true })
   }
 
-  // METHOD
-  public optional(): OptionalSchema<T, undefined> {
-    return OptionalSchema.create(this)
+  // CONFIG
+  public nullable(): TupleSchema<TTuple, TOptional, true, TDefault> {
+    return this._updateConfig({ nullable: true })
   }
 
-  // METHOD
-  public nullable(): NullableSchema<T, null> {
-    return NullableSchema.create(this)
+  // CONFIG
+  public default(value: TTuple): TupleSchema<TTuple, TOptional, TNullable, true> {
+    return this._updateConfig({ default: value })
   }
 
-  // METHOD
-  public or<NT>(schema: GenericSchema<NT>): UnionSchema<T | NT> {
-    return UnionSchema.create(this as GenericSchema<T>, schema)
+  // CONFIG
+  public fallback(value: TTuple): TupleSchema<TTuple, TOptional, TNullable, TDefault> {
+    return this._updateConfig({ fallback: value })
   }
 
-  // METHOD
-  public fallback(value: T): FallbackSchema<T> {
-    return FallbackSchema.create(this, value)
+  // --------------------------------------------------------------------------
+
+  // PIPELINE
+  public parse(fn: ParseFunction): TupleSchema<TTuple, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ parse: fn })
   }
 
-  // METHOD
-  public transform<V>(fn: (value: T) => V): TransformSchema<T, V> {
-    return TransformSchema.create(this, fn)
+  // PIPELINE
+  public prepare(fn: PrepareFunction<TTuple>): TupleSchema<TTuple, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ prepare: [...this._prepare, fn] })
+  }
+
+  // PIPELINE
+  public test(id: string, test: TestFunction<TTuple>): TupleSchema<TTuple, TOptional, TNullable, TDefault> {
+    return this._updateTests({ [`_${id}`]: test })
+  }
+
+  // PIPELINE
+  public refine(fn: RefineFunction<TTuple>): TupleSchema<TTuple, TOptional, TNullable, TDefault> {
+    return this._updatePipeline({ refine: [...this._refine, fn] })
   }
 
 }

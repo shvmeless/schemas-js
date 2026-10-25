@@ -30,3 +30,4 @@ describe('.validate(input)', () => {
     })
   })
 })
+

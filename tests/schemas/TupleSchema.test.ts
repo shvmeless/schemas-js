@@ -57,6 +57,32 @@ describe('.validate(input)', () => {
       }],
     ])
   })
+
+  it('compares the `shapes` indexes with the `input` indexes instead of their amounts.', () => {
+    const sparse = TupleSchema.create([StringSchema.create(), NumberSchema.create()])
+    const input = ['STRING', , 'UNEXPECTED']
+    expectValidation(sparse, input).toThrow('The tuple is missing one or more required elements.', [
+      [1, {
+        value: undefined,
+        message: 'The value must be a number.',
+      }],
+      [2, {
+        value: 'UNEXPECTED',
+        message: 'Unexpected element.',
+      }],
+    ])
+  })
+
+  it('does not report missing optional elements as required.', () => {
+    const optional = TupleSchema.create([StringSchema.create(), NumberSchema.create().optional()])
+    const input = [123]
+    expectValidation(optional, input).toThrow('At least one element does not match the given schema.', [
+      [0, {
+        value: 123,
+        message: 'The value must be a string.',
+      }],
+    ])
+  })
 })
 
 // METHOD ---------------------------------------------------------------------
@@ -102,3 +128,4 @@ describe('.strip()', () => {
     expectValidation(schema, input).toReturnNew(expected)
   })
 })
+

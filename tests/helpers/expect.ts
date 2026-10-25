@@ -2,8 +2,8 @@
 
 // IMPORTS
 import { expect } from 'vitest'
-import type { GenericSchema } from '@/schemas/GenericSchema'
-import { ValidationError, type ValidationErrorIndex } from '@/errors/ValidationError'
+import type { GenericSchema } from '@/lib/GenericSchema'
+import { ValidationError, type ValidationErrorLocation } from '@/errors/ValidationError'
 
 // INTERFACE
 interface ExpectSchemaResult {
@@ -11,15 +11,15 @@ interface ExpectSchemaResult {
   toReturnSame(value: unknown): void
   toReturnNew(value: unknown): void
   toReturnInstanceOf(value: unknown): void
-  toThrow(message: string, index?: Array<[unknown, {
+  toThrow(message: string, location?: Array<[unknown, {
     value: unknown
     message: string
-    index?: ValidationErrorIndex | null
+    location?: ValidationErrorLocation | null
   }]>): void
 }
 
 // FUNCTION
-export function expectValidation(schema: GenericSchema<unknown>, input: unknown): ExpectSchemaResult {
+export function expectValidation<TType>(schema: GenericSchema<TType, boolean, boolean, boolean>, input: unknown): ExpectSchemaResult {
   return {
     toReturn(value: unknown): void {
       const result = schema.validate(input)
@@ -38,10 +38,10 @@ export function expectValidation(schema: GenericSchema<unknown>, input: unknown)
       const result = schema.validate(input)
       expect(result).toBeInstanceOf(value)
     },
-    toThrow(message: string, index?: Array<[unknown, {
+    toThrow(message: string, location?: Array<[unknown, {
       value: unknown
       message: string
-      index?: ValidationErrorIndex | null
+      location?: ValidationErrorLocation | null
     }]>): void {
       try {
 
@@ -52,13 +52,13 @@ export function expectValidation(schema: GenericSchema<unknown>, input: unknown)
         expect(error).toBeInstanceOf(ValidationError)
         const e = error as ValidationError
 
-        index?.forEach(([, index]) => {
-          index.index ??= null
+        location?.forEach(([, location]) => {
+          location.location ??= null
         })
 
         expect(e.value).toBe(input)
         expect(e.message).toBe(message)
-        expect(e.index).toStrictEqual(index ? new Map(index) : null)
+        expect(e.location).toStrictEqual(location ? new Map(location) : null)
       }
     },
   }
