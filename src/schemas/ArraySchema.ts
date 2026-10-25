@@ -130,17 +130,17 @@ export class ArraySchema<TValue, TOptional extends boolean, TNullable extends bo
       const output: Array<TValue> = []
       const errors = ValidationError.prepare()
 
-      resolved.forEach((element, index) => {
+      for (let index = 0; index < resolved.length; index++) {
         try {
-          const value = this._schema.validate(element)
+          const value = this._schema.validate(resolved[index])
           output.push(value as TValue)
         } catch (error) {
           if (error instanceof ValidationError) {
-            if (this._prune) return
+            if (this._prune) continue
             errors.add(index, error)
           } else throw error
         }
-      })
+      }
 
       if (errors.size > 0) {
         errors.throw(input, 'At least one element does not match the given schema.')
