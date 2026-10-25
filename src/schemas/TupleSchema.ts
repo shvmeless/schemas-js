@@ -133,11 +133,15 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
       const errors = ValidationError.prepare()
 
       const longest = Math.max(this._shape.length, resolved.length)
+      let missing = false
+      let unexpected = false
       for (let index = 0; index < longest; index++) {
+        const hasShape = Object.hasOwn(this._shape, index)
+        const hasValue = Object.hasOwn(resolved, index)
         try {
 
           const value = resolved[index]
-          const shape = this._shape[index]
+          const shape = hasShape ? this._shape[index] : undefined
 
           if (shape === undefined) {
             if (this._strip) continue
@@ -147,17 +151,20 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
           result[index] = shape.validate(value)
 
         } catch (error) {
-          if (error instanceof ValidationError) errors.add(index, error)
-          else throw error
+          if (error instanceof ValidationError) {
+            errors.add(index, error)
+            if (!hasShape) unexpected = true
+            else if (!hasValue) missing = true
+          } else throw error
         }
       }
 
       if (errors.size > 0) {
-        const message = (resolved.length !== this._shape.length)
-          ? (resolved.length < this._shape.length)
-              ? 'The tuple is missing one or more required elements.'
-              : 'The tuple contains one or more unexpected elements.'
-          : 'At least one element does not match the given schema.'
+        const message = missing
+          ? 'The tuple is missing one or more required elements.'
+          : unexpected
+            ? 'The tuple contains one or more unexpected elements.'
+            : 'At least one element does not match the given schema.'
         errors.throw(input, message)
       }
 

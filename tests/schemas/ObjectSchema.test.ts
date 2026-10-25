@@ -92,6 +92,34 @@ describe('.validate(input)', () => {
     ])
   })
 
+  it('compares the `shape` keys with the `input` keys instead of their amounts.', () => {
+    const input = { string: 'STRING', boolean: true, unexpected: 'UNEXPECTED' }
+    expectValidation(schema, input).toThrow('The object is missing one or more required properties.', [
+      ['number', {
+        value: undefined,
+        message: 'The value must be a number.',
+      }],
+      ['unexpected', {
+        value: 'UNEXPECTED',
+        message: 'Unexpected property.',
+      }],
+    ])
+  })
+
+  it('does not report missing optional properties as required.', () => {
+    const optional = ObjectSchema.create({
+      string: StringSchema.create(),
+      number: NumberSchema.create().optional(),
+    })
+    const input = { string: 123 }
+    expectValidation(optional, input).toThrow('At least one property does not match the given schema.', [
+      ['string', {
+        value: 123,
+        message: 'The value must be a string.',
+      }],
+    ])
+  })
+
   it('does not treat inherited properties of `input` as part of the `shape`.', () => {
     const input = { string: 'STRING', number: 74105280, boolean: true, toString: 'UNEXPECTED' }
     expectValidation(schema, input).toThrow('The object contains one or more unexpected properties.', [
