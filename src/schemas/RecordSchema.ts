@@ -1,5 +1,5 @@
 // IMPORTS
-import type { GenericConfig, GenericPipeline, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, GenericSchemaLike, InferSchema, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
@@ -7,7 +7,7 @@ import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
 interface RecordConfig<TValue> extends GenericConfig<Record<string, TValue>> {
-  schema: GenericSchema<TValue, boolean, boolean, boolean>
+  schema: GenericSchemaLike
   prune: boolean
 }
 
@@ -16,7 +16,7 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
   extends GenericSchema<Record<string, TValue>, TOptional, TNullable, TDefault> {
 
   // CONFIG
-  protected readonly _schema: GenericSchema<TValue, boolean, boolean, boolean>
+  protected readonly _schema: GenericSchemaLike
   protected readonly _prune: boolean
   protected readonly _optional: boolean
   protected readonly _nullable: boolean
@@ -47,8 +47,8 @@ export class RecordSchema<TValue, TOptional extends boolean, TNullable extends b
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TValue>(schema: GenericSchema<TValue, boolean, boolean, boolean>): RecordSchema<TValue, false, false, false> {
-    return new RecordSchema<TValue, false, false, false>({
+  public static create<TSchema extends GenericSchemaLike>(schema: TSchema): RecordSchema<InferSchema<TSchema>, false, false, false> {
+    return new RecordSchema<InferSchema<TSchema>, false, false, false>({
       schema: schema,
       prune: false,
       optional: false,

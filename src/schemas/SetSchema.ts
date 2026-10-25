@@ -1,5 +1,5 @@
 // IMPORTS
-import type { GenericConfig, GenericPipeline, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, GenericSchemaLike, InferSchema, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
@@ -7,7 +7,7 @@ import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
 interface SetConfig<TValue> extends GenericConfig<Set<TValue>> {
-  schema: GenericSchema<TValue, boolean, boolean, boolean>
+  schema: GenericSchemaLike
   prune: boolean
 }
 
@@ -16,7 +16,7 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
   extends GenericSchema<Set<TValue>, TOptional, TNullable, TDefault> {
 
   // CONFIG
-  protected readonly _schema: GenericSchema<TValue, boolean, boolean, boolean>
+  protected readonly _schema: GenericSchemaLike
   protected readonly _prune: boolean
   protected readonly _optional: boolean
   protected readonly _nullable: boolean
@@ -47,8 +47,8 @@ export class SetSchema<TValue, TOptional extends boolean, TNullable extends bool
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TValue>(schema: GenericSchema<TValue, boolean, boolean, boolean>): SetSchema<TValue, false, false, false> {
-    return new SetSchema<TValue, false, false, false>({
+  public static create<TSchema extends GenericSchemaLike>(schema: TSchema): SetSchema<InferSchema<TSchema>, false, false, false> {
+    return new SetSchema<InferSchema<TSchema>, false, false, false>({
       schema: schema,
       prune: false,
       optional: false,

@@ -1,17 +1,22 @@
 // IMPORTS
-import type { GenericConfig, GenericPipeline, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, GenericSchemaLike, InferSchema, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
 
 // TYPE
-type InferShape<TObject> = {
-  [K in keyof TObject]: GenericSchema<TObject[K], boolean, boolean, boolean>
+type InferShape<TShape> = {
+  [K in keyof TShape]: InferSchema<TShape[K]>
+}
+
+// TYPE
+type ShapeLike<TObject> = {
+  [K in keyof TObject]: GenericSchemaLike
 }
 
 // INTERFACE
 interface ObjectConfig<TObject> extends GenericConfig<TObject> {
-  shape: InferShape<TObject>
+  shape: ShapeLike<TObject>
   strip: boolean
 }
 
@@ -20,7 +25,7 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
   extends GenericSchema<TObject, TOptional, TNullable, TDefault> {
 
   // CONFIG
-  protected readonly _shape: InferShape<TObject>
+  protected readonly _shape: ShapeLike<TObject>
   protected readonly _strip: boolean
   protected readonly _optional: boolean
   protected readonly _nullable: boolean
@@ -51,8 +56,8 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TObject>(shape: InferShape<TObject>): ObjectSchema<TObject, false, false, false> {
-    return new ObjectSchema<TObject, false, false, false>({
+  public static create<TShape extends Record<string, GenericSchemaLike>>(shape: TShape): ObjectSchema<InferShape<TShape>, false, false, false> {
+    return new ObjectSchema<InferShape<TShape>, false, false, false>({
       shape: shape,
       strip: false,
       optional: false,

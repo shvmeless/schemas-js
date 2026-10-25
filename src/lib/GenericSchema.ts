@@ -15,6 +15,17 @@ export type Nullish<TType, TOptional extends boolean, TNullable extends boolean,
   = Optional<Nullable<TType, TNullable, TDefault>, TOptional, TDefault>
 
 // TYPE
+export type InferSchema<TSchema> = TSchema extends { readonly _output: infer TOutput }
+  ? TOutput
+  : never
+
+// INTERFACE
+export interface GenericSchemaLike {
+  readonly _output: unknown
+  validate(input: unknown): unknown
+}
+
+// TYPE
 export type ParseFunction = (initial: unknown) => unknown
 export type PrepareFunction<TType> = (current: TType, initial: unknown) => TType
 export type TestFunction<TType> = (current: TType, initial: unknown) => void
@@ -49,6 +60,9 @@ export abstract class GenericSchema<TType, TOptional extends boolean, TNullable 
   protected abstract readonly _prepare: Array<PrepareFunction<TType>>
   protected abstract readonly _tests: TestObject<TType>
   protected abstract readonly _refine: Array<RefineFunction<TType>>
+
+  // TYPE
+  public declare readonly _output: Nullish<TType, TOptional, TNullable, TDefault>
 
   // ABSTRACT METHODS
   public abstract validate(input: unknown): Nullish<TType, TOptional, TNullable, TDefault>
