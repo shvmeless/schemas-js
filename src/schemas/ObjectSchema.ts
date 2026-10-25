@@ -153,8 +153,11 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
             throw new ValidationError(value, 'Unexpected property.')
           }
 
+          const output = shape.validate(value)
+          if (output === undefined) continue
+
           Object.defineProperty(result, key, {
-            value: shape.validate(value),
+            value: output,
             enumerable: true,
             writable: true,
             configurable: true,

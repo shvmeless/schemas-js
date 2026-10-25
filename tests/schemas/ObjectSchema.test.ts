@@ -120,6 +120,29 @@ describe('.validate(input)', () => {
     ])
   })
 
+  it('does not include `undefined` properties in the result.', () => {
+    const optional = ObjectSchema.create({
+      string: StringSchema.create(),
+      number: NumberSchema.create().optional(),
+    })
+
+    const absent = optional.validate({ string: 'STRING' })
+    expect(absent).toEqual({ string: 'STRING' })
+    expect(Object.hasOwn(absent as object, 'number')).toBe(false)
+
+    const explicit = optional.validate({ string: 'STRING', number: undefined })
+    expect(explicit).toEqual({ string: 'STRING' })
+    expect(Object.hasOwn(explicit as object, 'number')).toBe(false)
+  })
+
+  it('keeps the `default` value of absent optional properties.', () => {
+    const defaulted = ObjectSchema.create({
+      string: StringSchema.create(),
+      number: NumberSchema.create().optional().default(74105280),
+    })
+    expectValidation(defaulted, { string: 'STRING' }).toReturn({ string: 'STRING', number: 74105280 })
+  })
+
   it('does not treat inherited properties of `input` as part of the `shape`.', () => {
     const input = { string: 'STRING', number: 74105280, boolean: true, toString: 'UNEXPECTED' }
     expectValidation(schema, input).toThrow('The object contains one or more unexpected properties.', [
