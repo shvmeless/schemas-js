@@ -393,4 +393,28 @@ describe('.match(pattern)', () => {
   it('returns when `input` matches the `pattern`.', () => {
     expectValidation(schema, 'abcde').toReturn('abcde')
   })
+
+  it('returns consistently when the `pattern` is global.', () => {
+    const global = base.match(/\d+/g)
+
+    expectValidation(global, 'a1').toReturn('a1')
+    expectValidation(global, 'a1').toReturn('a1')
+    expectValidation(global, 'a1').toReturn('a1')
+  })
+
+  it('returns consistently when the `pattern` is sticky.', () => {
+    const sticky = base.match(/\d+/y)
+
+    expectValidation(sticky, '1a').toReturn('1a')
+    expectValidation(sticky, '1a').toReturn('1a')
+    expectValidation(sticky, '1a').toReturn('1a')
+  })
+
+  it('does not mutate the `lastIndex` of the original `pattern`.', () => {
+    const pattern = /\d+/g
+    const global = base.match(pattern)
+
+    expectValidation(global, 'a1').toReturn('a1')
+    expect(pattern.lastIndex).toBe(0)
+  })
 })

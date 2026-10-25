@@ -271,9 +271,11 @@ export class StringSchema<TOptional extends boolean, TNullable extends boolean, 
 
   // TEST
   public match(pattern: RegExp): StringSchema<TOptional, TNullable, TDefault> {
+    const regex = new RegExp(pattern)
     return this._updateTests({
       pattern: (current, initial) => {
-        if (!pattern.test(current))
+        regex.lastIndex = 0
+        if (!regex.test(current))
           throw new ValidationError(initial, `The value must match the pattern ${stringify(pattern)}.`)
       },
     })
