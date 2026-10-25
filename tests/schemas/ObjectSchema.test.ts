@@ -1,12 +1,12 @@
 // IMPORTS
 import { describe, it, expect } from 'vitest'
-import type { GenericSchemaLike } from '@/lib/GenericSchema'
 import { ObjectSchema } from '@/schemas/ObjectSchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { NumberSchema } from '@/schemas/NumberSchema'
 import { BooleanSchema } from '@/schemas/BooleanSchema'
 import { DataTypeGenerator } from '@tests/helpers/generator'
 import { expectValidation } from '@tests/helpers/expect'
+import type { GenericSchema } from '@/lib/GenericSchema'
 
 // METHOD ---------------------------------------------------------------------
 describe('.create(shape)', () => {
@@ -22,7 +22,9 @@ describe('.create(shape)', () => {
   })
 
   it('does not keep a reference to the given `shape`.', () => {
-    const shape: Record<string, GenericSchemaLike> = {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const shape: Record<string, GenericSchema<any, boolean, boolean, boolean>> = {
       string: StringSchema.create(),
     }
 
@@ -223,4 +225,3 @@ describe('.strip()', () => {
     expectValidation(schema, input).toReturnNew(expected)
   })
 })
-
