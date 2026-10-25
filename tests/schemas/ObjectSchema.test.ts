@@ -1,5 +1,6 @@
 // IMPORTS
 import { describe, it, expect } from 'vitest'
+import type { GenericSchemaLike } from '@/lib/GenericSchema'
 import { ObjectSchema } from '@/schemas/ObjectSchema'
 import { StringSchema } from '@/schemas/StringSchema'
 import { NumberSchema } from '@/schemas/NumberSchema'
@@ -18,6 +19,31 @@ describe('.create(shape)', () => {
 
   it('returns an instance of the schema.', () => {
     expect(schema).toBeInstanceOf(ObjectSchema)
+  })
+
+  it('does not keep a reference to the given `shape`.', () => {
+    const shape: Record<string, GenericSchemaLike> = {
+      string: StringSchema.create(),
+    }
+
+    const copy = ObjectSchema.create(shape)
+
+    shape['string'] = NumberSchema.create()
+    shape['number'] = NumberSchema.create()
+
+    expectValidation(copy, { string: 'STRING' }).toReturn({ string: 'STRING' })
+    expectValidation(copy, { string: 123 }).toThrow('At least one property does not match the given schema.', [
+      ['string', {
+        value: 123,
+        message: 'The value must be a string.',
+      }],
+    ])
+    expectValidation(copy, { string: 'STRING', number: 123 }).toThrow('The object contains one or more unexpected properties.', [
+      ['number', {
+        value: 123,
+        message: 'Unexpected property.',
+      }],
+    ])
   })
 })
 

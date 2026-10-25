@@ -41,7 +41,7 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
   // CONSTRUCTOR
   private constructor(config: ObjectConfig<TObject>, pipeline: GenericPipeline<TObject>) {
     super()
-    this._shape = config.shape
+    this._shape = { ...config.shape }
     this._strip = config.strip
     this._optional = config.optional
     this._nullable = config.nullable
