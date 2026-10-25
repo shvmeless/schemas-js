@@ -65,6 +65,26 @@ describe('.validate(input)', () => {
       }],
     ])
   })
+
+  it('does not treat inherited properties of `input` as part of the `shape`.', () => {
+    const input = { string: 'STRING', number: 74105280, boolean: true, toString: 'UNEXPECTED' }
+    expectValidation(schema, input).toThrow('The object contains one or more unexpected properties.', [
+      ['toString', {
+        value: 'UNEXPECTED',
+        message: 'Unexpected property.',
+      }],
+    ])
+  })
+
+  it('does not read inherited properties from `input`.', () => {
+    const inherited = ObjectSchema.create({ toString: StringSchema.create() })
+    expectValidation(inherited, {}).toThrow('The object is missing one or more required properties.', [
+      ['toString', {
+        value: undefined,
+        message: 'The value must be a string.',
+      }],
+    ])
+  })
 })
 
 // METHOD ---------------------------------------------------------------------

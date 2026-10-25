@@ -136,8 +136,8 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
       for (const key of keys) {
         try {
 
-          const value = resolved[key]
-          const shape = this._shape[key as keyof TObject]
+          const value = Object.hasOwn(resolved, key) ? resolved[key] : undefined
+          const shape = Object.hasOwn(this._shape, key) ? this._shape[key as keyof TObject] : undefined
 
           if (shape === undefined) {
             if (this._strip) continue
