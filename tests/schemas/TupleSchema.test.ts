@@ -60,6 +60,7 @@ describe('.validate(input)', () => {
 
   it('compares the `shapes` indexes with the `input` indexes instead of their amounts.', () => {
     const sparse = TupleSchema.create([StringSchema.create(), NumberSchema.create()])
+    // eslint-disable-next-line no-sparse-arrays
     const input = ['STRING', , 'UNEXPECTED']
     expectValidation(sparse, input).toThrow('The tuple is missing one or more required elements.', [
       [1, {
@@ -128,4 +129,3 @@ describe('.strip()', () => {
     expectValidation(schema, input).toReturnNew(expected)
   })
 })
-

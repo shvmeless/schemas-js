@@ -1,17 +1,12 @@
 // IMPORTS
-import type { GenericConfig, GenericPipeline, GenericSchemaLike, InferSchema, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, GenericSchemaLike, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
 
-// TYPE
-type InferShape<TShape extends ReadonlyArray<GenericSchemaLike>> = {
-  -readonly [K in keyof TShape]: InferSchema<TShape[K]>
-}
-
 // INTERFACE
 interface TupleConfig<TTuple extends ReadonlyArray<unknown>> extends GenericConfig<TTuple> {
-  shape: ReadonlyArray<GenericSchemaLike>
+  shape: { [K in keyof TTuple]: GenericSchemaLike<TTuple[K]> }
   strip: boolean
 }
 
@@ -20,7 +15,7 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
   extends GenericSchema<TTuple, TOptional, TNullable, TDefault> {
 
   // CONFIG
-  protected readonly _shape: ReadonlyArray<GenericSchemaLike>
+  protected readonly _shape: { [K in keyof TTuple]: GenericSchemaLike<TTuple[K]> }
   protected readonly _strip: boolean
   protected readonly _optional: boolean
   protected readonly _nullable: boolean
@@ -51,8 +46,8 @@ export class TupleSchema<TTuple extends ReadonlyArray<unknown>, TOptional extend
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<const TShape extends ReadonlyArray<GenericSchemaLike>>(shape: TShape): TupleSchema<InferShape<TShape>, false, false, false> {
-    return new TupleSchema<InferShape<TShape>, false, false, false>({
+  public static create<const TTuple extends ReadonlyArray<unknown>>(shape: { [K in keyof TTuple]: GenericSchemaLike<TTuple[K]> }): TupleSchema<TTuple, false, false, false> {
+    return new TupleSchema({
       shape: shape,
       strip: false,
       optional: false,
