@@ -53,4 +53,3 @@ describe('.validate(input)', () => {
     expectValidation(schema, 'LiTeRaL').toThrow('The value must match the literal value.')
   })
 })
-
