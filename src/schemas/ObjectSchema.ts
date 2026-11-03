@@ -4,6 +4,12 @@ import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchem
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
 
+// TYPES
+type Merge<TA, TB> = { [K in keyof (Omit<TA, keyof TB> & TB)]: (Omit<TA, keyof TB> & TB)[K] } & {}
+type MergeAll<TSchemas extends ReadonlyArray<Record<string, unknown>>> = TSchemas extends readonly [infer THead extends Record<string, unknown>, ...infer TTail extends ReadonlyArray<Record<string, unknown>>]
+  ? TTail extends readonly [] ? THead : Merge<THead, MergeAll<TTail>>
+  : never
+
 // INTERFACE
 interface ObjectConfig<TObject> extends GenericConfig<TObject> {
   shape: { [K in keyof TObject]: GenericSchemaLike<TObject[K]> }
@@ -49,6 +55,29 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
   public static create<TObject extends Record<string, unknown>>(shape: { [K in keyof TObject]: GenericSchemaLike<TObject[K]> }): ObjectSchema<TObject, false, false, false> {
     return new ObjectSchema({
       shape: shape,
+      strip: false,
+      optional: false,
+      nullable: false,
+      default: UNSET,
+      fallback: UNSET,
+    }, {
+      parse: UNSET,
+      prepare: [],
+      tests: {},
+      refine: [],
+    })
+  }
+
+  // FACTORY
+  public static merge<const TSchemas extends readonly [Record<string, unknown>, ...Array<Record<string, unknown>>]>(
+    ...schemas: { [K in keyof TSchemas]: ObjectSchema<TSchemas[K], boolean, boolean, boolean> }
+  ): ObjectSchema<MergeAll<TSchemas>, false, false, false> {
+    const shape = schemas.reduce<Record<string, GenericSchemaLike<unknown>>>(
+      (shape, schema) => ({ ...shape, ...schema._shape }),
+      {},
+    )
+    return new ObjectSchema({
+      shape: shape as { [K in keyof MergeAll<TSchemas>]: GenericSchemaLike<MergeAll<TSchemas>[K]> },
       strip: false,
       optional: false,
       nullable: false,

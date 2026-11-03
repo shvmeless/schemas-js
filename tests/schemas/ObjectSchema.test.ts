@@ -50,6 +50,61 @@ describe('.create(shape)', () => {
 })
 
 // METHOD ---------------------------------------------------------------------
+describe('.merge(...schemas)', () => {
+
+  const base = ObjectSchema.create({
+    string: StringSchema.create(),
+    number: NumberSchema.create(),
+  })
+
+  it('returns an instance of the schema.', () => {
+    expect(ObjectSchema.merge(base)).toBeInstanceOf(ObjectSchema)
+  })
+
+  it('merges an indefinite amount of `shape` schemas.', () => {
+    const schema = ObjectSchema.merge(
+      base,
+      ObjectSchema.create({ boolean: BooleanSchema.create() }),
+      ObjectSchema.create({ optional: StringSchema.create().optional() }),
+    )
+    expectValidation(schema, { string: 'STRING', number: 74105280, boolean: true }).toReturn({
+      string: 'STRING',
+      number: 74105280,
+      boolean: true,
+    })
+  })
+
+  it('gives precedence to the last schema when keys collide.', () => {
+    const schema = ObjectSchema.merge(
+      ObjectSchema.create({ value: StringSchema.create() }),
+      ObjectSchema.create({ value: NumberSchema.create() }),
+      ObjectSchema.create({ value: BooleanSchema.create() }),
+    )
+    expectValidation(schema, { value: true }).toReturn({ value: true })
+    expectValidation(schema, { value: 74105280 }).toThrow('At least one property does not match the given schema.', [
+      ['value', {
+        value: 74105280,
+        message: 'The value must be a boolean.',
+      }],
+    ])
+  })
+
+  it('does not keep a reference to the given `shape` schemas.', () => {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const shape: Record<string, GenericSchema<any, boolean, boolean, boolean>> = {
+      string: StringSchema.create(),
+    }
+
+    const schema = ObjectSchema.merge(ObjectSchema.create(shape))
+
+    shape['string'] = NumberSchema.create()
+
+    expectValidation(schema, { string: 'STRING' }).toReturn({ string: 'STRING' })
+  })
+})
+
+// METHOD ---------------------------------------------------------------------
 describe('.validate(input)', () => {
 
   const schema = ObjectSchema.create({

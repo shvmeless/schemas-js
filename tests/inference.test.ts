@@ -1,6 +1,7 @@
 // IMPORTS
 import { describe, expectTypeOf, it } from 'vitest'
 import { schemas } from '@/index'
+import { ObjectSchema } from '@/classes'
 
 // METHOD ---------------------------------------------------------------------
 describe('type inference', () => {
@@ -21,5 +22,23 @@ describe('type inference', () => {
     expectTypeOf(schemas.record(schemas.string().nullable()).validate({})).toEqualTypeOf<Record<string, string | null>>()
     expectTypeOf(schemas.set(schemas.string().nullable()).validate(new Set())).toEqualTypeOf<Set<string | null>>()
     expectTypeOf(schemas.map(schemas.string(), schemas.number().nullable()).validate(new Map())).toEqualTypeOf<Map<string, number | null>>()
+  })
+
+  it('merges an indefinite amount of object schemas.', () => {
+    const merged = ObjectSchema.merge(
+      ObjectSchema.create({ a: schemas.string() }),
+      ObjectSchema.create({ b: schemas.number() }),
+      ObjectSchema.create({ c: schemas.boolean() }),
+    )
+    expectTypeOf(merged.validate({ a: 'x', b: 1, c: true })).toEqualTypeOf<{ a: string, b: number, c: boolean }>()
+  })
+
+  it('lets the last object schema override colliding keys.', () => {
+    const merged = ObjectSchema.merge(
+      ObjectSchema.create({ value: schemas.string(), keep: schemas.boolean() }),
+      ObjectSchema.create({ value: schemas.number() }),
+      ObjectSchema.create({ value: schemas.boolean() }),
+    )
+    expectTypeOf(merged.validate({ value: true, keep: true })).toEqualTypeOf<{ value: boolean, keep: boolean }>()
   })
 })
