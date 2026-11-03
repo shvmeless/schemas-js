@@ -1,5 +1,5 @@
 // IMPORTS
-import type { GenericConfig, GenericPipeline, GenericSchemaLike, InferSchema, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, GenericSchemaLike, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { stringify } from '@/utils/stringify'
@@ -7,8 +7,8 @@ import { type Unset, UNSET } from '@/utils/unset'
 
 // INTERFACE
 interface MapConfig<TKey, TValue> extends GenericConfig<Map<TKey, TValue>> {
-  keySchema: GenericSchemaLike
-  valueSchema: GenericSchemaLike
+  keySchema: GenericSchemaLike<TKey>
+  valueSchema: GenericSchemaLike<TValue>
   prune: boolean
 }
 
@@ -17,8 +17,8 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   extends GenericSchema<Map<TKey, TValue>, TOptional, TNullable, TDefault> {
 
   // CONFIG
-  protected readonly _keySchema: GenericSchemaLike
-  protected readonly _valueSchema: GenericSchemaLike
+  protected readonly _keySchema: GenericSchemaLike<TKey>
+  protected readonly _valueSchema: GenericSchemaLike<TValue>
   protected readonly _prune: boolean
   protected readonly _optional: boolean
   protected readonly _nullable: boolean
@@ -50,8 +50,8 @@ export class MapSchema<TKey, TValue, TOptional extends boolean, TNullable extend
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TKeySchema extends GenericSchemaLike, TValueSchema extends GenericSchemaLike>(keySchema: TKeySchema, valueSchema: TValueSchema): MapSchema<InferSchema<TKeySchema>, InferSchema<TValueSchema>, false, false, false> {
-    return new MapSchema<InferSchema<TKeySchema>, InferSchema<TValueSchema>, false, false, false>({
+  public static create<TKey, TValue>(keySchema: GenericSchemaLike<TKey>, valueSchema: GenericSchemaLike<TValue>): MapSchema<TKey, TValue, false, false, false> {
+    return new MapSchema({
       keySchema: keySchema,
       valueSchema: valueSchema,
       prune: false,

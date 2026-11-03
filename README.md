@@ -136,6 +136,7 @@ All schemas inherit from `GenericSchema` and support the following methods.
 - **`strip()`** - Ignores unexpected elements in the tuple, removing them from output.
 
 ### `ObjectSchema`
+- **`ObjectSchema.merge(...schemas)`** - Static factory that combines the shapes of multiple object schemas into a new one.
 - **`strip()`** - Ignores unexpected properties in the object, removing them from output.
 
 ### `SetSchema`

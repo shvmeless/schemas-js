@@ -1,22 +1,18 @@
 // IMPORTS
-import type { GenericConfig, GenericPipeline, GenericSchemaLike, InferSchema, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
+import type { GenericConfig, GenericPipeline, GenericSchemaLike, ParseFunction, PrepareFunction, RefineFunction, TestFunction } from '@/lib/GenericSchema'
 import { GenericSchema, type Nullish, type TestObject } from '@/lib/GenericSchema'
 import { ValidationError } from '@/errors/ValidationError'
 import { type Unset, UNSET } from '@/utils/unset'
 
-// TYPE
-type InferShape<TShape> = {
-  [K in keyof TShape]: InferSchema<TShape[K]>
-}
-
-// TYPE
-type ShapeLike<TObject> = {
-  [K in keyof TObject]: GenericSchemaLike
-}
+// TYPES
+type Merge<TA, TB> = { [K in keyof (Omit<TA, keyof TB> & TB)]: (Omit<TA, keyof TB> & TB)[K] } & {}
+type MergeAll<TSchemas extends ReadonlyArray<Record<string, unknown>>> = TSchemas extends readonly [infer THead extends Record<string, unknown>, ...infer TTail extends ReadonlyArray<Record<string, unknown>>]
+  ? TTail extends readonly [] ? THead : Merge<THead, MergeAll<TTail>>
+  : never
 
 // INTERFACE
 interface ObjectConfig<TObject> extends GenericConfig<TObject> {
-  shape: ShapeLike<TObject>
+  shape: { [K in keyof TObject]: GenericSchemaLike<TObject[K]> }
   strip: boolean
 }
 
@@ -25,7 +21,7 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
   extends GenericSchema<TObject, TOptional, TNullable, TDefault> {
 
   // CONFIG
-  protected readonly _shape: ShapeLike<TObject>
+  protected readonly _shape: { [K in keyof TObject]: GenericSchemaLike<TObject[K]> }
   protected readonly _strip: boolean
   protected readonly _optional: boolean
   protected readonly _nullable: boolean
@@ -56,9 +52,32 @@ export class ObjectSchema<TObject, TOptional extends boolean, TNullable extends 
   // --------------------------------------------------------------------------
 
   // FACTORY
-  public static create<TShape extends Record<string, GenericSchemaLike>>(shape: TShape): ObjectSchema<InferShape<TShape>, false, false, false> {
-    return new ObjectSchema<InferShape<TShape>, false, false, false>({
+  public static create<TObject extends Record<string, unknown>>(shape: { [K in keyof TObject]: GenericSchemaLike<TObject[K]> }): ObjectSchema<TObject, false, false, false> {
+    return new ObjectSchema({
       shape: shape,
+      strip: false,
+      optional: false,
+      nullable: false,
+      default: UNSET,
+      fallback: UNSET,
+    }, {
+      parse: UNSET,
+      prepare: [],
+      tests: {},
+      refine: [],
+    })
+  }
+
+  // FACTORY
+  public static merge<const TSchemas extends readonly [Record<string, unknown>, ...Array<Record<string, unknown>>]>(
+    ...schemas: { [K in keyof TSchemas]: ObjectSchema<TSchemas[K], boolean, boolean, boolean> }
+  ): ObjectSchema<MergeAll<TSchemas>, false, false, false> {
+    const shape = schemas.reduce<Record<string, GenericSchemaLike<unknown>>>(
+      (shape, schema) => ({ ...shape, ...schema._shape }),
+      {},
+    )
+    return new ObjectSchema({
+      shape: shape as { [K in keyof MergeAll<TSchemas>]: GenericSchemaLike<MergeAll<TSchemas>[K]> },
       strip: false,
       optional: false,
       nullable: false,

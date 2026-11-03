@@ -1,5 +1,13 @@
+// TYPES
+export type { Optional, Nullable, Nullish } from '@/lib/GenericSchema'
+export type { ParseFunction, PrepareFunction, TestFunction, TestObject, RefineFunction } from '@/lib/GenericSchema'
+export type { GenericSchemaLike, GenericConfig, GenericPipeline } from '@/lib/GenericSchema'
+
+// UTILS
+export { type Unset, UNSET } from '@/utils/unset'
+
 // GENERIC
-export type { GenericSchema } from '@/lib/GenericSchema'
+export { GenericSchema } from '@/lib/GenericSchema'
 
 // BASIC
 export { UnknownSchema } from '@/schemas/UnknownSchema'

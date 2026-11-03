@@ -42,4 +42,3 @@ describe('.validate(input)', () => {
     expectValidation(schema, input).toReturnSame(input)
   })
 })
-
